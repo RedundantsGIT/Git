@@ -29,7 +29,7 @@ import org.powerbot.script.wrappers.Locatable;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", version = 0.3, hidden = true)
+@Manifest(authors = { "Redundant" }, name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", version = 0.4, hidden = true)
 public class rFurFlipper extends PollingScript implements PaintListener,
 		MessageListener {
 	private static Timer timeRan = new Timer(0);
@@ -270,8 +270,8 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	public boolean nearBank() {
 		final Npc Banker = ctx.npcs.select().id(bankerID).first().isEmpty() ? null
 				: ctx.npcs.iterator().next();
-		return Banker != null
-				&& Banker.isOnScreen();
+		return Banker != null && ctx.players.local().getLocation()
+						.distanceTo(Banker.getLocation()) < 4;
 	}
 
 	public void turnTo(final Locatable l) {
