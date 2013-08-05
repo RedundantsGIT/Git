@@ -271,9 +271,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		final Npc Banker = ctx.npcs.select().id(bankerID).first().isEmpty() ? null
 				: ctx.npcs.iterator().next();
 		return Banker != null
-				&& Banker.isOnScreen()
-				&& ctx.players.local().getLocation()
-						.distanceTo(Banker.getLocation()) < 6;
+				&& Banker.isOnScreen();
 	}
 
 	public void turnTo(final Locatable l) {
