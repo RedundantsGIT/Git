@@ -35,70 +35,71 @@ import org.powerbot.script.wrappers.Item;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", website = "http://www.powerbot.org/community/topic/876982-vip-rtanner-all-potions-all-hides-al-kharid-burthorpe/", version = 2.2)
+@Manifest(authors = { "Redundant" }, name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", website = "http://www.powerbot.org/community/topic/876982-vip-rtanner-all-potions-all-hides-al-kharid-burthorpe/", version = 2.3)
 public class rTanner extends PollingScript implements PaintListener {
 	private final RenderingHints antialiasing = new RenderingHints(
 			RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-	public long ElapsedTime = 0;
-	public Timer wait;
-	public Image tanner = getImage("http://i43.tinypic.com/rh288o.jpg");
-	public MouseTrail trail = new MouseTrail();
-	public int InventoryHideCount, HideCount, ProfitTotal, HidesLeft,
-			PotionsLeft;
-	public final JobContainer container;
-	public boolean gotPrices = false;
+	public long elapsedTime = 0;
 	public String status = "Starting...";
 	public String location;
+	public Timer wait;
+	public Image tanner = getImage("http://i43.tinypic.com/rh288o.jpg");
+	public mouseTrail trail = new mouseTrail();
+	public boolean gotPrices = false;
 	public boolean atBurthorpe = false;
 	public boolean atAlKharid = false;
-	public final int[] energyPotionID = { 3008, 3010, 3012, 3014, 23375, 23377,
-			23379, 23381, 23383, 23385, 11453, 11455, 23387, 23389, 23391,
-			23393, 23395, 23397, 11481, 11483, 3016, 3018, 3020, 3022 };
-	public final int[] hideID = { 1739, 1753, 1751, 24372, 6287, 7801, 1749,
-			1747 };
 	public final int[] leatherID = { 1741, 1743, 1745, 2505, 24374, 6289, 2507,
-			2509 };
-	public final Tile[] pathToJack = { new Tile(2893, 3529, 0),
-			new Tile(2892, 3517, 0), new Tile(2889, 3511, 0),
+			2509 },
+			bankBoothID = { 76274, 42192 },
+			tannerID = { 14877, 2824 },
+			hideID = { 1739, 1753, 1751, 24372, 6287, 7801, 1749, 1747 },
+			energyPotionID = { 3008, 3010, 3012, 3014, 23375, 23377, 23379,
+					23381, 23383, 23385, 11453, 11455, 23387, 23389, 23391,
+					23393, 23395, 23397, 11481, 11483, 3016, 3018, 3020, 3022 };
+	private final int IntCowhideID = 1739, IntSnakeSkinhideID = 6287,
+			IntSnakeSkinTwohideID = 7801, IntGreenDHideID = 1753,
+			IntBlueDHideID = 1751, IntRedDHideID = 1749,
+			IntBlackDHideID = 1747, IntRoyalDHideID = 24372,
+			IntLeatherID = 1741, IntHardLeatherID = 1743,
+			IntGreenDragonLeatherID = 1745, IntBlueDragonLeatherID = 2505,
+			IntBlackDragonLeatherID = 2509, IntRoyalDragonLeatherID = 24374,
+			IntTannedSnakeSkinID = 6289, IntTannedSnakeSkinIDTwo = 6289,
+			IntRedDragonLeatherID = 2507;
+	private int backpackHideCount, hideCount, profitTotal, hidesLeft,
+			potionsLeft;
+	private int cowHidePrice, snakeSkinPrice, swampSnakeSkinPrice,
+			greenDHidePrice, blueDHidePrice, redDHidePrice, blackDHidePrice,
+			royalDHidePrice, leatherPrice, hardLeatherPrice,
+			greenDragonLeatherPrice, redDragonLeatherPrice,
+			blueDragonLeatherPrice, blackDragonLeatherPrice,
+			royalDragonLeatherPrice, snakeLeatherPrice, swampSnakeLeatherPrice,
+			Profit;
+	public final Tile[] pathToJack = { new Tile(2892, 3516, 0), new Tile(2889, 3511, 0),
 			new Tile(2887, 3503, 0) };
+
+	public final Tile[] pathToBurthorpeBank = { new Tile(2889, 3511, 0),
+			new Tile(2892, 3516, 0), new Tile(2893, 3529, 0), };
+
 	public final Tile[] pathToEllis = { new Tile(3271, 3167, 0),
 			new Tile(3276, 3180, 0), new Tile(3275, 3195, 0) };
-	public final int[] bankBoothID = { 76274, 42192 },
-			tannerID = { 14877, 2824 };
+
+	public final Tile[] pathToAlKharidBank = { new Tile(3276, 3180, 0),
+			new Tile(3271, 3167, 0) };
+
 	private final Area areaBurthorpe = new Area(new Tile[] {
 			new Tile(2877, 3540, 0), new Tile(2900, 3540, 0),
 			new Tile(2899, 3479, 0), new Tile(2875, 3479, 0) });
 	private final Area areaAlKharid = new Area(new Tile[] {
 			new Tile(3263, 3203, 0), new Tile(3287, 3203, 0),
 			new Tile(3287, 3157, 0), new Tile(3262, 3158, 0) });
-	public final int[] snakeSkinhideID = { 6287 },
-			SnakeSkinTwohideID = { 7801 }, GreenDHideID = { 1753 },
-			BlueDHideID = { 1751 }, RedDHideID = { 1749 },
-			BlackDHideID = { 1747 }, RoyalDHideID = { 24372 },
-			HardLeatherID = { 1743 }, LeatherID = { 1741 };
-	public final int IntCowhideID = 1739, IntSnakeSkinhideID = 6287,
-			IntSnakeSkinTwohideID = 7801, IntGreenDHideID = 1753,
-			IntBlueDHideID = 1751, IntRedDHideID = 1749,
-			IntBlackDHideID = 1747, IntRoyalDHideID = 24372;
-	public final int IntLeatherID = 1741, IntHardLeatherID = 1743,
-			IntGreenDragonLeatherID = 1745, IntBlueDragonLeatherID = 2505,
-			IntBlackDragonLeatherID = 2509, IntRoyalDragonLeatherID = 24374,
-			IntTannedSnakeSkinID = 6289, IntTannedSnakeSkinIDTwo = 6289,
-			IntRedDragonLeatherID = 2507;
-	public int CowHidePrice, SnakeSkinPrice, SnakeSkinTwoPrice,
-			GreenDHidePrice, BlueDHidePrice, RedDHidePrice, BlackDHidePrice,
-			RoyalDHidePrice, IntLeatherPrice, IntHardLeatherPrice,
-			IntGreenDragonLeatherPrice, IntRedDragonLeatherPrice,
-			IntBlueDragonLeatherPrice, IntBlackDragonLeatherPrice,
-			IntRoyalDragonLeatherPrice, IntTannedSnakeSkinPrice,
-			IntTannedSnakeSkinPriceTwo, Profit;
+
+	public final JobContainer container;
 
 	public rTanner() {
-		ElapsedTime = System.currentTimeMillis();
+		elapsedTime = System.currentTimeMillis();
 
-		this.container = new JobContainer(new Job[] {// new Pitch(ctx),
-				new GetPlayerArea(ctx), new UseEnergyPotion(ctx), new Tan(ctx),
-						new Banking(ctx) });
+		this.container = new JobContainer(new Job[] { new GetPlayerArea(ctx),
+				new UseEnergyPotion(ctx), new Tan(ctx), new Banking(ctx) });
 	}
 
 	public abstract class Job extends MethodProvider {
@@ -158,7 +159,6 @@ public class rTanner extends PollingScript implements PaintListener {
 
 	@Override
 	public int poll() {
-		/* Game isn't logged in/map isn't loaded */
 		if (!ctx.game.isLoggedIn()
 				|| ctx.game.getClientState() != org.powerbot.script.methods.Game.INDEX_MAP_LOADED) {
 			return 1000;
@@ -185,14 +185,13 @@ public class rTanner extends PollingScript implements PaintListener {
 
 		@Override
 		public void execute() {
-			if (InBurthorpe()) {
+			if (inBurthorpe()) {
 				location = "Burthorpe";
 				atBurthorpe = true;
 			} else {
-				if (InAlKharid()) {
+				if (inAlKharid())
 					location = "Al Kharid";
-					atAlKharid = true;
-				}
+				atAlKharid = true;
 			}
 		}
 	}
@@ -211,7 +210,6 @@ public class rTanner extends PollingScript implements PaintListener {
 		public void execute() {
 			final Item EnergyPotion = ctx.backpack.select().id(energyPotionID)
 					.first().isEmpty() ? null : ctx.backpack.iterator().next();
-
 			if (EnergyPotion != null) {
 				status = "Use Potion";
 				EnergyPotion.interact("Drink");
@@ -227,7 +225,7 @@ public class rTanner extends PollingScript implements PaintListener {
 
 	public boolean ShouldUse() {
 		return ctx.players.local().isInMotion()
-				&& ctx.movement.getEnergyLevel() < 50 && ContainsPotions()
+				&& ctx.movement.getEnergyLevel() < 50 && hasPotions()
 				&& !ctx.bank.isOpen() && !ctx.widgets.get(1370, 40).isVisible();
 	}
 
@@ -238,9 +236,7 @@ public class rTanner extends PollingScript implements PaintListener {
 
 		@Override
 		public boolean activate() {
-			Item Hides = ctx.backpack.select().id(hideID).first().isEmpty() ? null
-					: ctx.backpack.iterator().next();
-			return ctx.backpack.select().contains(Hides);
+			return hasHides();
 		}
 
 		@Override
@@ -248,15 +244,15 @@ public class rTanner extends PollingScript implements PaintListener {
 			Npc Tanner = ctx.npcs.select().id(tannerID).first().isEmpty() ? null
 					: ctx.npcs.iterator().next();
 			if (ctx.backpack.getMoneyPouch() < 600) {
-				LogOut();
+				logOut();
 			} else {
 				if (atBurthorpe) {
 					if (atTanner()) {
 						if (Tanner != null) {
 							if (!Tanner.isOnScreen()) {
-								ctx.camera.turnTo(Tanner.getLocation());
+									ctx.camera.turnTo(Tanner.getLocation());
 							} else {
-								DoTanning();
+								doTanning();
 							}
 						}
 					} else {
@@ -270,7 +266,7 @@ public class rTanner extends PollingScript implements PaintListener {
 								if (!Tanner.isOnScreen()) {
 									ctx.camera.turnTo(Tanner.getLocation());
 								} else {
-									DoTanning();
+									doTanning();
 								}
 							}
 						} else {
@@ -291,154 +287,146 @@ public class rTanner extends PollingScript implements PaintListener {
 
 		@Override
 		public boolean activate() {
-			Item Hides = ctx.backpack.select().id(hideID).first().isEmpty() ? null
-					: ctx.backpack.iterator().next();
-			return !ctx.backpack.select().contains(Hides);
+			return !hasHides();
 		}
 
 		@Override
 		public void execute() {
 			status = "Walk to Bank";
 			if (atBurthorpe) {
-				if (!NearBank()) {
-					ctx.movement.newTilePath(pathToJack).reverse().traverse();
+				if (atBank()) {
+					doBanking();
 				} else {
-					PerformBanking();
+					ctx.movement.newTilePath(pathToBurthorpeBank).traverse();
 				}
 			} else {
 				if (atAlKharid) {
-					if (!NearBank()) {
-						ctx.movement.newTilePath(pathToEllis).reverse()
-								.traverse();
+					if (atBank()) {
+						doBanking();
 					} else {
-						PerformBanking();
+						ctx.movement.newTilePath(pathToAlKharidBank).traverse();
 					}
 				}
 			}
 		}
 	}
 
-	public void PerformBanking() {
-		if (!ctx.bank.isOpen()) {
-			status = "Bank Open";
-			ctx.bank.open();
-			sleep(Random.nextInt(200, 300));
-			while (ctx.players.local().isInMotion())
-				sleep(50);
-		} else {
+	public void doBanking() {
+		if (ctx.bank.isOpen()) {
 			if (!gotPrices) {
-				GetPricesFromBank();
+				getBankPrices();
 				gotPrices = true;
 			} else {
-				/* Inventory is full. */
 				if (ctx.backpack.select().count() == 28) {
-					if (!ContainsTannedHides() && !ContainsPotions()) {
+					if (!hasLeather() && !hasPotions()) {
 						status = "Deposit Inv";
 						ctx.bank.depositInventory();
 						stimer(ctx.backpack.select().count() > 0, 0, 0);
-					} else if (!ContainsTannedHides() && ContainsPotions()) {
+					} else if (!hasLeather() && hasPotions()) {
 						status = "Deposit Inv";
 						ctx.bank.depositInventory();
 						stimer(ctx.backpack.select().count() > 0, 0, 0);
-					} else if (ContainsTannedHides() && !ContainsPotions()) {
+					} else if (hasLeather() && !hasPotions()) {
 						status = "Deposit Inv";
 						ctx.bank.depositInventory();
 						stimer(ctx.backpack.select().count() > 0, 0, 0);
-					} else if (ContainsTannedHides() && ContainsPotions()) {
+					} else if (hasLeather() && hasPotions()) {
 						status = "Deposit Hides";
 						deposit(0, leatherID);
 					}
-				} else {/* Inventory isn't full */
-					if (!BankContainsHides()) {
-						LogOut();
-					} else if (ContainsPotions() && !ContainsHides()
+				} else {/* Not full */
+					if (!bankHasHides()) {
+						logOut();
+					} else if (hasPotions() && !hasHides()
 							&& ctx.backpack.count() > 1) {
 						status = "Reset";
 						ctx.bank.depositInventory();
 						stimer(ctx.backpack.select().count() > 0, 0, 0);
-					} else if (ContainsTannedHides() && ContainsPotions()) {
+					} else if (hasLeather() && hasPotions()) {
 						status = "Deposit Hides";
 						ctx.bank.deposit(IntHardLeatherID, 0);
-					} else if (ContainsTannedHides() && !ContainsPotions()) {
+					} else if (hasLeather() && !hasPotions()) {
 						status = "Deposit Inv";
 						ctx.bank.depositInventory();
 						stimer(ctx.backpack.select().count() > 0, 0, 0);
-					} else if (ctx.backpack.select().count() > 0
-							&& !ContainsHides() && !ContainsPotions()) {
+					} else if (ctx.backpack.select().count() > 0 && !hasHides()
+							&& !hasPotions()) {
 						status = "Deposit Inv";
 						ctx.bank.depositInventory();
 						stimer(ctx.backpack.select().count() > 0, 0, 0);
-					} else if (!ContainsPotions() && !ContainsHides()
-							&& BankContainsPotions()) {
+					} else if (!hasPotions() && !hasHides() && banHasPotions()) {
 						status = "Get Potion";
 						withdraw(1, energyPotionID);
-					} else if (!ContainsHides() && BankContainsHides()) {
+					} else if (!hasHides() && bankHasHides()) {
 						status = "Get Hides";
 						withdraw(0, hideID);
 					}
-					if (ContainsHides()) {
-						HidesLeft = ctx.bank.select().id(hideID).count(true);
-						PotionsLeft = ctx.bank.select().id(energyPotionID)
+					if (hasHides()) {
+						hidesLeft = ctx.bank.select().id(hideID).count(true);
+						potionsLeft = ctx.bank.select().id(energyPotionID)
 								.count(true);
 						status = "Close Bank";
 						ctx.bank.close();
 					}
 				}
 			}
+		} else {
+			status = "Bank Open";
+			ctx.bank.open();
+			while (ctx.players.local().isInMotion())
+				sleep(Random.nextInt(25, 50));
 		}
 	}
 
-	public boolean withdraw(final int count, final int... items) {
-		for (int i : items) {
-			if (ctx.bank.withdraw(i, count)) {
-				System.out.println("Succesfully withdrew all of " + i);
-				break;
-			}
-		}
-		return true;
-	}
-
-	public boolean deposit(final int count, final int... items) {
-		for (int i : items) {
-			if (ctx.bank.deposit(i, count)) {
-				System.out.println("Succesfully deposited all of " + i);
-				break;
-			}
-		}
-		return true;
-	}
-
-	private boolean ContainsPotions() {
+	private boolean hasPotions() {
 		Item Potions = ctx.backpack.select().id(energyPotionID).first()
 				.isEmpty() ? null : ctx.backpack.iterator().next();
 		return ctx.backpack.select().contains(Potions);
 	}
 
-	private boolean ContainsTannedHides() {
+	private boolean hasLeather() {
 		Item TannedHides = ctx.backpack.select().id(leatherID).first()
 				.isEmpty() ? null : ctx.backpack.iterator().next();
 		return ctx.backpack.select().contains(TannedHides);
 	}
 
-	private boolean ContainsHides() {
+	private boolean hasHides() {
 		Item Hides = ctx.backpack.select().id(hideID).first().isEmpty() ? null
 				: ctx.backpack.iterator().next();
 		return ctx.backpack.select().contains(Hides);
 	}
 
-	private boolean BankContainsHides() {
+	public boolean deposit(final int count, final int... items) {
+		for (int i : items) {
+			if (ctx.bank.deposit(i, count)) {
+				break;
+			}
+		}
+		return true;
+	}
+
+	private boolean bankHasHides() {
 		Item Hides = ctx.bank.select().id(hideID).first().isEmpty() ? null
 				: ctx.bank.iterator().next();
-		return ctx.bank.contains(Hides);
+		return ctx.bank.select().contains(Hides);
 	}
 
-	public boolean BankContainsPotions() {
+	public boolean banHasPotions() {
 		Item Potions = ctx.bank.select().id(energyPotionID).first().isEmpty() ? null
 				: ctx.bank.iterator().next();
-		return ctx.bank.contains(Potions);
+		return ctx.bank.select().contains(Potions);
 	}
 
-	public boolean NearBank() {
+	public boolean withdraw(final int count, final int... items) {
+		for (int i : items) {
+			if (ctx.bank.withdraw(i, count)) {
+				break;
+			}
+		}
+		return true;
+	}
+
+	public boolean atBank() {
 		GameObject BankBooth = ctx.objects.select().id(bankBoothID).first()
 				.isEmpty() ? null : ctx.objects.iterator().next();
 		return BankBooth != null && BankBooth.isOnScreen();
@@ -448,25 +436,26 @@ public class rTanner extends PollingScript implements PaintListener {
 		Npc Tanner = ctx.npcs.select().id(tannerID).first().isEmpty() ? null
 				: ctx.npcs.iterator().next();
 		return Tanner != null
+				&& Tanner.isOnScreen()
 				&& ctx.players.local().getLocation()
 						.distanceTo(Tanner.getLocation()) < 6;
 	}
 
-	public boolean InBurthorpe() {
+	public boolean inBurthorpe() {
 		return areaBurthorpe.contains(ctx.players.local().getLocation());
 	}
 
-	public boolean InAlKharid() {
+	public boolean inAlKharid() {
 		return areaAlKharid.contains(ctx.players.local().getLocation());
 	}
 
-	public void DoTanning() {
-		final Npc Tanner = ctx.npcs.select().id(tannerID).first().isEmpty() ? null
+	public void doTanning() {
+		Npc Tanner = ctx.npcs.select().id(tannerID).first().isEmpty() ? null
 				: ctx.npcs.iterator().next();
 		if (Tanner != null && Tanner.isOnScreen()) {
 			status = "Interact";
 			if (!ctx.widgets.get(1370, 20).isVisible()) {
-				InventoryHideCount = ctx.backpack.select().id(hideID).count();
+				backpackHideCount = ctx.backpack.select().id(hideID).count();
 				Tanner.interact("Tan");
 				final Timer InteractTimer = new Timer(3500);
 				while (InteractTimer.isRunning()
@@ -474,31 +463,31 @@ public class rTanner extends PollingScript implements PaintListener {
 					sleep(Random.nextInt(100, 200));
 			} else {
 				if (gotPrices)
-					MembersProfitCalculations();
-				HideCount += InventoryHideCount;
+					calculateMemberProfit();
+				hideCount += backpackHideCount;
 				ctx.widgets.get(1370, 20).interact("Make");
 				final Timer WidgetTimer = new Timer(6500);
 				while (WidgetTimer.isRunning()
-						&& ctx.widgets.get(1370, 20).isValid()
-						&& !ContainsTannedHides())
+						&& ctx.widgets.get(1370, 20).isValid() && !hasLeather())
 					sleep(Random.nextInt(100, 200));
 				if (gotPrices)
-					NonMembersProfitCalculations();
+					calculateFreeProfit();
 			}
 		}
 	}
 
-	private void LogOut() {
+	private void logOut() {
 		status = "Log-out";
 		if (ctx.bank.isOpen()) {
-			if (ctx.backpack.getAllItems().length > 0) {
+			if (ctx.backpack.select().count() > 0) {
 				ctx.bank.depositInventory();
-				stimer(ctx.backpack.getAllItems().length > 0, 0, 0);
+				stimer(ctx.backpack.select().count() > 0, 1600, 1800);
+			} else {
+				ctx.bank.close();
+				ctx.game.logout(false);
+				getController().stop();
 			}
 		}
-		ctx.bank.close();
-		ctx.game.logout(false);
-		getController().stop();
 	}
 
 	private void stimer(boolean wait4, int int1, int int2) {
@@ -512,146 +501,136 @@ public class rTanner extends PollingScript implements PaintListener {
 		}
 	}
 
-	private void MembersProfitCalculations() {
-
-		Item GreenDragonhide = ctx.backpack.select().id(GreenDHideID).first()
-				.isEmpty() ? null : ctx.backpack.iterator().next();
-		Item BlueDragonhide = ctx.backpack.select().id(BlueDHideID).first()
-				.isEmpty() ? null : ctx.backpack.iterator().next();
-		Item RedDragonhide = ctx.backpack.select().id(RedDHideID).first()
-				.isEmpty() ? null : ctx.backpack.iterator().next();
-		Item SnakeSkinhide = ctx.backpack.select().id(snakeSkinhideID).first()
-				.isEmpty() ? null : ctx.backpack.iterator().next();
-		Item SnakeSkinTwohide = ctx.backpack.select().id(SnakeSkinTwohideID)
+	private void calculateMemberProfit() {
+		final Item GreenDragonhide = ctx.backpack.select().id(IntGreenDHideID)
 				.first().isEmpty() ? null : ctx.backpack.iterator().next();
-		Item BlackDragonhide = ctx.backpack.select().id(BlackDHideID).first()
-				.isEmpty() ? null : ctx.backpack.iterator().next();
-		Item RoyalDragonhide = ctx.backpack.select().id(RoyalDHideID).first()
-				.isEmpty() ? null : ctx.backpack.iterator().next();
-
+		final Item BlueDragonhide = ctx.backpack.select().id(IntBlueDHideID)
+				.first().isEmpty() ? null : ctx.backpack.iterator().next();
+		final Item RedDragonhide = ctx.backpack.select().id(IntRedDHideID)
+				.first().isEmpty() ? null : ctx.backpack.iterator().next();
+		final Item SnakeSkinhide = ctx.backpack.select().id(IntSnakeSkinhideID)
+				.first().isEmpty() ? null : ctx.backpack.iterator().next();
+		final Item SnakeSkinTwohide = ctx.backpack.select()
+				.id(IntSnakeSkinTwohideID).first().isEmpty() ? null
+				: ctx.backpack.iterator().next();
+		final Item BlackDragonhide = ctx.backpack.select().id(IntBlackDHideID)
+				.first().isEmpty() ? null : ctx.backpack.iterator().next();
+		final Item RoyalDragonhide = ctx.backpack.select().id(IntRoyalDHideID)
+				.first().isEmpty() ? null : ctx.backpack.iterator().next();
 		if (ctx.backpack.select().contains(GreenDragonhide)) {
-			int GetCount = ctx.backpack.select().id(GreenDHideID).count();
-			Profit = IntGreenDragonLeatherPrice * GetCount - GreenDHidePrice
+			int GetCount = ctx.backpack.select().id(IntGreenDHideID).count();
+			Profit = greenDragonLeatherPrice * GetCount - greenDHidePrice
 					* GetCount;
-			ProfitTotal += Profit;
+			profitTotal += Profit;
 		}
 		if (ctx.backpack.select().contains(BlueDragonhide)) {
-			int GetCount = ctx.backpack.select().id(BlueDHideID).count();
-			Profit = IntBlueDragonLeatherPrice * GetCount - BlueDHidePrice
+			int GetCount = ctx.backpack.select().id(IntBlueDHideID).count();
+			Profit = blueDragonLeatherPrice * GetCount - blueDHidePrice
 					* GetCount;
-			ProfitTotal += Profit;
+			profitTotal += Profit;
 		}
 		if (ctx.backpack.select().contains(RedDragonhide)) {
-			int GetCount = ctx.backpack.select().id(RedDHideID).count();
-			Profit = IntRedDragonLeatherPrice * GetCount - RedDHidePrice
+			int GetCount = ctx.backpack.select().id(IntRedDHideID).count();
+			Profit = redDragonLeatherPrice * GetCount - redDHidePrice
 					* GetCount;
-			ProfitTotal += Profit;
+			profitTotal += Profit;
 		}
 		if (ctx.backpack.select().contains(SnakeSkinhide)) {
-			int GetCount = ctx.backpack.select().id(snakeSkinhideID).count();
-			Profit = -IntTannedSnakeSkinPrice * GetCount - SnakeSkinPrice
-					* GetCount;
-			ProfitTotal += Profit;
+			int GetCount = ctx.backpack.select().id(IntSnakeSkinhideID).count();
+			Profit = -snakeLeatherPrice * GetCount - snakeSkinPrice * GetCount;
+			profitTotal += Profit;
 		}
 		if (ctx.backpack.select().contains(SnakeSkinTwohide)) {
-			int GetCount = ctx.backpack.select().id(SnakeSkinTwohideID).count();
-			Profit = IntTannedSnakeSkinPriceTwo * GetCount - SnakeSkinTwoPrice
+			int GetCount = ctx.backpack.select().id(IntSnakeSkinTwohideID)
+					.count();
+			Profit = swampSnakeLeatherPrice * GetCount - swampSnakeSkinPrice
 					* GetCount;
-			ProfitTotal += Profit;
+			profitTotal += Profit;
 		}
 		if (ctx.backpack.select().contains(BlackDragonhide)) {
-			int GetCount = ctx.backpack.select().id(BlackDHideID).count();
-			Profit = IntBlackDragonLeatherPrice * GetCount - BlackDHidePrice
+			int GetCount = ctx.backpack.select().id(IntBlackDHideID).count();
+			Profit = blackDragonLeatherPrice * GetCount - blackDHidePrice
 					* GetCount;
-			ProfitTotal += Profit;
+			profitTotal += Profit;
 		}
 		if (ctx.backpack.select().contains(RoyalDragonhide)) {
-			int GetCount = ctx.backpack.select().id(RoyalDHideID).count();
-			Profit = IntRoyalDragonLeatherPrice * GetCount - RoyalDHidePrice
+			int GetCount = ctx.backpack.select().id(IntRoyalDHideID).count();
+			Profit = royalDragonLeatherPrice * GetCount - royalDHidePrice
 					* GetCount;
-			ProfitTotal += Profit;
+			profitTotal += Profit;
 		}
 	}
 
-	private void NonMembersProfitCalculations() {
-		Item HardLeather = ctx.backpack.select().id(HardLeatherID).first()
+	private void calculateFreeProfit() {
+		final Item HardLeather = ctx.backpack.select().id(IntHardLeatherID)
+				.first().isEmpty() ? null : ctx.backpack.iterator().next();
+		final Item Leather = ctx.backpack.select().id(IntLeatherID).first()
 				.isEmpty() ? null : ctx.backpack.iterator().next();
-		Item Leather = ctx.backpack.select().id(LeatherID).first().isEmpty() ? null
-				: ctx.backpack.iterator().next();
 		if (ctx.backpack.select().contains(HardLeather)) {
-			int GetHideCount = ctx.backpack.select().id(HardLeatherID).count();
-			Profit = IntHardLeatherPrice * GetHideCount - CowHidePrice
+			int GetHideCount = ctx.backpack.select().id(IntHardLeatherID)
+					.count();
+			Profit = hardLeatherPrice * GetHideCount - cowHidePrice
 					* GetHideCount;
-			ProfitTotal += Profit;
+			profitTotal += Profit;
 		}
 		if (ctx.backpack.select().contains(Leather)) {
-			int GetHideCount = ctx.backpack.select().id(LeatherID).count();
-			Profit = IntLeatherPrice * GetHideCount - CowHidePrice
-					* GetHideCount;
-			ProfitTotal += Profit;
+			int GetHideCount = ctx.backpack.select().id(IntLeatherID).count();
+			Profit = leatherPrice * GetHideCount - cowHidePrice * GetHideCount;
+			profitTotal += Profit;
 		}
 	}
 
-	private void GetPricesFromBank() {
-		Item GreenDragonhide = ctx.bank.select().id(BlueDHideID).first()
-				.isEmpty() ? null : ctx.bank.iterator().next();
-
-		Item BlueDragonhide = ctx.bank.select().id(BlueDHideID).first()
-				.isEmpty() ? null : ctx.bank.iterator().next();
-
-		Item RedDragonhide = ctx.bank.select().id(RedDHideID).first().isEmpty() ? null
-				: ctx.bank.iterator().next();
-
-		Item SnakeSkinhide = ctx.bank.select().id(snakeSkinhideID).first()
-				.isEmpty() ? null : ctx.bank.iterator().next();
-
-		Item SnakeSkinTwohide = ctx.bank.select().id(SnakeSkinTwohideID)
+	private void getBankPrices() {
+		final Item GreenDragonhide = ctx.bank.select().id(IntBlueDHideID)
 				.first().isEmpty() ? null : ctx.bank.iterator().next();
-
-		Item BlackDragonhide = ctx.bank.select().id(BlackDHideID).first()
+		final Item BlueDragonhide = ctx.bank.select().id(IntBlueDHideID)
+				.first().isEmpty() ? null : ctx.bank.iterator().next();
+		final Item RedDragonhide = ctx.bank.select().id(IntRedDHideID).first()
 				.isEmpty() ? null : ctx.bank.iterator().next();
-
-		Item RoyalDragonhide = ctx.bank.select().id(RoyalDHideID).first()
+		final Item SnakeSkinhide = ctx.bank.select().id(IntSnakeSkinhideID)
+				.first().isEmpty() ? null : ctx.bank.iterator().next();
+		final Item SnakeSkinTwohide = ctx.bank.select()
+				.id(IntSnakeSkinTwohideID).first().isEmpty() ? null : ctx.bank
+				.iterator().next();
+		final Item BlackDragonhide = ctx.bank.select().id(IntBlackDHideID)
+				.first().isEmpty() ? null : ctx.bank.iterator().next();
+		final Item RoyalDragonhide = ctx.bank.select().id(IntRoyalDHideID)
+				.first().isEmpty() ? null : ctx.bank.iterator().next();
+		final Item Cowhide = ctx.bank.select().id(IntCowhideID).first()
 				.isEmpty() ? null : ctx.bank.iterator().next();
-
-		Item Cowhide = ctx.bank.select().id(IntCowhideID).first().isEmpty() ? null
-				: ctx.bank.iterator().next();
-
 		status = "Fetching prices...";
 		if (ctx.bank.contains(GreenDragonhide)) {
-			IntGreenDragonLeatherPrice = getGuidePrice(IntGreenDragonLeatherID) - 20;
-			GreenDHidePrice = getGuidePrice(IntGreenDHideID);
+			greenDragonLeatherPrice = getGuidePrice(IntGreenDragonLeatherID) - 20;
+			greenDHidePrice = getGuidePrice(IntGreenDHideID);
 		}
 		if (ctx.bank.contains(BlueDragonhide)) {
-			IntBlueDragonLeatherPrice = getGuidePrice(IntBlueDragonLeatherID) - 20;
-			BlueDHidePrice = getGuidePrice(IntBlueDHideID);
+			blueDragonLeatherPrice = getGuidePrice(IntBlueDragonLeatherID) - 20;
+			blueDHidePrice = getGuidePrice(IntBlueDHideID);
 		}
 		if (ctx.bank.contains(RedDragonhide)) {
-			IntRedDragonLeatherPrice = getGuidePrice(IntRedDragonLeatherID) - 20;
-			RedDHidePrice = getGuidePrice(IntRedDHideID);
+			redDragonLeatherPrice = getGuidePrice(IntRedDragonLeatherID) - 20;
+			redDHidePrice = getGuidePrice(IntRedDHideID);
 		}
 		if (ctx.bank.contains(SnakeSkinhide)) {
-			IntTannedSnakeSkinPrice = getGuidePrice(IntTannedSnakeSkinID) - 15;
-			SnakeSkinPrice = getGuidePrice(IntSnakeSkinhideID);
+			snakeLeatherPrice = getGuidePrice(IntTannedSnakeSkinID) - 15;
+			snakeSkinPrice = getGuidePrice(IntSnakeSkinhideID);
 		}
 		if (ctx.bank.contains(SnakeSkinTwohide)) {
-			IntTannedSnakeSkinPriceTwo = getGuidePrice(IntTannedSnakeSkinIDTwo) - 20;
-			SnakeSkinTwoPrice = getGuidePrice(IntSnakeSkinTwohideID);
+			swampSnakeLeatherPrice = getGuidePrice(IntTannedSnakeSkinIDTwo) - 20;
+			swampSnakeSkinPrice = getGuidePrice(IntSnakeSkinTwohideID);
 		}
 		if (ctx.bank.contains(BlackDragonhide)) {
-			IntBlackDragonLeatherPrice = getGuidePrice(IntBlackDragonLeatherID) - 20;
-			BlackDHidePrice = getGuidePrice(IntBlackDHideID);
-
+			blackDragonLeatherPrice = getGuidePrice(IntBlackDragonLeatherID) - 20;
+			blackDHidePrice = getGuidePrice(IntBlackDHideID);
 		}
 		if (ctx.bank.contains(RoyalDragonhide)) {
-			IntRoyalDragonLeatherPrice = getGuidePrice(IntRoyalDragonLeatherID) - 20;
-			RoyalDHidePrice = getGuidePrice(IntRoyalDHideID);
-
+			royalDragonLeatherPrice = getGuidePrice(IntRoyalDragonLeatherID) - 20;
+			royalDHidePrice = getGuidePrice(IntRoyalDHideID);
 		}
 		if (ctx.bank.contains(Cowhide)) {
-			IntHardLeatherPrice = getGuidePrice(IntHardLeatherID) - 3;
-			IntLeatherPrice = getGuidePrice(IntLeatherID);
-			CowHidePrice = getGuidePrice(IntCowhideID);
+			hardLeatherPrice = getGuidePrice(IntHardLeatherID) - 3;
+			leatherPrice = getGuidePrice(IntLeatherID);
+			cowHidePrice = getGuidePrice(IntCowhideID);
 		}
 	}
 
@@ -663,7 +642,7 @@ public class rTanner extends PollingScript implements PaintListener {
 
 	@Override
 	public void repaint(Graphics g1) {
-		long millis = System.currentTimeMillis() - ElapsedTime;
+		long millis = System.currentTimeMillis() - elapsedTime;
 		long hours = millis / (1000 * 60 * 60);
 		millis -= hours * (1000 * 60 * 60);
 		long minutes = millis / (1000 * 60);
@@ -689,18 +668,18 @@ public class rTanner extends PollingScript implements PaintListener {
 		g.setColor(Color.WHITE);
 		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 110,
 				320);
-		g.drawString("Tanned: " + nf.format(HideCount) + "("
-				+ PerHour(HideCount) + ")", 110, 340);
-		g.drawString("Hides Left: " + nf.format(HidesLeft), 110, 360);
-		g.drawString("Potions Left: " + nf.format(PotionsLeft), 230, 320);
-		g.drawString("User: " + (DisplayName()), 230, 340);
+		g.drawString("Tanned: " + nf.format(hideCount) + "("
+				+ perHour(hideCount) + ")", 110, 340);
+		g.drawString("Hides Left: " + nf.format(hidesLeft), 110, 360);
+		g.drawString("Potions Left: " + nf.format(potionsLeft), 230, 320);
+		g.drawString("User: " + getDisplayName(), 230, 340);
 		g.drawString("Location: " + (location), 230, 360);
-		g.drawString("Profit: " + nf.format(ProfitTotal) + "("
-				+ PerHour(ProfitTotal) + ")", 350, 320);
+		g.drawString("Profit: " + nf.format(profitTotal) + "("
+				+ perHour(profitTotal) + ")", 350, 320);
 		g.drawString("Status: " + (status), 350, 340);
 		g.setFont(FONT_THREE);
 		g.setColor(Color.GREEN);
-		g.drawString("v2.2", 490, 360);
+		g.drawString("v2.3", 490, 360);
 		drawMouse(g);
 	}
 
@@ -714,13 +693,13 @@ public class rTanner extends PollingScript implements PaintListener {
 		trail.draw(g);
 	}
 
-	private static class MouseTrail {
+	private static class mouseTrail {
 		private final static int SIZE = 25;
 
 		private Point[] points;
 		private int index;
 
-		public MouseTrail() {
+		public mouseTrail() {
 			points = new Point[SIZE];
 			index = 0;
 		}
@@ -745,14 +724,13 @@ public class rTanner extends PollingScript implements PaintListener {
 		}
 	}
 
-	
- private String DisplayName() { 
-		return Environment.getDisplayName(); 
+	private String getDisplayName() {
+		return Environment.getDisplayName();
 	}
 
-	public String PerHour(int gained) {
+	public String perHour(int gained) {
 		return formatNumber((int) ((gained) * 3600000D / (System
-				.currentTimeMillis() - ElapsedTime)));
+				.currentTimeMillis() - elapsedTime)));
 	}
 
 	public String formatNumber(int start) {
