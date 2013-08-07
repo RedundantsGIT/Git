@@ -35,7 +35,7 @@ import org.powerbot.script.wrappers.Item;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", website = "http://www.powerbot.org/community/topic/876982-vip-rtanner-all-potions-all-hides-al-kharid-burthorpe/", version = 2.3)
+@Manifest(authors = { "Redundant" }, name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", website = "http://www.powerbot.org/community/topic/876982-vip-rtanner-all-potions-all-hides-al-kharid-burthorpe/", version = 2.4)
 public class rTanner extends PollingScript implements PaintListener {
 	private final RenderingHints antialiasing = new RenderingHints(
 			RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -74,18 +74,14 @@ public class rTanner extends PollingScript implements PaintListener {
 			blueDragonLeatherPrice, blackDragonLeatherPrice,
 			royalDragonLeatherPrice, snakeLeatherPrice, swampSnakeLeatherPrice,
 			Profit;
-	public final Tile[] pathToJack = { new Tile(2892, 3516, 0), new Tile(2889, 3511, 0),
-			new Tile(2887, 3503, 0) };
-
+	public final Tile[] pathToJack = { new Tile(2892, 3516, 0),
+			new Tile(2889, 3511, 0), new Tile(2887, 3503, 0) };
 	public final Tile[] pathToBurthorpeBank = { new Tile(2889, 3511, 0),
 			new Tile(2892, 3516, 0), new Tile(2893, 3529, 0), };
-
 	public final Tile[] pathToEllis = { new Tile(3271, 3167, 0),
 			new Tile(3276, 3180, 0), new Tile(3275, 3195, 0) };
-
-	public final Tile[] pathToAlKharidBank = { new Tile(3276, 3180, 0),
-			new Tile(3271, 3167, 0) };
-
+	public final Tile[] pathToAlKharidBank = { new Tile(3277, 3184, 0),
+			new Tile(3275, 3175, 0), new Tile(3271, 3167, 0) };
 	private final Area areaBurthorpe = new Area(new Tile[] {
 			new Tile(2877, 3540, 0), new Tile(2900, 3540, 0),
 			new Tile(2899, 3479, 0), new Tile(2875, 3479, 0) });
@@ -679,7 +675,7 @@ public class rTanner extends PollingScript implements PaintListener {
 		g.drawString("Status: " + (status), 350, 340);
 		g.setFont(FONT_THREE);
 		g.setColor(Color.GREEN);
-		g.drawString("v2.3", 490, 360);
+		g.drawString("v2.4", 490, 360);
 		drawMouse(g);
 	}
 
