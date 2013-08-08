@@ -11,6 +11,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.URLConnection;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -74,24 +75,18 @@ public class rTanner extends PollingScript implements PaintListener {
 			blueDragonLeatherPrice, blackDragonLeatherPrice,
 			royalDragonLeatherPrice, snakeLeatherPrice, swampSnakeLeatherPrice,
 			Profit;
-
-	
 	public final Tile[] pathToJack = { new Tile(2897, 3520, 0),
 			new Tile(2891, 3514, 0), new Tile(2891, 3507, 0),
-			new Tile(2887, 3502, 0)};
-	
+			new Tile(2887, 3502, 0) };
 	public final Tile[] pathToBurthorpeBank = { new Tile(2891, 3507, 0),
-			new Tile(2891, 3514, 0), new Tile(2897, 3520, 0), 
-			new Tile(2893, 3529, 0)};
-
-	
+			new Tile(2891, 3514, 0), new Tile(2897, 3520, 0),
+			new Tile(2893, 3529, 0) };
 	public final Tile[] pathToEllis = { new Tile(3271, 3167, 0),
 			new Tile(3275, 3173, 0), new Tile(3276, 3178, 0),
 			new Tile(3279, 3185, 0), new Tile(3273, 3195, 0) };
 	public final Tile[] pathToAlKharidBank = { new Tile(3279, 3185, 0),
 			new Tile(3276, 3178, 0), new Tile(3275, 3173, 0),
 			new Tile(3271, 3168, 0) };
-
 	private final Area areaBurthorpe = new Area(new Tile[] {
 			new Tile(2877, 3540, 0), new Tile(2900, 3540, 0),
 			new Tile(2899, 3479, 0), new Tile(2875, 3479, 0) });
@@ -219,11 +214,11 @@ public class rTanner extends PollingScript implements PaintListener {
 			if (EnergyPotion != null) {
 				status = "Use Potion";
 				EnergyPotion.interact("Drink");
-				final Timer potionTimer = new Timer(6500);
+				final Timer potionTimer = new Timer(4500);
 				while (potionTimer.isRunning()
-						&& ctx.movement.getEnergyLevel() < 50)
-					;
-				sleep(Random.nextInt(150, 250));
+						&& ctx.movement.getEnergyLevel() < 50) {
+					sleep(Random.nextInt(150, 250));
+				}
 			}
 		}
 
@@ -340,7 +335,7 @@ public class rTanner extends PollingScript implements PaintListener {
 						status = "Deposit Hides";
 						deposit(0, leatherID);
 					}
-				} else {/* Not full */
+				} else {
 					if (!bankHasHides()) {
 						logOut();
 					} else if (hasPotions() && !hasHides()
@@ -464,8 +459,9 @@ public class rTanner extends PollingScript implements PaintListener {
 				Tanner.interact("Tan");
 				final Timer InteractTimer = new Timer(3500);
 				while (InteractTimer.isRunning()
-						&& !ctx.widgets.get(1370, 40).isValid())
+						&& !ctx.widgets.get(1370, 40).isValid()){
 					sleep(Random.nextInt(100, 200));
+				}
 			} else {
 				if (gotPrices)
 					calculateMemberProfit();
@@ -473,8 +469,9 @@ public class rTanner extends PollingScript implements PaintListener {
 				ctx.widgets.get(1370, 20).interact("Make");
 				final Timer WidgetTimer = new Timer(6500);
 				while (WidgetTimer.isRunning()
-						&& ctx.widgets.get(1370, 20).isValid() && !hasLeather())
+						&& ctx.widgets.get(1370, 20).isValid() && !hasLeather()){
 					sleep(Random.nextInt(100, 200));
+				}
 				if (gotPrices)
 					calculateFreeProfit();
 			}
@@ -758,15 +755,31 @@ public class rTanner extends PollingScript implements PaintListener {
 		}
 	}
 
-	private static int getGuidePrice(final int id) {
-		final String add = "http://scriptwith.us/api/?return=text&item=" + id;
-		try (final BufferedReader in = new BufferedReader(
-				new InputStreamReader(new URL(add).openConnection()
-						.getInputStream()))) {
-			final String line = in.readLine();
-			return Integer.parseInt(line.split("[:]")[1]);
-		} catch (Exception e) {
-			e.printStackTrace();
+	public int getGuidePrice(final int id) {
+		try {
+			String price;
+			final URL url = new URL(
+					"http://www.tip.it/runescape/json/ge_single_item?item="
+							+ id);
+			final URLConnection con = url.openConnection();
+			con.setRequestProperty(
+					"User-Agent",
+					"Mozilla/5.0 "
+							+ "(Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2");
+			final BufferedReader in = new BufferedReader(new InputStreamReader(
+					con.getInputStream()));
+			String line;
+			while ((line = in.readLine()) != null) {
+				if (line.contains("mark_price")) {
+					price = line.substring(line.indexOf("mark_price") + 13,
+							line.indexOf(",\"daily_gp") - 1);
+					price = price.replace(",", "");
+					in.close();
+					return Integer.parseInt(price);
+				}
+			}
+		} catch (final Exception ignored) {
+			return -1;
 		}
 		return -1;
 	}
