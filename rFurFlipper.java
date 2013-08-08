@@ -25,19 +25,12 @@ import org.powerbot.script.methods.MethodProvider;
 import org.powerbot.script.util.Random;
 import org.powerbot.script.util.Timer;
 import org.powerbot.script.wrappers.Component;
-<<<<<<< HEAD
 import org.powerbot.script.wrappers.GameObject;
-=======
->>>>>>> 72f69758ca6636667ccdcaa98ffb7a04b3468f33
 import org.powerbot.script.wrappers.Locatable;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-<<<<<<< HEAD
 @Manifest(authors = { "Redundant" }, name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", version = 0.3, hidden = true)
-=======
-@Manifest(authors = { "Redundant" }, name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", version = 0.4, hidden = true)
->>>>>>> 72f69758ca6636667ccdcaa98ffb7a04b3468f33
 public class rFurFlipper extends PollingScript implements PaintListener,
 		MessageListener {
 	private static Timer timeRan = new Timer(0);
@@ -45,11 +38,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	private static long scriptTimer = 0;
 	private static int furPrice, furBought, furStored;
 	private static int baraekID = 547, furID = 948;
-<<<<<<< HEAD
 	private static int[] boothID = { 782 };
-=======
-	private static int[] bankerID = { 2759, 553 };
->>>>>>> 72f69758ca6636667ccdcaa98ffb7a04b3468f33
 	public final Tile[] pathToBaraek = { new Tile(3189, 3435, 0),
 			new Tile(3197, 3430, 0), new Tile(3206, 3429, 0),
 			new Tile(3216, 3433, 0) };
@@ -186,10 +175,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 					} else if (!canContinue1.isValid()
 							&& !canContinue2.isValid() && !pressOne.isVisible()) {
 						status = "Talk to Baraek";
-<<<<<<< HEAD
 					 mouseMoveSlightly();
-=======
->>>>>>> 72f69758ca6636667ccdcaa98ffb7a04b3468f33
 						baraek.interact("Talk-to", "Baraek");
 						final Timer talkTimer = new Timer(1500);
 						while (talkTimer.isRunning() && !pressOne.isVisible()) {
@@ -248,17 +234,10 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 		@Override
 		public void execute() {
-<<<<<<< HEAD
 			GameObject booth = ctx.objects.select().id(boothID).first()
 					.isEmpty() ? null : ctx.objects.iterator().next();
 			if (nearBank()) {
 				if (booth != null && booth.isOnScreen()) {
-=======
-			Npc Banker = ctx.npcs.select().id(bankerID).first().isEmpty() ? null
-					: ctx.npcs.iterator().next();
-			if (nearBank()) {
-				if (Banker != null && Banker.isOnScreen()) {
->>>>>>> 72f69758ca6636667ccdcaa98ffb7a04b3468f33
 					if (ctx.bank.isOpen()) {
 						status = "Deposit Inventory";
 						ctx.bank.depositInventory();
@@ -283,7 +262,6 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	}
 
 	public boolean nearBaraek() {
-<<<<<<< HEAD
 		for (Npc baraek : ctx.npcs.select().id(baraekID).nearest()) {
 			if (baraek != null
 					&& ctx.players.local().getLocation()
@@ -318,20 +296,6 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			return;
 		}
 		ctx.mouse.move(p);
-=======
-		final Npc Baraek = ctx.npcs.select().id(baraekID).first().isEmpty() ? null
-				: ctx.npcs.iterator().next();
-		return Baraek != null
-				&& ctx.players.local().getLocation()
-						.distanceTo(Baraek.getLocation()) < 6;
-	}
-
-	public boolean nearBank() {
-		final Npc Banker = ctx.npcs.select().id(bankerID).first().isEmpty() ? null
-				: ctx.npcs.iterator().next();
-		return Banker != null && ctx.players.local().getLocation()
-						.distanceTo(Banker.getLocation()) < 4;
->>>>>>> 72f69758ca6636667ccdcaa98ffb7a04b3468f33
 	}
 
 	public void turnTo(final Locatable l) {
