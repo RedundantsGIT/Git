@@ -442,10 +442,6 @@ public class rTanner extends PollingScript implements PaintListener {
 		Npc Tanner = ctx.npcs.select().id(tannerID).first().isEmpty() ? null
 				: ctx.npcs.iterator().next();
 		return Tanner != null
-<<<<<<< HEAD
-=======
-				&& Tanner.isOnScreen()
->>>>>>> 72f69758ca6636667ccdcaa98ffb7a04b3468f33
 				&& ctx.players.local().getLocation()
 						.distanceTo(Tanner.getLocation()) < 6;
 	}
