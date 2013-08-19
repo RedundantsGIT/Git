@@ -237,9 +237,7 @@ public class rTanner extends PollingScript implements PaintListener {
 
 		@Override
 		public boolean activate() {
-			Item Hides = ctx.backpack.select().id(leatherID).first()
-					.isEmpty() ? null : ctx.backpack.iterator().next();
-				return ctx.backpack.select().contains(Hides);
+				return hasHides();
 		}
 
 		@Override
@@ -290,9 +288,7 @@ public class rTanner extends PollingScript implements PaintListener {
 
 		@Override
 		public boolean activate() {
-			Item Hides = ctx.backpack.select().id(leatherID).first()
-					.isEmpty() ? null : ctx.backpack.iterator().next();
-				return !ctx.backpack.select().contains(Hides);
+				return !hasHides();
 		}
 
 		@Override
