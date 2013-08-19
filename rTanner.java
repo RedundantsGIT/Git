@@ -36,7 +36,11 @@ import org.powerbot.script.wrappers.Item;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
+<<<<<<< HEAD
 @Manifest(authors = { "Redundant" }, name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", website = "http://www.powerbot.org/community/topic/876982-vip-rtanner-all-potions-all-hides-al-kharid-burthorpe/", version = 2.5, vip = true)
+=======
+@Manifest(authors = { "Redundant" }, name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", website = "http://www.powerbot.org/community/topic/876982-vip-rtanner-all-potions-all-hides-al-kharid-burthorpe/", version = 2.5)
+>>>>>>> 0d1556341c44bf143b054d2e7df72727005ee60b
 public class rTanner extends PollingScript implements PaintListener {
 	private final RenderingHints antialiasing = new RenderingHints(
 			RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -237,10 +241,14 @@ public class rTanner extends PollingScript implements PaintListener {
 
 		@Override
 		public boolean activate() {
+<<<<<<< HEAD
 			for (Item Hides = ctx.backpack.select().id(leatherID).first()
 					.isEmpty() ? null : ctx.backpack.iterator().next();;) {
 				return ctx.backpack.select().contains(Hides);
 			}
+=======
+			return hasHides();
+>>>>>>> 0d1556341c44bf143b054d2e7df72727005ee60b
 		}
 
 		@Override
@@ -291,10 +299,14 @@ public class rTanner extends PollingScript implements PaintListener {
 
 		@Override
 		public boolean activate() {
+<<<<<<< HEAD
 			for (Item Hides = ctx.backpack.select().id(leatherID).first()
 					.isEmpty() ? null : ctx.backpack.iterator().next();;) {
 				return !ctx.backpack.select().contains(Hides);
 			}
+=======
+			return !hasHides();
+>>>>>>> 0d1556341c44bf143b054d2e7df72727005ee60b
 		}
 
 		@Override
@@ -465,7 +477,11 @@ public class rTanner extends PollingScript implements PaintListener {
 				Tanner.interact("Tan");
 				final Timer InteractTimer = new Timer(3500);
 				while (InteractTimer.isRunning()
+<<<<<<< HEAD
 						&& !ctx.widgets.get(1370, 40).isValid()) {
+=======
+						&& !ctx.widgets.get(1370, 40).isValid()){
+>>>>>>> 0d1556341c44bf143b054d2e7df72727005ee60b
 					sleep(Random.nextInt(100, 200));
 				}
 			} else {
@@ -475,7 +491,11 @@ public class rTanner extends PollingScript implements PaintListener {
 				ctx.widgets.get(1370, 20).interact("Make");
 				final Timer WidgetTimer = new Timer(6500);
 				while (WidgetTimer.isRunning()
+<<<<<<< HEAD
 						&& ctx.widgets.get(1370, 20).isValid() && !hasLeather()) {
+=======
+						&& ctx.widgets.get(1370, 20).isValid() && !hasLeather()){
+>>>>>>> 0d1556341c44bf143b054d2e7df72727005ee60b
 					sleep(Random.nextInt(100, 200));
 				}
 				if (gotPrices)
