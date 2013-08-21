@@ -28,7 +28,7 @@ import org.powerbot.script.wrappers.GameObject;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rOakChopper", description = "Chops oak trees at the Grand Exchange", version = 0.1, hidden = true)
+@Manifest(authors = { "Redundant" }, name = "rOakChopper", description = "Chops oak trees at the Grand Exchange", version = 0.1, hidden = true, instances = 30)
 public class rOakChopper extends PollingScript implements PaintListener,
 		MessageListener {
 	public long elapsedTime = 0;
