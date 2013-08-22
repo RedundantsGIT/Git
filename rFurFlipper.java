@@ -30,7 +30,7 @@ import org.powerbot.script.wrappers.Locatable;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", version = 0.3, hidden = true)
+@Manifest(authors = { "Redundant" }, name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", version = 0.4, hidden = true)
 public class rFurFlipper extends PollingScript implements PaintListener,
 		MessageListener {
 	private static Timer timeRan = new Timer(0);
@@ -171,15 +171,15 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 						getController().stop();
 					} else if (!baraek.isOnScreen()
 							&& !ctx.players.local().isInMotion()) {
-						turnTo(baraek.getLocation());
+						ctx.movement.stepTowards(ctx.movement.getClosestOnMap(baraek.getLocation()));
 					} else if (!canContinue1.isValid()
 							&& !canContinue2.isValid() && !pressOne.isVisible()) {
 						status = "Talk to Baraek";
 					 mouseMoveSlightly();
 						baraek.interact("Talk-to", "Baraek");
-						final Timer talkTimer = new Timer(1500);
+						final Timer talkTimer = new Timer(1600);
 						while (talkTimer.isRunning() && !pressOne.isVisible()) {
-							sleep(25, 50);
+							sleep(50, 100);
 						}
 						while (ctx.players.local().isInMotion()) {
 							sleep(50, 150);
