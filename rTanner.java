@@ -36,7 +36,7 @@ import org.powerbot.script.wrappers.Item;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", website = "http://www.powerbot.org/community/topic/876982-vip-rtanner-all-potions-all-hides-al-kharid-burthorpe/", version = 2.6, vip = true, instances = 30)
+@Manifest(authors = { "Redundant" }, name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", website = "http://www.powerbot.org/community/topic/876982-vip-rtanner-all-potions-all-hides-al-kharid-burthorpe/", version = 2.7, vip = true, instances = 30)
 public class rTanner extends PollingScript implements PaintListener {
 	private final RenderingHints antialiasing = new RenderingHints(
 			RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -209,7 +209,7 @@ public class rTanner extends PollingScript implements PaintListener {
 
 		@Override
 		public void execute() {
-			final Item EnergyPotion = ctx.backpack.select().id(energyPotionID)
+			Item EnergyPotion = ctx.backpack.select().id(energyPotionID)
 					.first().isEmpty() ? null : ctx.backpack.iterator().next();
 			if (EnergyPotion != null) {
 				status = "Use Potion";
@@ -463,8 +463,8 @@ public class rTanner extends PollingScript implements PaintListener {
 					sleep(Random.nextInt(100, 200));
 				}
 			} else {
-				if (gotPrices)
-					calculateMemberProfit();
+				if(gotPrices)
+				calculateMemberProfit();
 				hideCount += backpackHideCount;
 				ctx.widgets.get(1370, 20).interact("Make");
 				final Timer WidgetTimer = new Timer(6500);
@@ -472,8 +472,10 @@ public class rTanner extends PollingScript implements PaintListener {
 						&& ctx.widgets.get(1370, 20).isValid() && !hasLeather()) {
 					sleep(Random.nextInt(100, 200));
 				}
-				if (gotPrices)
-					calculateFreeProfit();
+				if (ctx.widgets.get(1370, 30).isVisible())
+					ctx.widgets.get(1370, 30).click(true);
+				if(gotPrices)
+				calculateFreeProfit();
 			}
 		}
 	}
@@ -681,7 +683,7 @@ public class rTanner extends PollingScript implements PaintListener {
 		g.drawString("Status: " + (status), 350, 340);
 		g.setFont(FONT_THREE);
 		g.setColor(Color.GREEN);
-		g.drawString("v2.6", 490, 360);
+		g.drawString("v2.7", 490, 360);
 		drawMouse(g);
 	}
 
