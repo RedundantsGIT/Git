@@ -467,7 +467,7 @@ public class rTanner extends PollingScript implements PaintListener {
 				calculateMemberProfit();
 				hideCount += backpackHideCount;
 				ctx.widgets.get(1370, 20).interact("Make");
-				final Timer WidgetTimer = new Timer(6500);
+				final Timer WidgetTimer = new Timer(5000);
 				while (WidgetTimer.isRunning()
 						&& ctx.widgets.get(1370, 20).isValid() && !hasLeather()) {
 					sleep(Random.nextInt(100, 200));
