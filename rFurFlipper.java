@@ -7,6 +7,7 @@ import java.awt.Point;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.URLConnection;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ import org.powerbot.script.wrappers.Locatable;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", version = 0.4, hidden = true)
+@Manifest(authors = { "Redundant" }, name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", version = 0.5, hidden = true, instances = 35)
 public class rFurFlipper extends PollingScript implements PaintListener,
 		MessageListener {
 	private static Timer timeRan = new Timer(0);
@@ -171,12 +172,14 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 						getController().stop();
 					} else if (!baraek.isOnScreen()
 							&& !ctx.players.local().isInMotion()) {
-						ctx.movement.stepTowards(ctx.movement.getClosestOnMap(baraek.getLocation()));
+						ctx.movement.stepTowards(ctx.movement
+								.getClosestOnMap(baraek.getLocation()));
 					} else if (!canContinue1.isValid()
 							&& !canContinue2.isValid() && !pressOne.isVisible()) {
 						status = "Talk to Baraek";
-					 mouseMoveSlightly();
+						mouseMoveSlightly();
 						baraek.interact("Talk-to", "Baraek");
+						mouseMoveSlightly();
 						final Timer talkTimer = new Timer(1600);
 						while (talkTimer.isRunning() && !pressOne.isVisible()) {
 							sleep(50, 100);
@@ -250,8 +253,10 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 						status = "Bank Close";
 						ctx.bank.close();
 					} else {
-						status = "Bank Open";
-						ctx.bank.open();
+						if (!ctx.players.local().isInMotion()) {
+							ctx.bank.open();
+							status = "Bank Open";
+						}
 					}
 				}
 			} else {
@@ -282,7 +287,6 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		}
 		return false;
 	}
-	
 
 	public void mouseMoveSlightly() {
 		Point p = new Point(
@@ -395,16 +399,33 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 	}
 
-	private static int getGuidePrice(final int id) {
-		final String add = "http://scriptwith.us/api/?return=text&item=" + id;
-		try (final BufferedReader in = new BufferedReader(
-				new InputStreamReader(new URL(add).openConnection()
-						.getInputStream()))) {
-			final String line = in.readLine();
-			return Integer.parseInt(line.split("[:]")[1]);
-		} catch (Exception e) {
-			e.printStackTrace();
+	public static int getGuidePrice(final int id) {
+		try {
+			String price;
+			final URL url = new URL(
+					"http://www.tip.it/runescape/json/ge_single_item?item="
+							+ id);
+			final URLConnection con = url.openConnection();
+			con.setRequestProperty(
+					"User-Agent",
+					"Mozilla/5.0 "
+							+ "(Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2");
+			final BufferedReader in = new BufferedReader(new InputStreamReader(
+					con.getInputStream()));
+			String line;
+			while ((line = in.readLine()) != null) {
+				if (line.contains("mark_price")) {
+					price = line.substring(line.indexOf("mark_price") + 13,
+							line.indexOf(",\"daily_gp") - 1);
+					price = price.replace(",", "");
+					in.close();
+					return Integer.parseInt(price);
+				}
+			}
+		} catch (final Exception ignored) {
+			return -1;
 		}
 		return -1;
 	}
+
 }
