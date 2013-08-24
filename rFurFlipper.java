@@ -265,6 +265,22 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		}
 	}
 
+	private static final int[][] CONTINUES = { { 1189, 11 }, { 1184, 13 },
+			{ 1186, 6 }, { 1191, 12 } };
+
+	public Component getContinue() {
+		for (int[] i : CONTINUES) {
+			Component c = ctx.widgets.get(i[0], i[1]);
+			if (c != null && c.isValid())
+				return c;
+		}
+		return null;
+	}
+
+	public boolean canContinue() {
+		return getContinue() != null;
+	}
+
 	public boolean nearBaraek() {
 		for (Npc baraek : ctx.npcs.select().id(baraekID).nearest()) {
 			if (baraek != null
@@ -299,23 +315,6 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			return;
 		}
 		ctx.mouse.move(p);
-	}
-
-	public void turnTo(final Locatable l) {
-		int turnAngle = ctx.camera.getAngleTo(l.getLocation().getPlane()
-				+ Random.nextInt(-40, 40));
-		int distance = (int) ctx.players.local().getLocation().distanceTo(l);
-		int xl = (int) (turnAngle * 2.86);
-		int yl = (int) ((125 - ctx.getClient().getCameraPitch()
-				- Random.nextInt(18, 28) - distance * 5.11) * 2.55);
-		Point p1 = new Point(xl > 0 ? Random.nextInt(20, 500 - Math.abs(xl))
-				: Random.nextInt(20 + Math.abs(xl), 500),
-				yl > 0 ? Random.nextInt(100, 360 - Math.abs(yl)) : Random
-						.nextInt(100 + Math.abs(yl), 360));
-		Point p2 = new Point(xl > 0 ? (int) p1.getX() + Math.abs(xl)
-				: (int) p1.getX() - Math.abs(xl), yl > 0 ? (int) p1.getY()
-				+ Math.abs(yl) : (int) p1.getY() - Math.abs(yl));
-		ctx.mouse.drag(p1, p2, 2);
 	}
 
 	@Override
