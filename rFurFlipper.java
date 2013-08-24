@@ -38,11 +38,10 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	private static String status = "Starting...";
 	private static long scriptTimer = 0;
 	private static int furPrice, furBought, furStored;
-	private static int baraekID = 547, furID = 948;
-	private static int[] boothID = { 782 };
-	public final Tile[] pathToBaraek = { new Tile(3189, 3435, 0),
-			new Tile(3197, 3430, 0), new Tile(3206, 3429, 0),
-			new Tile(3216, 3433, 0) };
+	private static int baraekID = 547, furID = 948, boothID = 782;
+	private static final Tile[] pathToBaraek = { new Tile(3189, 3434, 0),
+			new Tile(3198, 3429, 0), new Tile(3207, 3429, 0),
+			new Tile(3217, 3434, 0) };
 
 	public JobContainer container;
 
@@ -182,7 +181,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 						mouseMoveSlightly();
 						final Timer talkTimer = new Timer(1600);
 						while (talkTimer.isRunning() && !pressOne.isVisible()) {
-							sleep(50, 100);
+							sleep(100, 500);
 						}
 						while (ctx.players.local().isInMotion()) {
 							sleep(50, 150);
@@ -193,7 +192,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 						ctx.keyboard.send("1");
 						final Timer pressTimer = new Timer(1500);
 						while (pressTimer.isRunning() && pressOne.isVisible()) {
-							sleep(25, 50);
+							sleep(100, 500);
 						}
 					} else if (canContinue1.isValid()) {
 						status = "Press Spacebar";
@@ -201,7 +200,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 						ctx.keyboard.send(" ");
 						final Timer pressTimer = new Timer(1500);
 						while (pressTimer.isRunning() && canContinue1.isValid()) {
-							sleep(25, 50);
+							sleep(100, 500);
 						}
 					} else {
 						status = "Press Spacebar";
@@ -210,7 +209,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 						final Timer pressTimer = new Timer(1500);
 						while (pressTimer.isRunning()
 								&& canContinue2.isVisible()) {
-							sleep(25, 50);
+							sleep(100, 500);
 						}
 					}
 				}
@@ -244,10 +243,10 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 					if (ctx.bank.isOpen()) {
 						status = "Deposit Inventory";
 						ctx.bank.depositInventory();
-						final Timer depositTimer = new Timer(1700);
+						final Timer depositTimer = new Timer(1800);
 						while (depositTimer.isRunning()
 								&& ctx.backpack.select().count() == 28) {
-							sleep(Random.nextInt(150, 250));
+							sleep(Random.nextInt(100, 650));
 						}
 						furStored = ctx.bank.select().id(furID).count(true);
 						status = "Bank Close";
