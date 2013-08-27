@@ -394,13 +394,13 @@ public class rTanner extends PollingScript implements PaintListener {
 	}
 
 	private void walkingPath() {
-		final Tile[] pathToJack1 = { new Tile(2893, 3528),
+		final Tile[] pathToJack1 = { new Tile(2893, 3529),
 				new Tile(2894, 3517, 0), new Tile(2889, 3511, 0),
 				new Tile(2888, 3502, 0) };
-		final Tile[] pathToJack2 = { new Tile(2893, 3528),
+		final Tile[] pathToJack2 = { new Tile(2893, 3529),
 				new Tile(2890, 3516, 0), new Tile(2889, 3510, 0),
 				new Tile(2887, 3502, 0), new Tile(2888, 3502, 0) };
-		final Tile[] pathToJack3 = { new Tile(2893, 3528, 0),
+		final Tile[] pathToJack3 = { new Tile(2893, 3529, 0),
 				new Tile(2896, 3519, 0), new Tile(2890, 3513, 0),
 				new Tile(2888, 3501, 0) };
 		final Tile[] pathToEllis1 = { new Tile(3271, 3168),
