@@ -26,8 +26,6 @@ import org.powerbot.script.methods.MethodProvider;
 import org.powerbot.script.util.Random;
 import org.powerbot.script.util.Timer;
 import org.powerbot.script.wrappers.Component;
-import org.powerbot.script.wrappers.GameObject;
-import org.powerbot.script.wrappers.Locatable;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
@@ -40,7 +38,8 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	private static String status = "Starting...";
 	private static long scriptTimer = 0;
 	private static int furPrice, furBought, furStored;
-	private static int baraekID = 547, furID = 948, boothID = 782;
+	private static int baraekID = 547, furID = 948;
+	private static int bankerID [] = { 553, 2759 };
 	private static boolean path1 = false;
 	private static boolean path2 = false;
 	private static boolean path3 = false;
@@ -178,14 +177,14 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 						ctx.keyboard.send(" ");
 						final Timer pressTimer = new Timer(Random.nextInt(1500, 1800));
 						while (pressTimer.isRunning() && canContinue()) {
-							sleep(5, 500);
+							sleep(5, 250);
 						}
 					} else if (pressOne.isValid()) {
 						status = "Press 1";
 						ctx.keyboard.send("1");
 						final Timer pressTimer = new Timer(Random.nextInt(1500, 1800));
 						while (pressTimer.isRunning() && pressOne.isVisible()) {
-							sleep(5, 500);
+							sleep(5, 250);
 						}
 					} else {
 						status = "Talk to Baraek";
@@ -200,7 +199,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 						}
 						final Timer talkTimer = new Timer(Random.nextInt(1800, 2000));
 						while (talkTimer.isRunning() && !pressOne.isVisible()) {
-							sleep(5, 500);
+							sleep(5, 250);
 						}
 						while (ctx.players.local().isInMotion()) {
 							sleep(25, 300);
@@ -230,10 +229,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 		@Override
 		public void execute() {
-			GameObject booth = ctx.objects.select().id(boothID).first()
-					.isEmpty() ? null : ctx.objects.iterator().next();
 			if (nearBank()) {
-				if (booth != null && booth.isOnScreen()) {
 					if (ctx.bank.isOpen()) {
 						status = "Deposit Inventory";
 						ctx.bank.depositInventory();
@@ -252,7 +248,6 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 							status = "Bank Open";
 						}
 					}
-				}
 			} else {
 				status = "Walk to Banker";
 				WalkingPath();
@@ -338,22 +333,6 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		return getContinue() != null;
 	}
 
-	public void turnTo(final Locatable l) {
-		int turnAngle = ctx.camera.getAngleTo(l.getLocation().getPlane());
-		int distance = (int) ctx.players.local().getLocation().distanceTo(l);
-		int xl = (int) (turnAngle * 4.00);
-		int yl = (int) ((125 - ctx.getClient().getCameraPitch()
-				- Random.nextInt(18, 28) - distance * 1.25) * 1.25);
-		Point p1 = new Point(xl > 0 ? Random.nextInt(20, 500 - Math.abs(xl))
-				: Random.nextInt(20 + Math.abs(xl), 500),
-				yl > 0 ? Random.nextInt(100, 360 - Math.abs(yl)) : Random
-						.nextInt(100 + Math.abs(yl), 360));
-		Point p2 = new Point(xl > 0 ? (int) p1.getX() + Math.abs(xl)
-				: (int) p1.getX() - Math.abs(xl), yl > 0 ? (int) p1.getY()
-				+ Math.abs(yl) : (int) p1.getY() - Math.abs(yl));
-		ctx.mouse.drag(p1, p2, 2);
-	}
-
 	public boolean nearBaraek() {
 		for (Npc baraek : ctx.npcs.select().id(baraekID).nearest()) {
 			if (baraek != null
@@ -366,10 +345,10 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	}
 
 	public boolean nearBank() {
-		for (GameObject booth : ctx.objects.select().id(boothID).nearest()) {
-			if (booth != null
+		for (Npc banker : ctx.npcs.select().id(bankerID).nearest()) {
+			if (banker != null
 					&& ctx.players.local().getLocation()
-							.distanceTo(booth.getLocation()) < 4) {
+							.distanceTo(banker.getLocation()) < 6) {
 				return true;
 			}
 		}
@@ -470,33 +449,29 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 	}
 
-	public static int getGuidePrice(final int id) {
+	public int getGuidePrice(int itemId) {
 		try {
-			String price;
-			final URL url = new URL(
+			final URL website = new URL(
 					"http://www.tip.it/runescape/json/ge_single_item?item="
-							+ id);
-			final URLConnection con = url.openConnection();
-			con.setRequestProperty(
+							+ itemId);
+
+			final URLConnection conn = website.openConnection();
+			conn.addRequestProperty(
 					"User-Agent",
-					"Mozilla/5.0 "
-							+ "(Macintosh; U; Intel Mac OS X 10.4; en-US; rv:1.9.2.2) Gecko/20100316 Firefox/3.6.2");
-			final BufferedReader in = new BufferedReader(new InputStreamReader(
-					con.getInputStream()));
-			String line;
-			while ((line = in.readLine()) != null) {
-				if (line.contains("mark_price")) {
-					price = line.substring(line.indexOf("mark_price") + 13,
-							line.indexOf(",\"daily_gp") - 1);
-					price = price.replace(",", "");
-					in.close();
-					return Integer.parseInt(price);
-				}
-			}
-		} catch (final Exception ignored) {
+					"Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1547.57 Safari/537.36");
+			conn.setRequestProperty("Connection", "close");
+
+			final BufferedReader br = new BufferedReader(new InputStreamReader(
+					conn.getInputStream()));
+			final String json = br.readLine();
+
+			return Integer.parseInt(json.substring(
+					json.indexOf("mark_price") + 13,
+					json.indexOf(",\"daily_gp") - 1).replaceAll(",", ""));
+		} catch (Exception a) {
+			System.out.println("Error looking up price for item: " + itemId);
 			return -1;
 		}
-		return -1;
 	}
 
 }

@@ -6,6 +6,7 @@ import java.awt.Graphics;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.URLConnection;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -159,9 +160,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 	public boolean atBanker() {
 		for (Npc banker : ctx.npcs.select().id(bankerID).nearest()) {
 			if (banker != null
-					&& ctx.players.local().getLocation()
-							.distanceTo(banker.getLocation()) < 6) {
-				ctx.camera.turnTo(banker.getLocation());
+					&& banker.isOnScreen()) {
 				return true;
 			}
 		}
@@ -197,7 +196,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 							} else {
 								if (oakArea.contains(oak.getLocation())) {
 									status = "Turn Camera";
-									ctx.camera.turnTo(oak.getLocation());
+									ctx.movement.stepTowards(ctx.movement.getClosestOnMap(oak.getLocation()));
 								} else {
 									sleep(Random.nextInt(100, 300));
 								}
@@ -249,20 +248,6 @@ public class rOakChopper extends PollingScript implements PaintListener,
 		return "" + start;
 	}
 	
-
-	private static int getGuidePrice(final int id) {
-		final String add = "http://scriptwith.us/api/?return=text&item=" + id;
-		try (final BufferedReader in = new BufferedReader(
-				new InputStreamReader(new URL(add).openConnection()
-						.getInputStream()))) {
-			final String line = in.readLine();
-			return Integer.parseInt(line.split("[:]")[1]);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return -1;
-	}
-
 	final static Color black = new Color(25, 0, 0, 200);
 	final static Font font = new Font("Times New Roman", 0, 13);
 	final static Font fontTwo = new Font("Arial", 1, 12);
@@ -318,5 +303,30 @@ public class rOakChopper extends PollingScript implements PaintListener,
 		g.drawLine((int) (ctx.mouse.getLocation().getX()), 0,
 				(int) (ctx.mouse.getLocation().getX()), 800);
 
+	}
+	
+	public int getGuidePrice(int itemId) {
+		try {
+			final URL website = new URL(
+					"http://www.tip.it/runescape/json/ge_single_item?item="
+							+ itemId);
+
+			final URLConnection conn = website.openConnection();
+			conn.addRequestProperty(
+					"User-Agent",
+					"Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1547.57 Safari/537.36");
+			conn.setRequestProperty("Connection", "close");
+
+			final BufferedReader br = new BufferedReader(new InputStreamReader(
+					conn.getInputStream()));
+			final String json = br.readLine();
+
+			return Integer.parseInt(json.substring(
+					json.indexOf("mark_price") + 13,
+					json.indexOf(",\"daily_gp") - 1).replaceAll(",", ""));
+		} catch (Exception a) {
+			System.out.println("Error looking up price for item: " + itemId);
+			return -1;
+		}
 	}
 }
