@@ -50,6 +50,9 @@ public class rTanner extends PollingScript implements PaintListener {
 	private static boolean gotPrices = false;
 	private static boolean atBurthorpe = false;
 	private static boolean atAlKharid = false;
+	private static boolean path1 = false;
+	private static boolean path2 = false;
+	private static boolean path3 = false;
 	private static final int[] leatherID = { 1741, 1743, 1745, 2505, 24374,
 			6289, 2507, 2509 }, bankBoothID = { 76274, 42192 }, tannerID = {
 			14877, 2824 }, hideID = { 1739, 1753, 1751, 24372, 6287, 7801,
@@ -74,12 +77,6 @@ public class rTanner extends PollingScript implements PaintListener {
 			blueDragonLeatherPrice, blackDragonLeatherPrice,
 			royalDragonLeatherPrice, snakeLeatherPrice, swampSnakeLeatherPrice,
 			Profit;
-	private static final Tile[] pathToJack = { new Tile(2893, 3529),
-			new Tile(2894, 3517, 0), new Tile(2889, 3511, 0),
-			new Tile(2888, 3502, 0) };
-	private static final Tile[] pathToEllis = { new Tile(3271, 3168),
-			new Tile(3276, 3179, 0), new Tile(3279, 3185, 0),
-			new Tile(3272, 3195, 0) };
 	private static final Area areaBurthorpe = new Area(new Tile[] {
 			new Tile(2877, 3540, 0), new Tile(2900, 3540, 0),
 			new Tile(2899, 3479, 0), new Tile(2875, 3479, 0) });
@@ -91,6 +88,7 @@ public class rTanner extends PollingScript implements PaintListener {
 
 	@Override
 	public void start() {
+		path1 = true;
 		elapsedTime = System.currentTimeMillis();
 		this.container = new JobContainer(new Job[] { new Camera(ctx),
 				new GetPlayerArea(ctx), new UseEnergyPotion(ctx), new Tan(ctx),
@@ -272,7 +270,7 @@ public class rTanner extends PollingScript implements PaintListener {
 						tanHides();
 					} else {
 						status = "Walk to Jack";
-						ctx.movement.newTilePath(pathToJack).traverse();
+						walkingPath();
 					}
 				} else {
 					if (atAlKharid) {
@@ -280,7 +278,7 @@ public class rTanner extends PollingScript implements PaintListener {
 							tanHides();
 						} else {
 							status = "Walk to Ellis";
-							ctx.movement.newTilePath(pathToEllis).traverse();
+							walkingPath();
 						}
 					}
 				}
@@ -306,15 +304,14 @@ public class rTanner extends PollingScript implements PaintListener {
 				if (atBank()) {
 					doBanking();
 				} else {
-					ctx.movement.newTilePath(pathToJack).reverse().traverse();
+					walkingPath();
 				}
 			} else {
 				if (atAlKharid) {
 					if (atBank()) {
 						doBanking();
 					} else {
-						ctx.movement.newTilePath(pathToEllis).reverse()
-								.traverse();
+						walkingPath();
 					}
 				}
 			}
@@ -376,6 +373,7 @@ public class rTanner extends PollingScript implements PaintListener {
 						potionsLeft = ctx.bank.select().id(energyPotionID)
 								.count(true);
 						status = "Close Bank";
+						switchPath();
 						ctx.bank.close();
 					}
 				}
@@ -486,10 +484,10 @@ public class rTanner extends PollingScript implements PaintListener {
 				calculateMemberProfit();
 				hideCount += backpackHideCount;
 				Make.interact("Make");
-				final Timer WidgetTimer = new Timer(4000);
-				while (WidgetTimer.isRunning()
-						&& ctx.widgets.get(1370, 20).isValid() && !hasLeather()) {
-					sleep(Random.nextInt(100, 200));
+				final Timer WidgetTimer = new Timer(5000);
+				while (WidgetTimer.isRunning() && Make.isValid()
+						&& !hasLeather()) {
+					sleep(Random.nextInt(200, 350));
 				}
 				if (CloseButton.isVisible()) {
 					CloseButton.interact("Close");
@@ -540,6 +538,105 @@ public class rTanner extends PollingScript implements PaintListener {
 		wait = new Timer(Random.nextInt(int1, int2));
 		while (wait.isRunning() && wait4) {
 			sleep(Random.nextInt(25, 50));
+		}
+	}
+
+	private void walkingPath() {
+		final Tile[] pathToJack1 = { new Tile(2893, 3529),
+				new Tile(2891, 3514, 0), new Tile(2889, 3510, 0),
+				new Tile(2887, 3502) };
+		final Tile[] pathToJack2 = { new Tile(2893, 3529),
+				new Tile(2890, 3516, 0), new Tile(2889, 3510, 0),
+				new Tile(2887, 3502, 0), new Tile(2888, 3502, 0) };
+		final Tile[] pathToJack3 = { new Tile(2893, 3529, 0),
+				new Tile(2896, 3519, 0), new Tile(2890, 3513, 0),
+				new Tile(2888, 3501, 0) };
+		final Tile[] pathToEllis1 = { new Tile(3271, 3168),
+				new Tile(3276, 3179, 0), new Tile(3279, 3185, 0),
+				new Tile(3272, 3195, 0) };
+		final Tile[] pathToEllis2 = { new Tile(3270, 3168),
+				new Tile(3275, 3181, 0), new Tile(3280, 3187, 0),
+				new Tile(3274, 3194, 0) };
+		final Tile[] pathToEllis3 = { new Tile(3272, 3168, 0),
+				new Tile(3276, 3180, 0), new Tile(3274, 3195, 0) };
+		if (atBurthorpe) {
+			if (!ctx.players.local().isInMotion()
+					|| ctx.players.local().getLocation()
+							.distanceTo(ctx.movement.getDestination()) < Random
+							.nextInt(6, 7)) {
+				if (path1) {
+					log.info("Path1");
+					if (hasHide()) {
+						ctx.movement.newTilePath(pathToJack1).traverse();
+					} else {
+						ctx.movement.newTilePath(pathToJack1).reverse()
+								.traverse();
+					}
+				} else if (path2) {
+					log.info("Path2");
+					if (hasHide()) {
+						ctx.movement.newTilePath(pathToJack2).traverse();
+					} else {
+						ctx.movement.newTilePath(pathToJack2).reverse()
+								.traverse();
+					}
+				} else if (path3) {
+					log.info("Path3");
+					if (hasHide()) {
+						ctx.movement.newTilePath(pathToJack3).traverse();
+					} else {
+						ctx.movement.newTilePath(pathToJack3).reverse()
+								.traverse();
+					}
+				}
+			}
+		} else {
+			if (atAlKharid) {
+				if (!ctx.players.local().isInMotion()
+						|| ctx.players.local().getLocation()
+								.distanceTo(ctx.movement.getDestination()) < Random
+								.nextInt(6, 7)) {
+					if (path1) {
+						log.info("Path1");
+						if (hasHide()) {
+							ctx.movement.newTilePath(pathToEllis1).traverse();
+						} else {
+							ctx.movement.newTilePath(pathToEllis1).reverse()
+									.traverse();
+						}
+					} else if (path2) {
+						log.info("Path2");
+						if (hasHide()) {
+							ctx.movement.newTilePath(pathToEllis2).traverse();
+						} else {
+							ctx.movement.newTilePath(pathToEllis2).reverse()
+									.traverse();
+						}
+					} else if (path3) {
+						log.info("Path3");
+						if (hasHide()) {
+							ctx.movement.newTilePath(pathToEllis3).traverse();
+						} else {
+							ctx.movement.newTilePath(pathToEllis3).reverse()
+									.traverse();
+						}
+					}
+				}
+			}
+
+		}
+	}
+
+	private void switchPath() {
+		if (path1) {
+			path1 = false;
+			path2 = true;
+		} else if (path2) {
+			path2 = false;
+			path3 = true;
+		} else if (path3) {
+			path3 = false;
+			path1 = true;
 		}
 	}
 
