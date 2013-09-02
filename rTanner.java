@@ -196,7 +196,7 @@ public class rTanner extends PollingScript implements PaintListener {
 
 		@Override
 		public void execute() {
-			ctx.camera.setPitch(Random.nextInt(75, 85));
+			ctx.camera.setPitch(Random.nextInt(71, 80));
 		}
 	}
 
