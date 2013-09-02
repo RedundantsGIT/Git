@@ -367,14 +367,10 @@ public class rTanner extends PollingScript implements PaintListener {
 					} else if (!hasHide() && bankHasHide()) {
 						status = "Get Hides";
 						withdraw(0, hideID);
-					}
-					if (hasHide()) {
 						hidesLeft = ctx.bank.select().id(hideID).count(true);
 						potionsLeft = ctx.bank.select().id(energyPotionID)
 								.count(true);
-						status = "Close Bank";
 						switchPath();
-						ctx.bank.close();
 					}
 				}
 			}
@@ -484,10 +480,10 @@ public class rTanner extends PollingScript implements PaintListener {
 				calculateMemberProfit();
 				hideCount += backpackHideCount;
 				Make.interact("Make");
-				final Timer WidgetTimer = new Timer(5500);
+				final Timer WidgetTimer = new Timer(5600);
 				while (WidgetTimer.isRunning() && Make.isValid()
 						&& !hasLeather()) {
-					sleep(Random.nextInt(250, 450));
+					sleep(Random.nextInt(300, 500));
 				}
 				if (CloseButton.isVisible()) {
 					CloseButton.interact("Close");
@@ -559,39 +555,10 @@ public class rTanner extends PollingScript implements PaintListener {
 				new Tile(3274, 3194, 0) };
 		final Tile[] pathToEllis3 = { new Tile(3272, 3168, 0),
 				new Tile(3276, 3180, 0), new Tile(3274, 3195, 0) };
-		if (atBurthorpe) {
-			if (!ctx.players.local().isInMotion()
-					|| ctx.players.local().getLocation()
-							.distanceTo(ctx.movement.getDestination()) < Random
-							.nextInt(6, 7)) {
-				if (path1) {
-					log.info("Path1");
-					if (hasHide()) {
-						ctx.movement.newTilePath(pathToJack1).traverse();
-					} else {
-						ctx.movement.newTilePath(pathToJack1).reverse()
-								.traverse();
-					}
-				} else if (path2) {
-					log.info("Path2");
-					if (hasHide()) {
-						ctx.movement.newTilePath(pathToJack2).traverse();
-					} else {
-						ctx.movement.newTilePath(pathToJack2).reverse()
-								.traverse();
-					}
-				} else if (path3) {
-					log.info("Path3");
-					if (hasHide()) {
-						ctx.movement.newTilePath(pathToJack3).traverse();
-					} else {
-						ctx.movement.newTilePath(pathToJack3).reverse()
-								.traverse();
-					}
-				}
-			}
+		if (ctx.bank.isOpen()) {
+			ctx.bank.close();
 		} else {
-			if (atAlKharid) {
+			if (atBurthorpe) {
 				if (!ctx.players.local().isInMotion()
 						|| ctx.players.local().getLocation()
 								.distanceTo(ctx.movement.getDestination()) < Random
@@ -599,26 +566,62 @@ public class rTanner extends PollingScript implements PaintListener {
 					if (path1) {
 						log.info("Path1");
 						if (hasHide()) {
-							ctx.movement.newTilePath(pathToEllis1).traverse();
+							ctx.movement.newTilePath(pathToJack1).traverse();
 						} else {
-							ctx.movement.newTilePath(pathToEllis1).reverse()
+							ctx.movement.newTilePath(pathToJack1).reverse()
 									.traverse();
 						}
 					} else if (path2) {
 						log.info("Path2");
 						if (hasHide()) {
-							ctx.movement.newTilePath(pathToEllis2).traverse();
+							ctx.movement.newTilePath(pathToJack2).traverse();
 						} else {
-							ctx.movement.newTilePath(pathToEllis2).reverse()
+							ctx.movement.newTilePath(pathToJack2).reverse()
 									.traverse();
 						}
 					} else if (path3) {
 						log.info("Path3");
 						if (hasHide()) {
-							ctx.movement.newTilePath(pathToEllis3).traverse();
+							ctx.movement.newTilePath(pathToJack3).traverse();
 						} else {
-							ctx.movement.newTilePath(pathToEllis3).reverse()
+							ctx.movement.newTilePath(pathToJack3).reverse()
 									.traverse();
+						}
+					}
+				}
+			} else {
+				if (atAlKharid) {
+					if (!ctx.players.local().isInMotion()
+							|| ctx.players.local().getLocation()
+									.distanceTo(ctx.movement.getDestination()) < Random
+									.nextInt(6, 7)) {
+						if (path1) {
+							log.info("Path1");
+							if (hasHide()) {
+								ctx.movement.newTilePath(pathToEllis1)
+										.traverse();
+							} else {
+								ctx.movement.newTilePath(pathToEllis1)
+										.reverse().traverse();
+							}
+						} else if (path2) {
+							log.info("Path2");
+							if (hasHide()) {
+								ctx.movement.newTilePath(pathToEllis2)
+										.traverse();
+							} else {
+								ctx.movement.newTilePath(pathToEllis2)
+										.reverse().traverse();
+							}
+						} else if (path3) {
+							log.info("Path3");
+							if (hasHide()) {
+								ctx.movement.newTilePath(pathToEllis3)
+										.traverse();
+							} else {
+								ctx.movement.newTilePath(pathToEllis3)
+										.reverse().traverse();
+							}
 						}
 					}
 				}
