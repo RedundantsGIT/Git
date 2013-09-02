@@ -26,6 +26,7 @@ import org.powerbot.script.methods.MethodProvider;
 import org.powerbot.script.util.Random;
 import org.powerbot.script.util.Timer;
 import org.powerbot.script.wrappers.Component;
+import org.powerbot.script.wrappers.GameObject;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
@@ -39,7 +40,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	private static long scriptTimer = 0;
 	private static int furPrice, furBought, furStored;
 	private static int baraekID = 547, furID = 948;
-	private static int bankerID [] = { 553, 2759 };
+	private static int boothID = 782;
 	private static boolean path1 = false;
 	private static boolean path2 = false;
 	private static boolean path3 = false;
@@ -175,16 +176,18 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 					} else if (canContinue()) {
 						status = "Press Spacebar";
 						ctx.keyboard.send(" ");
-						final Timer pressTimer = new Timer(Random.nextInt(1500, 1800));
+						final Timer pressTimer = new Timer(Random.nextInt(1600,
+								1800));
 						while (pressTimer.isRunning() && canContinue()) {
-							sleep(25, 225);
+							sleep(15, 200);
 						}
 					} else if (pressOne.isValid()) {
 						status = "Press 1";
 						ctx.keyboard.send("1");
-						final Timer pressTimer = new Timer(Random.nextInt(1500, 1800));
+						final Timer pressTimer = new Timer(Random.nextInt(1600,
+								1800));
 						while (pressTimer.isRunning() && pressOne.isVisible()) {
-							sleep(25, 225);
+							sleep(15, 200);
 						}
 					} else {
 						status = "Talk to Baraek";
@@ -197,9 +200,10 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 						if (Random.nextInt(0, 8) == 4) {
 							mouseMoveSlightly();
 						}
-						final Timer talkTimer = new Timer(Random.nextInt(1800, 2000));
+						final Timer talkTimer = new Timer(Random.nextInt(1800,
+								2000));
 						while (talkTimer.isRunning() && !pressOne.isVisible()) {
-							sleep(5, 250);
+							sleep(50, 250);
 						}
 						while (ctx.players.local().isInMotion()) {
 							sleep(25, 300);
@@ -230,24 +234,24 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		@Override
 		public void execute() {
 			if (nearBank()) {
-					if (ctx.bank.isOpen()) {
-						status = "Deposit Inventory";
-						ctx.bank.depositInventory();
-						final Timer depositTimer = new Timer(1800);
-						while (depositTimer.isRunning()
-								&& ctx.backpack.select().count() == 28) {
-							sleep(Random.nextInt(100, 650));
-						}
-						furStored = ctx.bank.select().id(furID).count(true);
-						status = "Bank Close";
-						ctx.bank.close();
-						SwitchPath();
-					} else {
-						if (!ctx.players.local().isInMotion()) {
-							ctx.bank.open();
-							status = "Bank Open";
-						}
+				if (ctx.bank.isOpen()) {
+					status = "Deposit Inventory";
+					ctx.bank.depositInventory();
+					final Timer depositTimer = new Timer(1800);
+					while (depositTimer.isRunning()
+							&& ctx.backpack.select().count() == 28) {
+						sleep(Random.nextInt(100, 650));
 					}
+					furStored = ctx.bank.select().id(furID).count(true);
+					status = "Bank Close";
+					ctx.bank.close();
+					SwitchPath();
+				} else {
+					if (!ctx.players.local().isInMotion()) {
+						ctx.bank.open();
+						status = "Bank Open";
+					}
+				}
 			} else {
 				status = "Walk to Banker";
 				WalkingPath();
@@ -285,33 +289,38 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		final Tile[] pathToNpc4 = { new Tile(3189, 3439, 0),
 				new Tile(3198, 3435, 0), new Tile(3208, 3432, 0),
 				new Tile(3215, 3434, 0) };
-		if (path1) {
-			log.info("Path1");
-			if (ctx.backpack.select().count() == 28) {
-				ctx.movement.newTilePath(pathToNpc1).reverse().traverse();
-			} else {
-				ctx.movement.newTilePath(pathToNpc1).traverse();
-			}
-		} else if (path2) {
-			log.info("Path2");
-			if (ctx.backpack.select().count() == 28) {
-				ctx.movement.newTilePath(pathToNpc2).reverse().traverse();
-			} else {
-				ctx.movement.newTilePath(pathToNpc2).traverse();
-			}
-		} else if (path3) {
-			log.info("Path3");
-			if (ctx.backpack.select().count() == 28) {
-				ctx.movement.newTilePath(pathToNpc3).reverse().traverse();
-			} else {
-				ctx.movement.newTilePath(pathToNpc3).traverse();
-			}
-		} else if (path4) {
-			log.info("Path4");
-			if (ctx.backpack.select().count() == 28) {
-				ctx.movement.newTilePath(pathToNpc4).reverse().traverse();
-			} else {
-				ctx.movement.newTilePath(pathToNpc4).traverse();
+		if (!ctx.players.local().isInMotion()
+				|| ctx.players.local().getLocation()
+						.distanceTo(ctx.movement.getDestination()) < Random
+						.nextInt(6, 7)) {
+			if (path1) {
+				log.info("Path1");
+				if (ctx.backpack.select().count() == 28) {
+					ctx.movement.newTilePath(pathToNpc1).reverse().traverse();
+				} else {
+					ctx.movement.newTilePath(pathToNpc1).traverse();
+				}
+			} else if (path2) {
+				log.info("Path2");
+				if (ctx.backpack.select().count() == 28) {
+					ctx.movement.newTilePath(pathToNpc2).reverse().traverse();
+				} else {
+					ctx.movement.newTilePath(pathToNpc2).traverse();
+				}
+			} else if (path3) {
+				log.info("Path3");
+				if (ctx.backpack.select().count() == 28) {
+					ctx.movement.newTilePath(pathToNpc3).reverse().traverse();
+				} else {
+					ctx.movement.newTilePath(pathToNpc3).traverse();
+				}
+			} else if (path4) {
+				log.info("Path4");
+				if (ctx.backpack.select().count() == 28) {
+					ctx.movement.newTilePath(pathToNpc4).reverse().traverse();
+				} else {
+					ctx.movement.newTilePath(pathToNpc4).traverse();
+				}
 			}
 
 		}
@@ -336,7 +345,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	public boolean nearBaraek() {
 		for (Npc baraek : ctx.npcs.select().id(baraekID).nearest()) {
 			if (ctx.players.local().getLocation()
-							.distanceTo(baraek.getLocation()) < 7) {
+					.distanceTo(baraek.getLocation()) < 7) {
 				return true;
 			}
 		}
@@ -344,8 +353,10 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	}
 
 	public boolean nearBank() {
-		for (Npc banker : ctx.npcs.select().id(bankerID).nearest()) {
-			if (banker.isOnScreen()) {
+		for (GameObject Bank : ctx.objects.select().id(boothID).nearest()) {
+			if (Bank.isOnScreen()
+					&& ctx.players.local().getLocation()
+							.distanceTo(Bank.getLocation()) < 3) {
 				return true;
 			}
 		}
