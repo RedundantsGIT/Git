@@ -177,14 +177,14 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 						ctx.keyboard.send(" ");
 						final Timer pressTimer = new Timer(Random.nextInt(1500, 1800));
 						while (pressTimer.isRunning() && canContinue()) {
-							sleep(50, 200);
+							sleep(25, 225);
 						}
 					} else if (pressOne.isValid()) {
 						status = "Press 1";
 						ctx.keyboard.send("1");
 						final Timer pressTimer = new Timer(Random.nextInt(1500, 1800));
 						while (pressTimer.isRunning() && pressOne.isVisible()) {
-							sleep(50, 200);
+							sleep(25, 225);
 						}
 					} else {
 						status = "Talk to Baraek";
@@ -335,8 +335,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 	public boolean nearBaraek() {
 		for (Npc baraek : ctx.npcs.select().id(baraekID).nearest()) {
-			if (baraek != null
-					&& ctx.players.local().getLocation()
+			if (ctx.players.local().getLocation()
 							.distanceTo(baraek.getLocation()) < 7) {
 				return true;
 			}
@@ -346,9 +345,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 	public boolean nearBank() {
 		for (Npc banker : ctx.npcs.select().id(bankerID).nearest()) {
-			if (banker != null
-					&& ctx.players.local().getLocation()
-							.distanceTo(banker.getLocation()) < 6) {
+			if (banker.isOnScreen()) {
 				return true;
 			}
 		}
