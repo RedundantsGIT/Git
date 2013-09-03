@@ -179,7 +179,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 						final Timer pressTimer = new Timer(Random.nextInt(1600,
 								1800));
 						while (pressTimer.isRunning() && canContinue()) {
-							sleep(15, 200);
+							sleep(15, 100);
 						}
 					} else if (pressOne.isValid()) {
 						status = "Press 1";
@@ -187,7 +187,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 						final Timer pressTimer = new Timer(Random.nextInt(1600,
 								1800));
 						while (pressTimer.isRunning() && pressOne.isVisible()) {
-							sleep(15, 200);
+							sleep(15, 100);
 						}
 					} else {
 						status = "Talk to Baraek";
