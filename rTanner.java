@@ -502,16 +502,16 @@ public class rTanner extends PollingScript implements PaintListener {
 	public void tanHides() {
 		final Component CloseButton = ctx.widgets.get(1370, 30);
 		final Component Make = ctx.widgets.get(1370, 20);
-		final Npc Tanner = ctx.npcs.select().id(tannerID).first().isEmpty() ? null
-				: ctx.npcs.iterator().next();
+		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
 			if (Make.isVisible()) {
 				calculateMemberProfit();
 				hideCount += backpackHideCount;
-				Make.interact("Make");
-				final Timer WidgetTimer = new Timer(5600);
-				while (WidgetTimer.isRunning() && Make.isValid()
-						&& !hasLeather()) {
-					sleep(Random.nextInt(300, 500));
+				if (Make.interact("Make")) {
+					final Timer WidgetTimer = new Timer(5600);
+					while (WidgetTimer.isRunning() && Make.isValid()
+							&& !hasLeather()) {
+						sleep(Random.nextInt(300, 500));
+					}
 				}
 				if (CloseButton.isVisible()) {
 					CloseButton.interact("Close");
@@ -522,10 +522,11 @@ public class rTanner extends PollingScript implements PaintListener {
 					status = "Interact";
 					backpackHideCount = ctx.backpack.select().id(hideID)
 							.count();
-					Tanner.interact("Tan");
-					final Timer InteractTimer = new Timer(3500);
-					while (InteractTimer.isRunning() && !Make.isVisible()) {
-						sleep(Random.nextInt(100, 200));
+					if (Tanner.interact("Tan")) {
+						final Timer InteractTimer = new Timer(3500);
+						while (InteractTimer.isRunning() && !Make.isVisible()) {
+							sleep(Random.nextInt(100, 200));
+						}
 					}
 				} else {
 					if (atAlKharid) {
@@ -535,6 +536,7 @@ public class rTanner extends PollingScript implements PaintListener {
 					} else {
 						ctx.camera.turnTo(Tanner.getLocation());
 					}
+				}
 			}
 		}
 	}
