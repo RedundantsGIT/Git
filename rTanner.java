@@ -502,7 +502,8 @@ public class rTanner extends PollingScript implements PaintListener {
 	public void tanHides() {
 		final Component CloseButton = ctx.widgets.get(1370, 30);
 		final Component Make = ctx.widgets.get(1370, 20);
-		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
+		final Npc Tanner = ctx.npcs.select().id(tannerID).first().isEmpty() ? null
+				: ctx.npcs.iterator().next();
 			if (Make.isVisible()) {
 				calculateMemberProfit();
 				hideCount += backpackHideCount;
@@ -534,7 +535,6 @@ public class rTanner extends PollingScript implements PaintListener {
 					} else {
 						ctx.camera.turnTo(Tanner.getLocation());
 					}
-				}
 			}
 		}
 	}
@@ -589,7 +589,7 @@ public class rTanner extends PollingScript implements PaintListener {
 				if (!ctx.players.local().isInMotion()
 						|| ctx.players.local().getLocation()
 								.distanceTo(ctx.movement.getDestination()) < Random
-								.nextInt(12, 14)) {
+								.nextInt(13, 14)) {
 					if (path1) {
 						if (hasHide()) {
 							ctx.movement.newTilePath(pathToJack1).traverse();
@@ -618,7 +618,7 @@ public class rTanner extends PollingScript implements PaintListener {
 					if (!ctx.players.local().isInMotion()
 							|| ctx.players.local().getLocation()
 									.distanceTo(ctx.movement.getDestination()) < Random
-									.nextInt(12, 14)) {
+									.nextInt(13, 14)) {
 						if (path1) {
 							if (hasHide()) {
 								ctx.movement.newTilePath(pathToEllis1)
