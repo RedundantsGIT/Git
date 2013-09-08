@@ -37,7 +37,7 @@ import org.powerbot.script.wrappers.Item;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", website = "http://www.powerbot.org/community/topic/876982-vip-rtanner-all-potions-all-hides-al-kharid-burthorpe/", version = 2.9, instances = 5)
+@Manifest(authors = { "Redundant" }, name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", website = "http://www.powerbot.org/community/topic/876982-vip-rtanner-all-potions-all-hides-al-kharid-burthorpe/", version = 2.9, instances = 6)
 public class rTanner extends PollingScript implements PaintListener {
 	private static RenderingHints antialiasing = new RenderingHints(
 			RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -58,7 +58,8 @@ public class rTanner extends PollingScript implements PaintListener {
 			14877, 2824 }, hideID = { 1739, 1753, 1751, 24372, 6287, 7801,
 			1749, 1747 }, energyPotionID = { 3008, 3010, 3012, 3014, 23375,
 			23377, 23379, 23381, 23383, 23385, 11453, 11455, 23387, 23389,
-			23391, 23393, 23395, 23397, 11481, 11483, 3016, 3018, 3020, 3022 };
+			23391, 23393, 23395, 23397, 11481, 11483, 3016, 3018, 3020, 3022 },
+			stairsID = { 76222 };
 	private static final int IntCowhideID = 1739, IntSnakeSkinhideID = 6287,
 			IntSnakeSkinTwohideID = 7801, IntGreenDHideID = 1753,
 			IntBlueDHideID = 1751, IntRedDHideID = 1749,
@@ -80,9 +81,9 @@ public class rTanner extends PollingScript implements PaintListener {
 	private static final Area areaBurthorpe = new Area(new Tile[] {
 			new Tile(2877, 3540, 0), new Tile(2900, 3540, 0),
 			new Tile(2899, 3479, 0), new Tile(2875, 3479, 0) });
-	private static final Area areaAlKharid = new Area(new Tile[] {
-			new Tile(3263, 3203, 0), new Tile(3287, 3203, 0),
-			new Tile(3287, 3157, 0), new Tile(3262, 3158, 0) });
+	public final Area areaAlKharid = new Area(new Tile[] {
+			new Tile(3239, 3154, 0), new Tile(3315, 3151, 0),
+			new Tile(3319, 3224, 0), new Tile(3250, 3223, 0) });
 
 	public JobContainer container;
 
@@ -91,8 +92,8 @@ public class rTanner extends PollingScript implements PaintListener {
 		path1 = true;
 		elapsedTime = System.currentTimeMillis();
 		this.container = new JobContainer(new Job[] { new Camera(ctx),
-				new GetPlayerArea(ctx), new UseEnergyPotion(ctx), new Tan(ctx),
-				new Banking(ctx) });
+				new GetPlayerArea(ctx), new ScriptFix(ctx),
+				new UseEnergyPotion(ctx), new Tan(ctx), new Banking(ctx) });
 	}
 
 	@Override
@@ -213,11 +214,38 @@ public class rTanner extends PollingScript implements PaintListener {
 			if (inBurthorpe()) {
 				location = "Burthorpe";
 				atBurthorpe = true;
-			} else {
-				if (inAlKharid())
-					location = "Al Kharid";
+			} else if (inAlKharid()) {
+				location = "Al Kharid";
 				atAlKharid = true;
 			}
+		}
+	}
+
+	private class ScriptFix extends Job {
+		public ScriptFix(MethodContext ctx) {
+			super(ctx);
+		}
+
+		@Override
+		public boolean activate() {
+			final GameObject Stairs = ctx.objects.select().id(stairsID).first()
+					.isEmpty() ? null : ctx.objects.iterator().next();
+			return Stairs != null && Stairs.isOnScreen();
+		}
+
+		@Override
+		public void execute() {
+			for (GameObject Stairs : ctx.objects.select().id(stairsID)
+					.nearest()) {
+				if (Stairs.interact("Climb-down")) {
+					final Timer climbTimer = new Timer(Random.nextInt(3500,
+							4000));
+					while (climbTimer.isRunning() && Stairs.isOnScreen()) {
+						sleep(Random.nextInt(25, 350));
+					}
+				}
+			}
+
 		}
 	}
 
@@ -247,7 +275,6 @@ public class rTanner extends PollingScript implements PaintListener {
 			}
 
 		}
-
 	}
 
 	private class Tan extends Job {
@@ -562,9 +589,8 @@ public class rTanner extends PollingScript implements PaintListener {
 				if (!ctx.players.local().isInMotion()
 						|| ctx.players.local().getLocation()
 								.distanceTo(ctx.movement.getDestination()) < Random
-								.nextInt(6, 7)) {
+								.nextInt(12, 14)) {
 					if (path1) {
-						log.info("Path1");
 						if (hasHide()) {
 							ctx.movement.newTilePath(pathToJack1).traverse();
 						} else {
@@ -572,7 +598,6 @@ public class rTanner extends PollingScript implements PaintListener {
 									.traverse();
 						}
 					} else if (path2) {
-						log.info("Path2");
 						if (hasHide()) {
 							ctx.movement.newTilePath(pathToJack2).traverse();
 						} else {
@@ -580,7 +605,6 @@ public class rTanner extends PollingScript implements PaintListener {
 									.traverse();
 						}
 					} else if (path3) {
-						log.info("Path3");
 						if (hasHide()) {
 							ctx.movement.newTilePath(pathToJack3).traverse();
 						} else {
@@ -594,9 +618,8 @@ public class rTanner extends PollingScript implements PaintListener {
 					if (!ctx.players.local().isInMotion()
 							|| ctx.players.local().getLocation()
 									.distanceTo(ctx.movement.getDestination()) < Random
-									.nextInt(6, 7)) {
+									.nextInt(12, 14)) {
 						if (path1) {
-							log.info("Path1");
 							if (hasHide()) {
 								ctx.movement.newTilePath(pathToEllis1)
 										.traverse();
@@ -605,7 +628,6 @@ public class rTanner extends PollingScript implements PaintListener {
 										.reverse().traverse();
 							}
 						} else if (path2) {
-							log.info("Path2");
 							if (hasHide()) {
 								ctx.movement.newTilePath(pathToEllis2)
 										.traverse();
@@ -614,7 +636,6 @@ public class rTanner extends PollingScript implements PaintListener {
 										.reverse().traverse();
 							}
 						} else if (path3) {
-							log.info("Path3");
 							if (hasHide()) {
 								ctx.movement.newTilePath(pathToEllis3)
 										.traverse();
