@@ -560,7 +560,7 @@ public class rTanner extends PollingScript implements PaintListener {
 				if (Make.interact("Make")) {
 					final Timer WidgetTimer = new Timer(5600);
 					while (WidgetTimer.isRunning() && hasHide()) {
-						sleep(Random.nextInt(200, 450));
+						sleep(Random.nextInt(300, 500));
 					}
 				}
 				if (CloseButton.isVisible()) {
