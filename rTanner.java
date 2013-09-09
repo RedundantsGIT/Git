@@ -559,8 +559,8 @@ public class rTanner extends PollingScript implements PaintListener {
 				hideCount += backpackHideCount;
 				if (Make.interact("Make")) {
 					final Timer WidgetTimer = new Timer(5600);
-					while (WidgetTimer.isRunning() && Make.isVisible()) {
-						sleep(Random.nextInt(150, 400));
+					while (WidgetTimer.isRunning() && hasHide()) {
+						sleep(Random.nextInt(200, 450));
 					}
 				}
 				if (CloseButton.isVisible()) {
