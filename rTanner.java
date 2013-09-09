@@ -559,9 +559,8 @@ public class rTanner extends PollingScript implements PaintListener {
 				hideCount += backpackHideCount;
 				if (Make.interact("Make")) {
 					final Timer WidgetTimer = new Timer(5600);
-					while (WidgetTimer.isRunning() && Make.isVisible()
-							&& !hasLeather()) {
-						sleep(Random.nextInt(25, 350));
+					while (WidgetTimer.isRunning() && Make.isVisible()) {
+						sleep(Random.nextInt(150, 400));
 					}
 				}
 				if (CloseButton.isVisible()) {
@@ -576,7 +575,7 @@ public class rTanner extends PollingScript implements PaintListener {
 					if (Tanner.interact("Tan")) {
 						final Timer InteractTimer = new Timer(3500);
 						while (InteractTimer.isRunning() && !Make.isVisible()) {
-							sleep(Random.nextInt(50, 300));
+							sleep(Random.nextInt(100, 350));
 						}
 					}
 				} else {
