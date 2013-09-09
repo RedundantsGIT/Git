@@ -292,22 +292,20 @@ public class rTanner extends PollingScript implements PaintListener {
 			} else {
 				if (atBurthorpe) {
 					if (atTanner()) {
-						antiPattern();
 						tanHides();
+						antiPattern();
 					} else {
 						status = "Walk to Jack";
-						antiPattern();
 						walkingPath();
 						antiPattern();
 					}
 				} else {
 					if (atAlKharid) {
 						if (atTanner()) {
-							antiPattern();
 							tanHides();
+							antiPattern();
 						} else {
 							status = "Walk to Ellis";
-							antiPattern();
 							walkingPath();
 							antiPattern();
 						}
@@ -360,7 +358,7 @@ public class rTanner extends PollingScript implements PaintListener {
 
 	private void antiPattern() {
 		final Component faceNorth = ctx.widgets.get(1465, 7);
-		if (Random.nextInt(0, 4) == 2) {
+		if (Random.nextInt(0, 8) == 4) {
 			mouseMoveSlightly();
 			if (Random.nextInt(0, 15) == 5) {
 				ctx.camera.setAngle(Random.nextInt(-180, 180));
@@ -560,7 +558,7 @@ public class rTanner extends PollingScript implements PaintListener {
 				if (Make.interact("Make")) {
 					final Timer WidgetTimer = new Timer(5600);
 					while (WidgetTimer.isRunning() && hasHide()) {
-						sleep(Random.nextInt(300, 500));
+						sleep(Random.nextInt(200, 450));
 					}
 				}
 				if (CloseButton.isVisible()) {
