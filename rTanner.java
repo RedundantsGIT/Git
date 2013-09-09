@@ -378,7 +378,8 @@ public class rTanner extends PollingScript implements PaintListener {
 						stimer(ctx.backpack.select().count() > 0, 0, 0);
 					} else if (hasLeather() && hasPotion()) {
 						status = "Deposit Hides";
-						ctx.bank.deposit(IntHardLeatherID, 0);
+                                                deposit(0, leatherID);
+						//ctx.bank.deposit(IntHardLeatherID, 0);
 					} else if (hasLeather() && !hasPotion()) {
 						status = "Deposit Inv";
 						ctx.bank.depositInventory();
