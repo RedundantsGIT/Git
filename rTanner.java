@@ -89,7 +89,7 @@ public class rTanner extends PollingScript implements PaintListener {
 	public void start() {
 		path1 = true;
 		elapsedTime = System.currentTimeMillis();
-		this.container = new JobContainer(new Job[] { new GetPlayerArea(ctx),
+		this.container = new JobContainer(new Job[] { new Camera(ctx), new GetPlayerArea(ctx),
 				new ScriptFix(ctx), new UseEnergyPotion(ctx), new Tan(ctx),
 				new Banking(ctx) });
 	}
@@ -179,6 +179,22 @@ public class rTanner extends PollingScript implements PaintListener {
 		}
 
 		return 250;
+	}
+	
+	private class Camera extends Job {
+		public Camera(MethodContext ctx) {
+			super(ctx);
+		}
+
+		@Override
+		public boolean activate() {
+			return ctx.camera.getPitch() < 65;
+		}
+
+		@Override
+		public void execute() {
+			ctx.camera.setPitch(Random.nextInt(67, 80));
+		}
 	}
 
 	private class GetPlayerArea extends Job {
@@ -351,15 +367,13 @@ public class rTanner extends PollingScript implements PaintListener {
 				mouseMoveSlightly();
 			} else if (Random.nextInt(0, 20) == 10) {
 				ctx.camera.setAngle(Random.nextInt(-100, 100));
-				ctx.camera.setPitch(Random.nextInt(30, 50));
 			} else if (Random.nextInt(0, 40) == 20) {
 				faceNorth.interact("Face North");
 			} else if (Random.nextInt(0, 32) == 22) {
-				ctx.camera.setPitch(Random.nextInt(25, 70));
 				ctx.camera.turnTo(ctx.bank.getNearest());
 				mouseMoveSlightly();
 			} else if (Random.nextInt(0, 30) == 15) {
-				ctx.camera.setPitch(Random.nextInt(30, 65));
+				ctx.camera.setAngle(Random.nextInt(-50, 50));
 			}
 		}
 	}
