@@ -24,7 +24,6 @@ import org.powerbot.script.methods.Game;
 import org.powerbot.script.methods.MethodContext;
 import org.powerbot.script.methods.MethodProvider;
 import org.powerbot.script.util.Random;
-import org.powerbot.script.util.Timer;
 import org.powerbot.script.wrappers.Component;
 import org.powerbot.script.wrappers.GameObject;
 import org.powerbot.script.wrappers.Npc;
@@ -33,8 +32,7 @@ import org.powerbot.script.wrappers.Tile;
 @Manifest(authors = { "Redundant" }, name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", version = 0.5, hidden = true, instances = 35)
 public class rFurFlipper extends PollingScript implements PaintListener,
 		MessageListener {
-
-	private static Timer timeRan = new Timer(0);
+	
 	private static JobContainer container;
 	private static String status = "Starting...";
 	private static long scriptTimer = 0;
@@ -69,8 +67,6 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 	@Override
 	public void stop() {
-		System.out.println("[rFurFlipper]: -Total Time: "
-				+ timeRan.toElapsedString());
 		System.out.println("[rFurFlipper]: -Total Fur Purchased: " + furBought);
 		System.out.println("[rFurFlipper]: -Total Profit Gained: " + profit());
 		System.out.println("Script stopped");
@@ -376,6 +372,19 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		}
 		ctx.mouse.move(p);
 	}
+	
+	public class Timer {
+		private long end;
+		private final long start;
+
+		public Timer(final long period) {
+			start = System.currentTimeMillis();
+			end = start + period;
+		}
+		public boolean isRunning() {
+			return System.currentTimeMillis() < end;
+		}
+	}
 
 	@Override
 	public void messaged(MessageEvent msg) {
@@ -483,3 +492,4 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	}
 
 }
+

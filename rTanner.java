@@ -29,7 +29,6 @@ import org.powerbot.script.methods.Game;
 import org.powerbot.script.methods.MethodContext;
 import org.powerbot.script.methods.MethodProvider;
 import org.powerbot.script.util.Random;
-import org.powerbot.script.util.Timer;
 import org.powerbot.script.wrappers.Area;
 import org.powerbot.script.wrappers.Component;
 import org.powerbot.script.wrappers.GameObject;
@@ -454,57 +453,6 @@ public class rTanner extends PollingScript implements PaintListener {
 		}
 	}
 
-	private void depositBackpackTimer() {
-		final Timer depositTimer = new Timer(Random.nextInt(1800, 2200));
-		while (depositTimer.isRunning() && ctx.backpack.select().count() > 0) {
-			sleep(Random.nextInt(50, 350));
-		}
-	}
-
-	private boolean hasPotion() {
-		for (Item Potion : ctx.backpack.select().id(energyPotionID)) {
-			if (ctx.backpack.select().contains(Potion)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private boolean hasLeather() {
-		for (Item Leather : ctx.backpack.select().id(leatherID)) {
-			if (ctx.backpack.select().contains(Leather)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private boolean hasHide() {
-		for (Item Hide : ctx.backpack.select().id(hideID)) {
-			if (ctx.backpack.select().contains(Hide)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private boolean bankHasHide() {
-		for (Item Hide : ctx.bank.select().id(hideID)) {
-			if (ctx.bank.select().contains(Hide)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public boolean bankHasPotion() {
-		for (Item Potion : ctx.bank.select().id(energyPotionID)) {
-			if (ctx.bank.select().contains(Potion)) {
-				return true;
-			}
-		}
-		return false;
-	}
 
 	public boolean deposit(final int count, final int... items) {
 		for (int i : items) {
@@ -522,30 +470,6 @@ public class rTanner extends PollingScript implements PaintListener {
 			}
 		}
 		return true;
-	}
-
-	public boolean atBank() {
-		return ctx.bank.isOnScreen()
-				&& ctx.players.local().getLocation()
-						.distanceTo(ctx.bank.getNearest()) < 8;
-	}
-
-	public boolean atTanner() {
-		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
-			if (ctx.players.local().getLocation()
-					.distanceTo(Tanner.getLocation()) < 8) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public boolean inBurthorpe() {
-		return areaBurthorpe.contains(ctx.players.local().getLocation());
-	}
-
-	public boolean inAlKharid() {
-		return areaAlKharid.contains(ctx.players.local().getLocation());
 	}
 
 	public void tanHides() {
@@ -825,6 +749,95 @@ public class rTanner extends PollingScript implements PaintListener {
 			leatherPrice = getGuidePrice(IntLeatherID);
 			cowHidePrice = getGuidePrice(IntCowhideID);
 		}
+	}
+	
+	public class Timer {
+		private long end;
+		private final long start;
+
+		public Timer(final long period) {
+			start = System.currentTimeMillis();
+			end = start + period;
+		}
+		public boolean isRunning() {
+			return System.currentTimeMillis() < end;
+		}
+	}
+	
+	private void depositBackpackTimer() {
+		final Timer depositTimer = new Timer(Random.nextInt(1800, 2200));
+		while (depositTimer.isRunning() && ctx.backpack.select().count() > 0) {
+			sleep(Random.nextInt(50, 350));
+		}
+	}
+
+	private boolean hasPotion() {
+		for (Item Potion : ctx.backpack.select().id(energyPotionID)) {
+			if (ctx.backpack.select().contains(Potion)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean hasLeather() {
+		for (Item Leather : ctx.backpack.select().id(leatherID)) {
+			if (ctx.backpack.select().contains(Leather)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean hasHide() {
+		for (Item Hide : ctx.backpack.select().id(hideID)) {
+			if (ctx.backpack.select().contains(Hide)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean bankHasHide() {
+		for (Item Hide : ctx.bank.select().id(hideID)) {
+			if (ctx.bank.select().contains(Hide)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean bankHasPotion() {
+		for (Item Potion : ctx.bank.select().id(energyPotionID)) {
+			if (ctx.bank.select().contains(Potion)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public boolean atBank() {
+		return ctx.bank.isOnScreen()
+				&& ctx.players.local().getLocation()
+						.distanceTo(ctx.bank.getNearest()) < 8;
+	}
+
+	public boolean atTanner() {
+		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
+			if (ctx.players.local().getLocation()
+					.distanceTo(Tanner.getLocation()) < 8) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean inBurthorpe() {
+		return areaBurthorpe.contains(ctx.players.local().getLocation());
+	}
+
+	public boolean inAlKharid() {
+		return areaAlKharid.contains(ctx.players.local().getLocation());
 	}
 
 	final Color Black = new Color(0, 0, 0, 200);

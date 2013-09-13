@@ -23,7 +23,6 @@ import org.powerbot.script.methods.Game;
 import org.powerbot.script.methods.MethodContext;
 import org.powerbot.script.methods.MethodProvider;
 import org.powerbot.script.util.Random;
-import org.powerbot.script.util.Timer;
 import org.powerbot.script.wrappers.Area;
 import org.powerbot.script.wrappers.GameObject;
 import org.powerbot.script.wrappers.Npc;
@@ -218,6 +217,19 @@ public class rOakChopper extends PollingScript implements PaintListener,
 
 	public boolean atOaks() {
 		return oakArea.contains(ctx.players.local().getLocation());
+	}
+	
+	public class Timer {
+		private long end;
+		private final long start;
+
+		public Timer(final long period) {
+			start = System.currentTimeMillis();
+			end = start + period;
+		}
+		public boolean isRunning() {
+			return System.currentTimeMillis() < end;
+		}
 	}
 	
 	private void sTimer(boolean wait4, int int1, int int2) {
