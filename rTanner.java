@@ -180,7 +180,7 @@ public class rTanner extends PollingScript implements PaintListener {
 
 		return 250;
 	}
-
+	
 	private class GetPlayerArea extends Job {
 		public GetPlayerArea(MethodContext ctx) {
 			super(ctx);
@@ -277,17 +277,21 @@ public class rTanner extends PollingScript implements PaintListener {
 				if (atBurthorpe) {
 					if (atTanner()) {
 						tanHides();
+						antiPattern();
 					} else {
 						status = "Walk to Jack";
 						walkingPath();
+						antiPattern();
 					}
 				} else {
 					if (atAlKharid) {
 						if (atTanner()) {
 							tanHides();
+							antiPattern();
 						} else {
 							status = "Walk to Ellis";
 							walkingPath();
+							antiPattern();
 						}
 					}
 				}
@@ -310,20 +314,48 @@ public class rTanner extends PollingScript implements PaintListener {
 		public void execute() {
 			if (atBurthorpe) {
 				if (atBank()) {
-					doBanking();
+					if (ctx.bank.isOnScreen()) {
+						antiPattern();
+						doBanking();
+					}
 				} else {
 					status = "Walk to Bank";
 					walkingPath();
+					antiPattern();
 				}
 			} else {
 				if (atAlKharid) {
 					if (atBank()) {
-						doBanking();
+						if (ctx.bank.isOnScreen()) {
+							antiPattern();
+							doBanking();
+						}
 					} else {
 						status = "Walk to Bank";
 						walkingPath();
+						antiPattern();
 					}
 				}
+			}
+		}
+	}
+
+	private void antiPattern() {
+		final Component faceNorth = ctx.widgets.get(1465, 7);
+		if (Random.nextInt(0, 8) == 4) {
+			mouseMoveSlightly();
+			if (Random.nextInt(0, 15) == 5) {
+				ctx.camera.setAngle(Random.nextInt(-180, 180));
+				mouseMoveSlightly();
+			} else if (Random.nextInt(0, 20) == 10) {
+				ctx.camera.setAngle(Random.nextInt(-100, 100));
+			} else if (Random.nextInt(0, 40) == 20) {
+				faceNorth.interact("Face North");
+			} else if (Random.nextInt(0, 32) == 22) {
+				ctx.camera.turnTo(ctx.bank.getNearest());
+				mouseMoveSlightly();
+			} else if (Random.nextInt(0, 30) == 15) {
+				ctx.camera.setAngle(Random.nextInt(-50, 50));
 			}
 		}
 	}
@@ -406,6 +438,58 @@ public class rTanner extends PollingScript implements PaintListener {
 		}
 	}
 
+	private void depositBackpackTimer() {
+		final Timer depositTimer = new Timer(Random.nextInt(1800, 2200));
+		while (depositTimer.isRunning() && ctx.backpack.select().count() > 0) {
+			sleep(Random.nextInt(50, 350));
+		}
+	}
+
+	private boolean hasPotion() {
+		for (Item Potion : ctx.backpack.select().id(energyPotionID)) {
+			if (ctx.backpack.select().contains(Potion)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean hasLeather() {
+		for (Item Leather : ctx.backpack.select().id(leatherID)) {
+			if (ctx.backpack.select().contains(Leather)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean hasHide() {
+		for (Item Hide : ctx.backpack.select().id(hideID)) {
+			if (ctx.backpack.select().contains(Hide)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private boolean bankHasHide() {
+		for (Item Hide : ctx.bank.select().id(hideID)) {
+			if (ctx.bank.select().contains(Hide)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean bankHasPotion() {
+		for (Item Potion : ctx.bank.select().id(energyPotionID)) {
+			if (ctx.bank.select().contains(Potion)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public boolean deposit(final int count, final int... items) {
 		for (int i : items) {
 			if (ctx.bank.deposit(i, count)) {
@@ -422,6 +506,30 @@ public class rTanner extends PollingScript implements PaintListener {
 			}
 		}
 		return true;
+	}
+
+	public boolean atBank() {
+		return ctx.bank.isOnScreen()
+				&& ctx.players.local().getLocation()
+						.distanceTo(ctx.bank.getNearest()) < 8;
+	}
+
+	public boolean atTanner() {
+		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
+			if (ctx.players.local().getLocation()
+					.distanceTo(Tanner.getLocation()) < 8) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean inBurthorpe() {
+		return areaBurthorpe.contains(ctx.players.local().getLocation());
+	}
+
+	public boolean inAlKharid() {
+		return areaAlKharid.contains(ctx.players.local().getLocation());
 	}
 
 	public void tanHides() {
@@ -473,7 +581,7 @@ public class rTanner extends PollingScript implements PaintListener {
 				depositBackpackTimer();
 			} else {
 				ctx.bank.close();
-				// ctx.game.logout(false);
+				ctx.game.logout(false);
 				getController().stop();
 			}
 		}
@@ -718,82 +826,6 @@ public class rTanner extends PollingScript implements PaintListener {
 			leatherPrice = getGuidePrice(IntLeatherID);
 			cowHidePrice = getGuidePrice(IntCowhideID);
 		}
-	}
-
-	private void depositBackpackTimer() {
-		final Timer depositTimer = new Timer(Random.nextInt(1800, 2200));
-		while (depositTimer.isRunning() && ctx.backpack.select().count() > 0) {
-			sleep(Random.nextInt(50, 350));
-		}
-	}
-
-	private boolean hasPotion() {
-		for (Item Potion : ctx.backpack.select().id(energyPotionID)) {
-			if (ctx.backpack.select().contains(Potion)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private boolean hasLeather() {
-		for (Item Leather : ctx.backpack.select().id(leatherID)) {
-			if (ctx.backpack.select().contains(Leather)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private boolean hasHide() {
-		for (Item Hide : ctx.backpack.select().id(hideID)) {
-			if (ctx.backpack.select().contains(Hide)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private boolean bankHasHide() {
-		for (Item Hide : ctx.bank.select().id(hideID)) {
-			if (ctx.bank.select().contains(Hide)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public boolean bankHasPotion() {
-		for (Item Potion : ctx.bank.select().id(energyPotionID)) {
-			if (ctx.bank.select().contains(Potion)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public boolean atBank() {
-		return ctx.bank.isOnScreen()
-				&& ctx.players.local().getLocation()
-						.distanceTo(ctx.bank.getNearest()) < 8;
-	}
-
-	public boolean atTanner() {
-		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
-			if (ctx.players.local().getLocation()
-					.distanceTo(Tanner.getLocation()) < 8) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	public boolean inBurthorpe() {
-		return areaBurthorpe.contains(ctx.players.local().getLocation());
-	}
-
-	public boolean inAlKharid() {
-		return areaAlKharid.contains(ctx.players.local().getLocation());
 	}
 
 	final Color Black = new Color(0, 0, 0, 200);
