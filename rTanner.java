@@ -180,7 +180,7 @@ public class rTanner extends PollingScript implements PaintListener {
 
 		return 250;
 	}
-	
+
 	private class GetPlayerArea extends Job {
 		public GetPlayerArea(MethodContext ctx) {
 			super(ctx);
@@ -277,21 +277,17 @@ public class rTanner extends PollingScript implements PaintListener {
 				if (atBurthorpe) {
 					if (atTanner()) {
 						tanHides();
-						antiPattern();
 					} else {
 						status = "Walk to Jack";
 						walkingPath();
-						antiPattern();
 					}
 				} else {
 					if (atAlKharid) {
 						if (atTanner()) {
 							tanHides();
-							antiPattern();
 						} else {
 							status = "Walk to Ellis";
 							walkingPath();
-							antiPattern();
 						}
 					}
 				}
@@ -315,63 +311,25 @@ public class rTanner extends PollingScript implements PaintListener {
 			if (atBurthorpe) {
 				if (atBank()) {
 					if (ctx.bank.isOnScreen()) {
-						antiPattern();
 						doBanking();
 					}
 				} else {
 					status = "Walk to Bank";
 					walkingPath();
-					antiPattern();
 				}
 			} else {
 				if (atAlKharid) {
 					if (atBank()) {
 						if (ctx.bank.isOnScreen()) {
-							antiPattern();
 							doBanking();
 						}
 					} else {
 						status = "Walk to Bank";
 						walkingPath();
-						antiPattern();
 					}
 				}
 			}
 		}
-	}
-
-	private void antiPattern() {
-		final Component faceNorth = ctx.widgets.get(1465, 7);
-		if (Random.nextInt(0, 8) == 4) {
-			mouseMoveSlightly();
-			if (Random.nextInt(0, 15) == 5) {
-				ctx.camera.setAngle(Random.nextInt(-180, 180));
-				mouseMoveSlightly();
-			} else if (Random.nextInt(0, 20) == 10) {
-				ctx.camera.setAngle(Random.nextInt(-100, 100));
-			} else if (Random.nextInt(0, 40) == 20) {
-				faceNorth.interact("Face North");
-			} else if (Random.nextInt(0, 32) == 22) {
-				ctx.camera.turnTo(ctx.bank.getNearest());
-				mouseMoveSlightly();
-			} else if (Random.nextInt(0, 30) == 15) {
-				ctx.camera.setAngle(Random.nextInt(-50, 50));
-			}
-		}
-	}
-
-	public void mouseMoveSlightly() {
-		Point p = new Point(
-				(int) (ctx.mouse.getLocation().getX() + (Math.random() * 50 > 25 ? 1
-						: -1)
-						* (20 + Math.random() * 70)), (int) (ctx.mouse
-						.getLocation().getY() + (Math.random() * 50 > 25 ? 1
-						: -1) * (20 + Math.random() * 85)));
-		if (p.getX() < 1 || p.getY() < 1 || p.getX() > 761 || p.getY() > 499) {
-			mouseMoveSlightly();
-			return;
-		}
-		ctx.mouse.move(p);
 	}
 
 	public void doBanking() {
@@ -606,6 +564,7 @@ public class rTanner extends PollingScript implements PaintListener {
 		final Tile[] pathToBurthorpeBank3 = { new Tile(2887, 3502),
 				new Tile(2893, 3510, 0), new Tile(2892, 3523, 0),
 				new Tile(2893, 3528) };
+
 		final Tile[] pathToEllis1 = { new Tile(3270, 3168),
 				new Tile(3274, 3178, 0), new Tile(3280, 3187, 0),
 				new Tile(3275, 3195, 0) };
@@ -648,7 +607,7 @@ public class rTanner extends PollingScript implements PaintListener {
 									.traverse();
 						} else if (path3) {
 							ctx.movement.newTilePath(pathToBurthorpeBank3)
-									.reverse().traverse();
+									.traverse();
 						}
 					}
 				}
