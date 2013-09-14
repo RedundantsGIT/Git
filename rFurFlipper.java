@@ -25,20 +25,19 @@ import org.powerbot.script.methods.MethodContext;
 import org.powerbot.script.methods.MethodProvider;
 import org.powerbot.script.util.Random;
 import org.powerbot.script.wrappers.Component;
-import org.powerbot.script.wrappers.GameObject;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", version = 0.5, hidden = true, instances = 35)
+@Manifest(authors = { "Redundant" }, name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", version = 0.6, hidden = true, instances = 35)
 public class rFurFlipper extends PollingScript implements PaintListener,
 		MessageListener {
 	
 	private static JobContainer container;
+	private mouseTrail trail = new mouseTrail();
 	private static String status = "Starting...";
 	private static long scriptTimer = 0;
 	private static int furPrice, furBought, furStored;
 	private static int baraekID = 547, furID = 948;
-	private static int boothID = 782;
 	private static boolean path1 = false;
 	private static boolean path2 = false;
 	private static boolean path3 = false;
@@ -273,7 +272,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	}
 
 	private void WalkingPath() {
-		final Tile[] pathToNpc1 = { new Tile(3189, 3434, 0),
+		final Tile[] pathToNpc1 = { new Tile(3189, 3435, 0),
 				new Tile(3198, 3429, 0), new Tile(3207, 3429, 0),
 				new Tile(3217, 3434, 0) };
 		final Tile[] pathToNpc2 = { new Tile(3189, 3435, 0),
@@ -349,14 +348,9 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	}
 
 	public boolean nearBank() {
-		for (GameObject Bank : ctx.objects.select().id(boothID).nearest()) {
-			if (Bank.isOnScreen()
+			return ctx.bank.isOnScreen()
 					&& ctx.players.local().getLocation()
-							.distanceTo(Bank.getLocation()) < 3) {
-				return true;
-			}
-		}
-		return false;
+							.distanceTo(ctx.bank.getNearest()) < 7;
 	}
 
 	public void mouseMoveSlightly() {
@@ -430,7 +424,8 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		g.drawString("Profit: " + nf.format(profit()) + "(" + PerHour(profit())
 				+ "/h)", 13, 325);
 		g.drawString("Status: " + (status), 13, 345);
-		drawCross(g);
+		drawTrail(g);
+		drawMouse(g);
 	}
 
 	public String PerHour(int gained) {
@@ -456,14 +451,51 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			cost = -20;
 		return furBought * furPrice - cost;
 	}
+	
+	private void drawTrail(final Graphics g) {
+		final Point m = ctx.mouse.getLocation();
+		trail.add(m);
+		trail.draw(g);
+	}
 
-	private void drawCross(Graphics g) {
+	private void drawMouse(final Graphics g) {
+		final Point m = ctx.mouse.getLocation();
 		g.setColor(ctx.mouse.isPressed() ? Color.GREEN : Color.RED);
-		g.drawLine(0, (int) (ctx.mouse.getLocation().getY()), 800,
-				(int) (ctx.mouse.getLocation().getY()));
-		g.drawLine((int) (ctx.mouse.getLocation().getX()), 0,
-				(int) (ctx.mouse.getLocation().getX()), 800);
+		g.drawLine(m.x - 5, m.y + 5, m.x + 5, m.y - 5);
+		g.drawLine(m.x - 5, m.y - 5, m.x + 5, m.y + 5);
+	}
+	
+	private final class mouseTrail {
+		private final int SIZE = 50;
+		private final double ALPHA_STEP = (255.0 / SIZE);
+		private final Point[] points;
+		private int index;
 
+		public mouseTrail() {
+			points = new Point[SIZE];
+			index = 0;
+		}
+
+		public void add(final Point p) {
+			points[index++] = p;
+			index %= SIZE;
+		}
+
+		public void draw(final Graphics g) {
+			double alpha = 0;
+			for (int i = index; i != (index == 0 ? SIZE - 1 : index - 1); i = (i + 1)
+					% SIZE) {
+				if (points[i] != null && points[(i + 1) % SIZE] != null) {
+					Color rainbow = Color.getHSBColor((float) (alpha / 255), 1,
+							1);
+					g.setColor(new Color(rainbow.getRed(), rainbow.getGreen(),
+							rainbow.getBlue(), (int) alpha));
+					g.drawLine(points[i].x, points[i].y,
+							points[(i + 1) % SIZE].x, points[(i + 1) % SIZE].y);
+					alpha += ALPHA_STEP;
+				}
+			}
+		}
 	}
 
 	public int getGuidePrice(int itemId) {
