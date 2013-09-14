@@ -219,7 +219,7 @@ public class rTanner extends PollingScript implements PaintListener {
 			for (GameObject Stairs : ctx.objects.select().id(stairsID)
 					.nearest()) {
 				if (Stairs.interact("Climb-down")) {
-					final Timer climbTimer = new Timer(Random.nextInt(3500,
+					final Timerr climbTimer = new Timerr(Random.nextInt(3500,
 							4000));
 					while (climbTimer.isRunning() && Stairs.isOnScreen()) {
 						sleep(Random.nextInt(25, 350));
@@ -248,7 +248,7 @@ public class rTanner extends PollingScript implements PaintListener {
 			for (Item EnergyPotion : ctx.backpack.select().id(energyPotionID)) {
 				status = "Use Potion";
 				EnergyPotion.interact("Drink");
-				final Timer potionTimer = new Timer(Random.nextInt(3500, 4000));
+				final Timerr potionTimer = new Timerr(Random.nextInt(3500, 4000));
 				while (potionTimer.isRunning()
 						&& ctx.movement.getEnergyLevel() < 50) {
 					sleep(Random.nextInt(50, 200));
@@ -431,7 +431,7 @@ public class rTanner extends PollingScript implements PaintListener {
 				calculateMemberProfit();
 				hideCount += backpackHideCount;
 				if (Make.interact("Make")) {
-					final Timer WidgetTimer = new Timer(5600);
+					final Timerr WidgetTimer = new Timerr(5600);
 					while (WidgetTimer.isRunning() && hasHide()) {
 						sleep(Random.nextInt(200, 450));
 					}
@@ -446,7 +446,7 @@ public class rTanner extends PollingScript implements PaintListener {
 					backpackHideCount = ctx.backpack.select().id(hideID)
 							.count();
 					if (Tanner.interact("Tan")) {
-						final Timer InteractTimer = new Timer(3500);
+						final Timerr InteractTimer = new Timerr(3500);
 						while (InteractTimer.isRunning() && !Make.isVisible()) {
 							sleep(Random.nextInt(100, 350));
 						}
@@ -719,11 +719,11 @@ public class rTanner extends PollingScript implements PaintListener {
 		}
 	}
 
-	public class Timer {
+	public class Timerr {
 		private long end;
 		private final long start;
 
-		public Timer(final long period) {
+		public Timerr(final long period) {
 			start = System.currentTimeMillis();
 			end = start + period;
 		}
@@ -734,7 +734,7 @@ public class rTanner extends PollingScript implements PaintListener {
 	}
 
 	private void depositBackpackTimer() {
-		final Timer depositTimer = new Timer(Random.nextInt(1800, 2200));
+		final Timerr depositTimer = new Timerr(Random.nextInt(1800, 2200));
 		while (depositTimer.isRunning() && ctx.backpack.select().count() > 0) {
 			sleep(Random.nextInt(50, 350));
 		}
