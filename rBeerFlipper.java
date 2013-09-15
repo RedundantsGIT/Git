@@ -29,7 +29,7 @@ import org.powerbot.script.wrappers.GameObject;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rBeerFlipper", description = "Buys Beer From The Bartender In Varrock.", version = 0.1)
+@Manifest(authors = { "Redundant" }, name = "rBeerFlipper", description = "Buys Beer From The Bartender In Varrock.", version = 0.1, hidden = true, instances = 30)
 public class rBeerFlipper extends PollingScript implements PaintListener,
 		MessageListener {
 	private static long elapsedTime = 0;
