@@ -27,6 +27,7 @@ import org.powerbot.script.util.Timer;
 import org.powerbot.script.wrappers.Component;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
+import org.powerbot.script.wrappers.Widget;
 
 @Manifest(authors = { "Redundant" }, name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", version = 0.9, hidden = true, instances = 35)
 public class rFurFlipper extends PollingScript implements PaintListener,
@@ -149,18 +150,19 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 		@Override
 		public boolean activate() {
-			final org.powerbot.script.wrappers.Widget InfoWindow = ctx.widgets
-					.get(1477);
+			final Component InfoWindow = ctx.widgets
+					.get(1477).getComponent(72);
 			
 			return InfoWindow.isValid();
 		}
 
 		@Override
 		public void execute() {
-			final org.powerbot.script.wrappers.Widget InfoWindow = ctx.widgets
-					.get(1477);
-
-			InfoWindow.getComponent(72).getChild(2).click(true);
+			final Component InfoWindow = ctx.widgets
+					.get(1477).getComponent(72);
+			
+			InfoWindow.interact("Close Window");
+			sleep(200, 400);
 		
 		}
 	}
