@@ -50,7 +50,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		scriptTimer = System.currentTimeMillis();
 		status = "Getting G.E. Fur Price";
 		furPrice = getGuidePrice(furID);
-		rFurFlipper.container = new JobContainer(new Job[] { new BuyFur(ctx),
+		rFurFlipper.container = new JobContainer(new Job[] { new ScriptFix(ctx), new BuyFur(ctx),
 				new Banking(ctx) });
 	}
 
@@ -141,6 +141,25 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		}
 
 		return 50;
+	}
+	
+	private class ScriptFix extends Job {
+		public ScriptFix(MethodContext ctx) {
+			super(ctx);
+		}
+
+		@Override
+		public boolean activate() {
+			Component closeButton = ctx.widgets.get(1477, 72).getComponent().getChild(1);
+			return closeButton.isOnScreen();
+		}
+
+		@Override
+		public void execute() {
+			Component closeButton = ctx.widgets.get(1477, 72).getComponent().getChild(1);
+			closeButton.interact("Close Window");
+	
+		}
 	}
 
 	private class BuyFur extends Job {
@@ -396,10 +415,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 	@Override
 	public void repaint(Graphics g) {
-		if (ctx.game.getClientState() != Game.INDEX_MAP_LOADED) {
-			return;
-		}
-
+	
 		long millis = System.currentTimeMillis() - scriptTimer;
 		long hours = millis / (1000 * 60 * 60);
 		millis -= hours * (1000 * 60 * 60);
