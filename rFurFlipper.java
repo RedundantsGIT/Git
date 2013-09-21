@@ -28,7 +28,7 @@ import org.powerbot.script.wrappers.Component;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", version = 0.8, hidden = true, instances = 35)
+@Manifest(authors = { "Redundant" }, name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", version = 0.9, hidden = true, instances = 35)
 public class rFurFlipper extends PollingScript implements PaintListener,
 		MessageListener {
 
@@ -50,7 +50,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		scriptTimer = System.currentTimeMillis();
 		status = "Getting G.E. Fur Price";
 		furPrice = getGuidePrice(furID);
-		rFurFlipper.container = new JobContainer(new Job[] {new BuyFur(ctx), new Banking(ctx) });
+		rFurFlipper.container = new JobContainer(new Job[] {new Fix(ctx), new BuyFur(ctx), new Banking(ctx) });
 	}
 
 	@Override
@@ -140,6 +140,28 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		}
 
 		return 50;
+	}
+	
+	private class Fix extends Job {
+		public Fix(MethodContext ctx) {
+			super(ctx);
+		}
+
+		@Override
+		public boolean activate() {
+			final org.powerbot.script.wrappers.Widget InfoWindow = ctx.widgets
+					.get(1477);
+			
+			return InfoWindow.getComponent(72).isVisible();
+		}
+
+		@Override
+		public void execute() {
+			final org.powerbot.script.wrappers.Widget InfoWindow = ctx.widgets
+					.get(1477);
+			InfoWindow.getComponent(2).click(true);
+		
+		}
 	}
 
 
@@ -389,7 +411,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		g.setColor(Color.RED);
 		g.drawRect(6, 210, 200, 145);
 		g.setFont(fontTwo);
-		g.drawString("rFurFlipper v0.8", 70, 222);
+		g.drawString("rFurFlipper v0.9", 70, 222);
 		g.setFont(font);
 		g.setColor(Color.WHITE);
 		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 13,
