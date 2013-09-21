@@ -37,7 +37,7 @@ import org.powerbot.script.wrappers.Item;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", website = "http://www.powerbot.org/community/topic/876982-vip-rtanner-all-potions-all-hides-al-kharid-burthorpe/", version = 3.1, instances = 5)
+@Manifest(authors = { "Redundant" }, name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", website = "http://www.powerbot.org/community/topic/876982-vip-rtanner-all-potions-all-hides-al-kharid-burthorpe/", version = 3.2, instances = 5)
 public class rTanner extends PollingScript implements PaintListener {
 	private static RenderingHints antialiasing = new RenderingHints(
 			RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -90,8 +90,8 @@ public class rTanner extends PollingScript implements PaintListener {
 		path1 = true;
 		elapsedTime = System.currentTimeMillis();
 		this.container = new JobContainer(new Job[] { new GetPlayerArea(ctx),
-				new ScriptFix(ctx), new UseEnergyPotion(ctx), new Tan(ctx),
-				new Banking(ctx) });
+				new CloseWindow(ctx), new Stairs(ctx),
+				new UseEnergyPotion(ctx), new Tan(ctx), new Banking(ctx) });
 	}
 
 	@Override
@@ -203,8 +203,29 @@ public class rTanner extends PollingScript implements PaintListener {
 		}
 	}
 
-	private class ScriptFix extends Job {
-		public ScriptFix(MethodContext ctx) {
+	private class CloseWindow extends Job {
+		public CloseWindow(MethodContext ctx) {
+			super(ctx);
+		}
+
+		@Override
+		public boolean activate() {
+			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
+			return InfoWindow.isVisible();
+		}
+
+		@Override
+		public void execute() {
+			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
+			if (InfoWindow.getChild(1).interact("Close Window")) {
+				sleep(200, 400);
+			}
+
+		}
+	}
+
+	private class Stairs extends Job {
+		public Stairs(MethodContext ctx) {
 			super(ctx);
 		}
 
@@ -831,7 +852,7 @@ public class rTanner extends PollingScript implements PaintListener {
 		g.drawString("Status: " + (status), 350, 340);
 		g.setFont(FONT_THREE);
 		g.setColor(Color.RED);
-		g.drawString("v3.1", 490, 360);
+		g.drawString("v3.2", 490, 360);
 		drawMouse(g);
 		drawTrail(g);
 	}
