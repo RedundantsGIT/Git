@@ -31,7 +31,7 @@ import org.powerbot.script.wrappers.Tile;
 @Manifest(authors = { "Redundant" }, name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", version = 0.6, hidden = true, instances = 35)
 public class rFurFlipper extends PollingScript implements PaintListener,
 		MessageListener {
-	
+
 	private static JobContainer container;
 	private mouseTrail trail = new mouseTrail();
 	private static String status = "Starting...";
@@ -42,6 +42,8 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	private static boolean path2 = false;
 	private static boolean path3 = false;
 	private static boolean path4 = false;
+	private static final int CLOSE_MENU = 1477;
+	private static final int CLOSE_BUTTON = 2;
 
 	@Override
 	public void start() {
@@ -50,8 +52,8 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		scriptTimer = System.currentTimeMillis();
 		status = "Getting G.E. Fur Price";
 		furPrice = getGuidePrice(furID);
-		rFurFlipper.container = new JobContainer(new Job[] { new ScriptFix(ctx), new BuyFur(ctx),
-				new Banking(ctx) });
+		rFurFlipper.container = new JobContainer(new Job[] {
+				new ScriptFix(ctx), new BuyFur(ctx), new Banking(ctx) });
 	}
 
 	@Override
@@ -142,7 +144,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 		return 50;
 	}
-	
+
 	private class ScriptFix extends Job {
 		public ScriptFix(MethodContext ctx) {
 			super(ctx);
@@ -150,15 +152,16 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 		@Override
 		public boolean activate() {
-			Component closeButton = ctx.widgets.get(1477, 72).getComponent().getChild(1);
+			Component closeButton = ctx.widgets.get(1477, 72);
 			return closeButton.isOnScreen();
 		}
 
 		@Override
 		public void execute() {
-			Component closeButton = ctx.widgets.get(1477, 72).getComponent().getChild(1);
-			closeButton.interact("Close Window");
-	
+			final org.powerbot.script.wrappers.Widget Menu = ctx.widgets
+					.get(CLOSE_MENU);
+			Menu.getComponent(CLOSE_BUTTON).click(true);
+
 		}
 	}
 
@@ -367,9 +370,9 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	}
 
 	public boolean nearBank() {
-			return ctx.bank.isOnScreen()
-					&& ctx.players.local().getLocation()
-							.distanceTo(ctx.bank.getNearest()) < 7;
+		return ctx.bank.isOnScreen()
+				&& ctx.players.local().getLocation()
+						.distanceTo(ctx.bank.getNearest()) < 7;
 	}
 
 	public void mouseMoveSlightly() {
@@ -385,7 +388,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		}
 		ctx.mouse.move(p);
 	}
-	
+
 	public class Timer {
 		private long end;
 		private final long start;
@@ -394,6 +397,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			start = System.currentTimeMillis();
 			end = start + period;
 		}
+
 		public boolean isRunning() {
 			return System.currentTimeMillis() < end;
 		}
@@ -415,7 +419,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 	@Override
 	public void repaint(Graphics g) {
-	
+
 		long millis = System.currentTimeMillis() - scriptTimer;
 		long hours = millis / (1000 * 60 * 60);
 		millis -= hours * (1000 * 60 * 60);
@@ -467,7 +471,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			cost = -20;
 		return furBought * furPrice - cost;
 	}
-	
+
 	private void drawTrail(final Graphics g) {
 		final Point m = ctx.mouse.getLocation();
 		trail.add(m);
@@ -480,7 +484,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		g.drawLine(m.x - 5, m.y + 5, m.x + 5, m.y - 5);
 		g.drawLine(m.x - 5, m.y - 5, m.x + 5, m.y + 5);
 	}
-	
+
 	private final class mouseTrail {
 		private final int SIZE = 50;
 		private final double ALPHA_STEP = (255.0 / SIZE);
@@ -540,4 +544,3 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	}
 
 }
-
