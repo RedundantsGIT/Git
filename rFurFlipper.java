@@ -159,7 +159,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		public void execute() {
 			final org.powerbot.script.wrappers.Widget InfoWindow = ctx.widgets
 					.get(1477);
-			InfoWindow.getComponent(2).click(true);
+			InfoWindow.getComponent(1).click(true);
 		
 		}
 	}
