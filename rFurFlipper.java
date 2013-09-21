@@ -28,7 +28,7 @@ import org.powerbot.script.wrappers.Component;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", version = 0.6, hidden = true, instances = 35)
+@Manifest(authors = { "Redundant" }, name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", version = 0.7, hidden = true, instances = 35)
 public class rFurFlipper extends PollingScript implements PaintListener,
 		MessageListener {
 
@@ -42,8 +42,6 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	private static boolean path2 = false;
 	private static boolean path3 = false;
 	private static boolean path4 = false;
-	private static final int CLOSE_MENU = 1477;
-	private static final int CLOSE_BUTTON = 2;
 
 	@Override
 	public void start() {
@@ -52,8 +50,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		scriptTimer = System.currentTimeMillis();
 		status = "Getting G.E. Fur Price";
 		furPrice = getGuidePrice(furID);
-		rFurFlipper.container = new JobContainer(new Job[] {
-				new ScriptFix(ctx), new BuyFur(ctx), new Banking(ctx) });
+		rFurFlipper.container = new JobContainer(new Job[] {new BuyFur(ctx), new Banking(ctx) });
 	}
 
 	@Override
@@ -145,25 +142,6 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		return 50;
 	}
 
-	private class ScriptFix extends Job {
-		public ScriptFix(MethodContext ctx) {
-			super(ctx);
-		}
-
-		@Override
-		public boolean activate() {
-			Component closeButton = ctx.widgets.get(1477, 72);
-			return closeButton.isOnScreen();
-		}
-
-		@Override
-		public void execute() {
-			final org.powerbot.script.wrappers.Widget Menu = ctx.widgets
-					.get(CLOSE_MENU);
-			Menu.getComponent(CLOSE_BUTTON).click(true);
-
-		}
-	}
 
 	private class BuyFur extends Job {
 		public BuyFur(MethodContext ctx) {
@@ -196,7 +174,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 						final Timer pressTimer = new Timer(Random.nextInt(1600,
 								1800));
 						while (pressTimer.isRunning() && canContinue()) {
-							sleep(15, 50);
+							sleep(15, 40);
 						}
 					} else if (pressOne.isValid()) {
 						status = "Press 1";
@@ -204,23 +182,17 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 						final Timer pressTimer = new Timer(Random.nextInt(1600,
 								1800));
 						while (pressTimer.isRunning() && pressOne.isVisible()) {
-							sleep(15, 50);
+							sleep(15, 40);
 						}
 					} else {
 						status = "Talk to Baraek";
-						if (Random.nextInt(0, 10) == 5) {
-							mouseMoveSlightly();
-						}
 						if (baraek.isOnScreen()) {
 							baraek.interact("Talk-to", "Baraek");
 						}
-						if (Random.nextInt(0, 8) == 4) {
-							mouseMoveSlightly();
-						}
-						final Timer talkTimer = new Timer(Random.nextInt(1800,
-								2000));
+						final Timer talkTimer = new Timer(Random.nextInt(2000,
+								2500));
 						while (talkTimer.isRunning() && !pressOne.isVisible()) {
-							sleep(50, 100);
+							sleep(50, 70);
 						}
 						while (ctx.players.local().isInMotion()) {
 							sleep(25, 300);
