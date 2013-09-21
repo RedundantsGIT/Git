@@ -153,14 +153,13 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			final Component InfoWindow = ctx.widgets
 					.get(1477).getComponent(72);
 			
-			return InfoWindow.isValid();
+			return InfoWindow.isVisible();
 		}
 
 		@Override
 		public void execute() {
 			final Component InfoWindow = ctx.widgets
 					.get(1477).getComponent(72);
-			
 			InfoWindow.getChild(1).interact("Close Window");
 			sleep(200, 400);
 		
