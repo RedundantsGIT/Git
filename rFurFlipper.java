@@ -20,15 +20,15 @@ import org.powerbot.event.MessageListener;
 import org.powerbot.event.PaintListener;
 import org.powerbot.script.Manifest;
 import org.powerbot.script.PollingScript;
-import org.powerbot.script.methods.Game;
 import org.powerbot.script.methods.MethodContext;
 import org.powerbot.script.methods.MethodProvider;
 import org.powerbot.script.util.Random;
+import org.powerbot.script.util.Timer;
 import org.powerbot.script.wrappers.Component;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", version = 0.7, hidden = true, instances = 35)
+@Manifest(authors = { "Redundant" }, name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", version = 0.8, hidden = true, instances = 35)
 public class rFurFlipper extends PollingScript implements PaintListener,
 		MessageListener {
 
@@ -189,13 +189,13 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 						if (baraek.isOnScreen()) {
 							baraek.interact("Talk-to", "Baraek");
 						}
+						while (ctx.players.local().isInMotion()) {
+							sleep(25, 300);
+						}
 						final Timer talkTimer = new Timer(Random.nextInt(2000,
 								2500));
 						while (talkTimer.isRunning() && !pressOne.isVisible()) {
 							sleep(50, 70);
-						}
-						while (ctx.players.local().isInMotion()) {
-							sleep(25, 300);
 						}
 					}
 				}
@@ -232,8 +232,6 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 						sleep(Random.nextInt(100, 650));
 					}
 					furStored = ctx.bank.select().id(furID).count(true);
-					status = "Bank Close";
-					ctx.bank.close();
 					SwitchPath();
 				} else {
 					if (!ctx.players.local().isInMotion()) {
@@ -361,19 +359,6 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		ctx.mouse.move(p);
 	}
 
-	public class Timer {
-		private long end;
-		private final long start;
-
-		public Timer(final long period) {
-			start = System.currentTimeMillis();
-			end = start + period;
-		}
-
-		public boolean isRunning() {
-			return System.currentTimeMillis() < end;
-		}
-	}
 
 	@Override
 	public void messaged(MessageEvent msg) {
@@ -404,7 +389,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		g.setColor(Color.RED);
 		g.drawRect(6, 210, 200, 145);
 		g.setFont(fontTwo);
-		g.drawString("rFurFlipper", 75, 222);
+		g.drawString("rFurFlipper v0.8", 70, 222);
 		g.setFont(font);
 		g.setColor(Color.WHITE);
 		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 13,
