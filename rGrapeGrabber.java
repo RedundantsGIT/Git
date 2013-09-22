@@ -271,7 +271,7 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 			sleep(Random.nextInt(50, 150));
 			}
 			ctx.mouse.click(g.getCenterPoint().x ,
-					g.getCenterPoint().y - Random.nextInt(14, 13), true);
+					g.getCenterPoint().y - 14, true);
 			tries++;
 			final Timer lootingTimer = new Timer(2000);
 			while (lootingTimer.isRunning()
