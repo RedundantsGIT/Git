@@ -37,7 +37,7 @@ import org.powerbot.script.wrappers.Item;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", website = "http://www.powerbot.org/community/topic/876982-vip-rtanner-all-potions-all-hides-al-kharid-burthorpe/", version = 3.2, instances = 5)
+@Manifest(authors = { "Redundant" }, name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", website = "http://www.powerbot.org/community/topic/876982-vip-rtanner-all-potions-all-hides-al-kharid-burthorpe/", version = 3.3, instances = 5)
 public class rTanner extends PollingScript implements PaintListener {
 	private static RenderingHints antialiasing = new RenderingHints(
 			RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -89,8 +89,8 @@ public class rTanner extends PollingScript implements PaintListener {
 	public void start() {
 		path1 = true;
 		elapsedTime = System.currentTimeMillis();
-		this.container = new JobContainer(new Job[] { new GetPlayerArea(ctx),
-				new CloseWindow(ctx), new Stairs(ctx),
+		this.container = new JobContainer(new Job[] { new Camera(ctx),
+				new GetPlayerArea(ctx), new CloseWidgets(ctx), new Stairs(ctx),
 				new UseEnergyPotion(ctx), new Tan(ctx), new Banking(ctx) });
 	}
 
@@ -181,6 +181,24 @@ public class rTanner extends PollingScript implements PaintListener {
 		return 250;
 	}
 
+	private class Camera extends Job {
+		public Camera(MethodContext ctx) {
+			super(ctx);
+		}
+
+		@Override
+		public boolean activate() {
+			return ctx.camera.getPitch() < 55;
+		}
+
+		@Override
+		public void execute() {
+			if (ctx.camera.setPitch(Random.nextInt(58, 65))) {
+				sleep(25, 50);
+			}
+		}
+	}
+
 	private class GetPlayerArea extends Job {
 		public GetPlayerArea(MethodContext ctx) {
 			super(ctx);
@@ -203,22 +221,33 @@ public class rTanner extends PollingScript implements PaintListener {
 		}
 	}
 
-	private class CloseWindow extends Job {
-		public CloseWindow(MethodContext ctx) {
+	private class CloseWidgets extends Job {
+		public CloseWidgets(MethodContext ctx) {
 			super(ctx);
 		}
 
 		@Override
 		public boolean activate() {
 			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
-			return InfoWindow.isVisible();
+			final Component CollectionBox = ctx.widgets.get(109).getComponent(12);
+			final Component WorldMap = ctx.widgets.get(1422).getComponent(18);
+			return InfoWindow.isVisible() || CollectionBox.isVisible()
+					|| WorldMap.isVisible();
 		}
 
 		@Override
 		public void execute() {
 			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
-			if (InfoWindow.getChild(1).interact("Close Window")) {
+			final Component CollectionBox = ctx.widgets.get(109).getComponent(12);
+			final Component WorldMap = ctx.widgets.get(1422).getComponent(18);
+			if (InfoWindow.isVisible()
+					&& InfoWindow.getChild(1).interact("Close Window")) {
 				sleep(200, 400);
+			} else if (CollectionBox.isVisible()
+					&& CollectionBox.interact("Close")) {
+				sleep(100, 350);
+			} else if (WorldMap.isVisible() && WorldMap.interact("Close")) {
+				sleep(300, 550);
 			}
 
 		}
@@ -825,9 +854,6 @@ public class rTanner extends PollingScript implements PaintListener {
 
 		final Graphics2D g = (Graphics2D) g1;
 
-		if (ctx.game.getClientState() != Game.INDEX_MAP_LOADED)
-			return;
-
 		g.setRenderingHints(antialiasing);
 		g.setColor(Color.RED);
 		g.drawRect(3, 285, 514, 105);
@@ -852,7 +878,7 @@ public class rTanner extends PollingScript implements PaintListener {
 		g.drawString("Status: " + (status), 350, 340);
 		g.setFont(FONT_THREE);
 		g.setColor(Color.RED);
-		g.drawString("v3.2", 490, 360);
+		g.drawString("v3.3", 490, 360);
 		drawMouse(g);
 		drawTrail(g);
 	}
