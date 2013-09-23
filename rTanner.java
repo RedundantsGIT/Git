@@ -229,17 +229,21 @@ public class rTanner extends PollingScript implements PaintListener {
 		@Override
 		public boolean activate() {
 			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
-			final Component CollectionBox = ctx.widgets.get(109).getComponent(12);
+			final Component CollectionBox = ctx.widgets.get(109).getComponent(
+					12);
 			final Component WorldMap = ctx.widgets.get(1422).getComponent(18);
+			final Component Armoury = ctx.widgets.get(1265).getComponent(89);
 			return InfoWindow.isVisible() || CollectionBox.isVisible()
-					|| WorldMap.isVisible();
+					|| WorldMap.isVisible() || Armoury.isVisible();
 		}
 
 		@Override
 		public void execute() {
 			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
-			final Component CollectionBox = ctx.widgets.get(109).getComponent(12);
+			final Component CollectionBox = ctx.widgets.get(109).getComponent(
+					12);
 			final Component WorldMap = ctx.widgets.get(1422).getComponent(18);
+			final Component Armoury = ctx.widgets.get(1265).getComponent(89);
 			if (InfoWindow.isVisible()
 					&& InfoWindow.getChild(1).interact("Close Window")) {
 				sleep(200, 400);
@@ -248,6 +252,8 @@ public class rTanner extends PollingScript implements PaintListener {
 				sleep(100, 350);
 			} else if (WorldMap.isVisible() && WorldMap.interact("Close")) {
 				sleep(300, 550);
+			} else if (Armoury.isVisible() && Armoury.interact("Close")) {
+				sleep(55, 155);
 			}
 
 		}
