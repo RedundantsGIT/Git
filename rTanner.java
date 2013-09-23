@@ -188,12 +188,12 @@ public class rTanner extends PollingScript implements PaintListener {
 
 		@Override
 		public boolean activate() {
-			return ctx.camera.getPitch() < 45;
+			return ctx.camera.getPitch() < 55;
 		}
 
 		@Override
 		public void execute() {
-			if (ctx.camera.setPitch(Random.nextInt(46, 50))) {
+			if (ctx.camera.setPitch(Random.nextInt(56, 60))) {
 				sleep(25, 50);
 			}
 		}
