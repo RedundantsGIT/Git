@@ -148,14 +148,16 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		@Override
 		public boolean activate() {
 			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
-			final Component CollectionBox = ctx.widgets.get(109).getComponent(12);
+			final Component CollectionBox = ctx.widgets.get(109).getComponent(
+					12);
 			return InfoWindow.isVisible() || CollectionBox.isVisible();
 		}
 
 		@Override
 		public void execute() {
 			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
-			final Component CollectionBox = ctx.widgets.get(109).getComponent(12);
+			final Component CollectionBox = ctx.widgets.get(109).getComponent(
+					12);
 			if (InfoWindow.isVisible()
 					&& InfoWindow.getChild(1).interact("Close Window")) {
 				sleep(200, 400);
@@ -182,42 +184,44 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			final Npc baraek = ctx.npcs.select().id(baraekID).first().isEmpty() ? null
 					: ctx.npcs.iterator().next();
 			if (nearBaraek()) {
-				if (ctx.backpack.getMoneyPouch() < 20) {
-					System.out
-							.println("[rFurFlipper]: -Not enough gold left to continue, stopping script.. .");
-					getController().stop();
-				} else if (!baraek.isOnScreen()
-						&& !ctx.players.local().isInMotion()) {
-					ctx.movement.stepTowards(ctx.movement
-							.getClosestOnMap(baraek.getLocation()));
-				} else if (canContinue()) {
-					status = "Press Spacebar";
-					ctx.keyboard.send(" ");
-					final Timer pressTimer = new Timer(Random.nextInt(1600,
-							1800));
-					while (pressTimer.isRunning() && canContinue()) {
-						sleep(10, 35);
-					}
-				} else if (pressOne.isValid()) {
-					status = "Press 1";
-					ctx.keyboard.send("1");
-					final Timer pressTimer = new Timer(Random.nextInt(1600,
-							1800));
-					while (pressTimer.isRunning() && pressOne.isVisible()) {
-						sleep(10, 35);
-					}
-				} else {
-					status = "Talk to Baraek";
-					if (baraek.isOnScreen()) {
-						baraek.interact("Talk-to", "Baraek");
-					}
-					while (ctx.players.local().isInMotion()) {
-						sleep(25, 300);
-					}
-					final Timer talkTimer = new Timer(
-							Random.nextInt(2000, 2500));
-					while (talkTimer.isRunning() && !pressOne.isVisible()) {
-						sleep(15, 50);
+				if (baraek != null) {
+					if (ctx.backpack.getMoneyPouch() < 20) {
+						System.out
+								.println("[rFurFlipper]: -Not enough gold left to continue, stopping script.. .");
+						getController().stop();
+					} else if (!baraek.isOnScreen()
+							&& !ctx.players.local().isInMotion()) {
+						ctx.movement.stepTowards(ctx.movement
+								.getClosestOnMap(baraek.getLocation()));
+					} else if (canContinue()) {
+						status = "Press Spacebar";
+						ctx.keyboard.send(" ");
+						final Timer pressTimer = new Timer(Random.nextInt(1600,
+								1800));
+						while (pressTimer.isRunning() && canContinue()) {
+							sleep(10, 35);
+						}
+					} else if (pressOne.isValid()) {
+						status = "Press 1";
+						ctx.keyboard.send("1");
+						final Timer pressTimer = new Timer(Random.nextInt(1600,
+								1800));
+						while (pressTimer.isRunning() && pressOne.isVisible()) {
+							sleep(10, 35);
+						}
+					} else {
+						status = "Talk to Baraek";
+						if (baraek.isOnScreen()) {
+							baraek.interact("Talk-to", "Baraek");
+						}
+						while (ctx.players.local().isInMotion()) {
+							sleep(25, 300);
+						}
+						final Timer talkTimer = new Timer(Random.nextInt(2000,
+								2500));
+						while (talkTimer.isRunning() && !pressOne.isVisible()) {
+							sleep(15, 50);
+						}
 					}
 				}
 			} else {
