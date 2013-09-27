@@ -198,8 +198,8 @@ public class rTanner extends PollingScript implements PaintListener {
 
 		@Override
 		public void execute() {
-			status = "Set Pitch";
-			ctx.camera.setPitch(55);
+			ctx.camera.setPitch(true);
+			sleep(5, 10);
 			pitch = true;
 		}
 	}
