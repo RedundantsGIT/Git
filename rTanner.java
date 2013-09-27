@@ -192,13 +192,14 @@ public class rTanner extends PollingScript implements PaintListener {
 
 		@Override
 		public boolean activate() {
-			return ctx.camera.getPitch() < 50;
+			return ctx.camera.getPitch() < 40;
 		}
 
 		@Override
 		public void execute() {
-			if (ctx.camera.setPitch(52)) {
-				sleep(15, 25);
+			if (ctx.camera.setPitch(42)) {
+				status = "Set Pitch";
+				sleep(10, 20);
 			}
 		}
 	}
@@ -233,7 +234,8 @@ public class rTanner extends PollingScript implements PaintListener {
 		@Override
 		public boolean activate() {
 			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
-			final Component CollectionBox = ctx.widgets.get(109).getComponent(12);
+			final Component CollectionBox = ctx.widgets.get(109).getComponent(
+					12);
 			final Component WorldMap = ctx.widgets.get(1422).getComponent(18);
 			final Component Armoury = ctx.widgets.get(1265).getComponent(89);
 			return InfoWindow.isVisible() || CollectionBox.isVisible()
@@ -243,7 +245,8 @@ public class rTanner extends PollingScript implements PaintListener {
 		@Override
 		public void execute() {
 			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
-			final Component CollectionBox = ctx.widgets.get(109).getComponent(12);
+			final Component CollectionBox = ctx.widgets.get(109).getComponent(
+					12);
 			final Component WorldMap = ctx.widgets.get(1422).getComponent(18);
 			final Component Armoury = ctx.widgets.get(1265).getComponent(89);
 			if (InfoWindow.isVisible()
@@ -630,44 +633,43 @@ public class rTanner extends PollingScript implements PaintListener {
 		final Component Make = ctx.widgets.get(1370, 20);
 		final Npc Tanner = ctx.npcs.select().id(tannerID).first().isEmpty() ? null
 				: ctx.npcs.iterator().next();
-			if (Make.isVisible()) {
-				calculateMemberProfit();
-				hideCount += backpackHideCount;
-				if (Make.interact("Make")) {
-					final Timer WidgetTimer = new Timer(5600);
-					while (WidgetTimer.isRunning() && hasHide()) {
-						sleep(Random.nextInt(200, 450));
-					}
+		if (Make.isVisible()) {
+			calculateMemberProfit();
+			hideCount += backpackHideCount;
+			if (Make.interact("Make")) {
+				final Timer WidgetTimer = new Timer(5600);
+				while (WidgetTimer.isRunning() && hasHide()) {
+					sleep(Random.nextInt(200, 450));
 				}
-				if (CloseButton.isVisible()) {
-					CloseButton.interact("Close");
-				}
-				calculateFreeProfit();
-			} else {
-				if (Tanner.isOnScreen()) {
-					status = "Interact";
-					backpackHideCount = ctx.backpack.select().id(hideID)
-							.count();
-					if (atBurthorpe) {
-						interact(Tanner, "Tan hide", "Jack Oval");
-					} else {
-						interact(Tanner, "Tan hides", "Ellis");
-					}
-					final Timer InteractTimer = new Timer(3500);
-					while (InteractTimer.isRunning() && !Make.isVisible()) {
-						sleep(Random.nextInt(100, 350));
-					}
+			}
+			if (CloseButton.isVisible()) {
+				CloseButton.interact("Close");
+			}
+			calculateFreeProfit();
+		} else {
+			if (Tanner != null && Tanner.isOnScreen()) {
+				status = "Interact";
+				backpackHideCount = ctx.backpack.select().id(hideID).count();
+				if (atBurthorpe) {
+					interact(Tanner, "Tan hide", "Jack Oval");
 				} else {
-					if (atAlKharid) {
-						ctx.movement.stepTowards(ctx.movement
-								.getClosestOnMap(Tanner.getLocation()));
-						sleep(Random.nextInt(50, 400));
-					} else {
-						ctx.camera.turnTo(Tanner.getLocation());
-					}
+					interact(Tanner, "Tan hides", "Ellis");
+				}
+				final Timer InteractTimer = new Timer(3500);
+				while (InteractTimer.isRunning() && !Make.isVisible()) {
+					sleep(Random.nextInt(100, 350));
+				}
+			} else {
+				if (atAlKharid) {
+					ctx.movement.stepTowards(ctx.movement
+							.getClosestOnMap(Tanner.getLocation()));
+					sleep(Random.nextInt(50, 400));
+				} else {
+					ctx.camera.turnTo(Tanner.getLocation());
 				}
 			}
 		}
+	}
 
 	private void logOut() {
 		status = "Log-out";
