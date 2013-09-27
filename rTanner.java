@@ -174,7 +174,7 @@ public class rTanner extends PollingScript implements PaintListener {
 	public int poll() {
 		if (!ctx.game.isLoggedIn()
 				|| ctx.game.getClientState() != org.powerbot.script.methods.Game.INDEX_MAP_LOADED) {
-			return 1000;
+			return 1500;
 		}
 
 		final Job job = container.get();
@@ -650,11 +650,14 @@ public class rTanner extends PollingScript implements PaintListener {
 					status = "Interact";
 					backpackHideCount = ctx.backpack.select().id(hideID)
 							.count();
-					if (Tanner.interact("Tan")) {
-						final Timer InteractTimer = new Timer(3500);
-						while (InteractTimer.isRunning() && !Make.isVisible()) {
-							sleep(Random.nextInt(100, 350));
-						}
+					if (atBurthorpe) {
+						interact(Tanner, "Tan hide", "Jack Oval");
+					} else {
+						interact(Tanner, "Tan hides", "Ellis");
+					}
+					final Timer InteractTimer = new Timer(3500);
+					while (InteractTimer.isRunning() && !Make.isVisible()) {
+						sleep(Random.nextInt(100, 350));
 					}
 				} else {
 					if (atAlKharid) {
