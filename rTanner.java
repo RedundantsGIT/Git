@@ -51,6 +51,7 @@ public class rTanner extends PollingScript implements PaintListener {
 	private static boolean gotPrices = false;
 	private static boolean atBurthorpe = false;
 	private static boolean atAlKharid = false;
+	private static boolean pitch = false;
 	private static final int[] leatherID = { 1741, 1743, 1745, 2505, 24374,
 			6289, 2507, 2509 }, tannerID = { 14877, 2824 }, hideID = { 1739,
 			1753, 1751, 24372, 6287, 7801, 1749, 1747 }, energyPotionID = {
@@ -93,7 +94,7 @@ public class rTanner extends PollingScript implements PaintListener {
 	@Override
 	public void start() {
 		elapsedTime = System.currentTimeMillis();
-		this.container = new JobContainer(new Job[] {
+		this.container = new JobContainer(new Job[] { new Pitch(ctx),
 				new GetPlayerArea(ctx), new CloseWidgets(ctx), new Stairs(ctx),
 				new UseEnergyPotion(ctx), new Tan(ctx), new Banking(ctx) });
 	}
@@ -183,6 +184,24 @@ public class rTanner extends PollingScript implements PaintListener {
 		}
 
 		return 100;
+	}
+
+	private class Pitch extends Job {
+		public Pitch(MethodContext ctx) {
+			super(ctx);
+		}
+
+		@Override
+		public boolean activate() {
+			return !pitch;
+		}
+
+		@Override
+		public void execute() {
+			status = "Set Pitch";
+			ctx.camera.setPitch(55);
+			pitch = true;
+		}
 	}
 
 	private class GetPlayerArea extends Job {
@@ -323,6 +342,7 @@ public class rTanner extends PollingScript implements PaintListener {
 						status = "Walk to Jack";
 						if (ctx.bank.isOpen()) {
 							ctx.bank.close();
+							pitch = false;
 						} else {
 							if (!ctx.players.local().isInMotion()
 									|| ctx.players
@@ -344,6 +364,7 @@ public class rTanner extends PollingScript implements PaintListener {
 							status = "Walk to Ellis";
 							if (ctx.bank.isOpen()) {
 								ctx.bank.close();
+								pitch = false;
 							} else {
 								if (!ctx.players.local().isInMotion()
 										|| ctx.players
@@ -612,41 +633,39 @@ public class rTanner extends PollingScript implements PaintListener {
 	public void tanHides() {
 		final Component CloseButton = ctx.widgets.get(1370, 30);
 		final Component Make = ctx.widgets.get(1370, 20);
-		final Npc Tanner = ctx.npcs.select().id(tannerID).first().isEmpty() ? null
-				: ctx.npcs.iterator().next();
-		if (Make.isVisible()) {
-			calculateMemberProfit();
-			hideCount += backpackHideCount;
-			if (Make.interact("Make")) {
-				final Timer WidgetTimer = new Timer(5600);
-				while (WidgetTimer.isRunning() && hasHide()) {
-					sleep(Random.nextInt(200, 450));
+		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
+			if (Make.isVisible()) {
+				calculateMemberProfit();
+				hideCount += backpackHideCount;
+				if (Make.interact("Make")) {
+					final Timer WidgetTimer = new Timer(5600);
+					while (WidgetTimer.isRunning() && hasHide()) {
+						sleep(Random.nextInt(200, 450));
+					}
 				}
-			}
-			if (CloseButton.isVisible()) {
-				CloseButton.interact("Close");
-			}
-			calculateFreeProfit();
-		} else {
-			if (Tanner != null && Tanner.isOnScreen()) {
-				status = "Interact";
-				backpackHideCount = ctx.backpack.select().id(hideID).count();
-				if (atBurthorpe) {
-					interact(Tanner, "Tan hide", "Jack Oval");
-				} else {
-					interact(Tanner, "Tan hides", "Ellis");
+				if (CloseButton.isVisible()) {
+					CloseButton.interact("Close");
 				}
-				final Timer InteractTimer = new Timer(3500);
-				while (InteractTimer.isRunning() && !Make.isVisible()) {
-					sleep(Random.nextInt(100, 350));
-				}
+				calculateFreeProfit();
 			} else {
-				if (atAlKharid) {
-					ctx.movement.stepTowards(ctx.movement
-							.getClosestOnMap(Tanner.getLocation()));
-					sleep(Random.nextInt(50, 400));
+				if (Tanner.isOnScreen()) {
+					status = "Interact";
+					backpackHideCount = ctx.backpack.select().id(hideID)
+							.count();
+					if (Tanner.interact("Tan")) {
+						final Timer InteractTimer = new Timer(3500);
+						while (InteractTimer.isRunning() && !Make.isVisible()) {
+							sleep(Random.nextInt(100, 350));
+						}
+					}
 				} else {
-					ctx.camera.turnTo(Tanner.getLocation());
+					if (atAlKharid) {
+						ctx.movement.stepTowards(ctx.movement
+								.getClosestOnMap(Tanner.getLocation()));
+						sleep(Random.nextInt(50, 400));
+					} else {
+						ctx.camera.turnTo(Tanner.getLocation());
+					}
 				}
 			}
 		}
