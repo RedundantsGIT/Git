@@ -631,6 +631,7 @@ public class rTanner extends PollingScript implements PaintListener {
 	public void tanHides() {
 		final Component CloseButton = ctx.widgets.get(1370, 30);
 		final Component Make = ctx.widgets.get(1370, 20);
+		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
 		if (Make.isVisible()) {
 			calculateMemberProfit();
 			hideCount += backpackHideCount;
@@ -645,7 +646,6 @@ public class rTanner extends PollingScript implements PaintListener {
 			}
 			calculateFreeProfit();
 		} else {
-			for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
 				if (Tanner.isOnScreen()) {
 					status = "Interact";
 					backpackHideCount = ctx.backpack.select().id(hideID)
