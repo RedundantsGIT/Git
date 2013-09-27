@@ -25,7 +25,6 @@ import org.powerbot.script.methods.MethodProvider;
 import org.powerbot.script.util.Random;
 import org.powerbot.script.wrappers.Area;
 import org.powerbot.script.wrappers.GameObject;
-import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
 @Manifest(authors = { "Redundant" }, name = "rOakChopper", description = "Chops oak trees at the Grand Exchange", version = 0.1, hidden = true, instances = 30)
@@ -37,7 +36,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 	public String status = "Starting...";
 	private int logsChopped, logPrice, profitGained, logsInBank;
 	private int oakLogID = 1521;
-	private int[] bankerID = { 3293, 3416 }, oakID = { 38732, 38731 };
+	private int[] oakID = { 38732, 38731 };
 	Tile[] pathToOak = new Tile[] { new Tile(3180, 3502, 0),
 			new Tile(3183, 3498, 0), new Tile(3186, 3494, 0),
 			new Tile(3192, 3491, 0), new Tile(3195, 3487, 0),
@@ -124,7 +123,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 			return job.delay();
 		}
 
-		return Random.nextInt(50, 100);
+		return Random.nextInt(50, 75);
 	}
 
 	private class Banking extends Job {
@@ -151,19 +150,18 @@ public class rOakChopper extends PollingScript implements PaintListener,
 				}
 			} else {
 				status = "Walk to Bank";
-				ctx.movement.newTilePath(pathToOak).reverse().traverse();
+				if (!ctx.players.local().isInMotion()
+						|| ctx.players.local().getLocation()
+								.distanceTo(ctx.movement.getDestination()) < Random
+								.nextInt(6, 7)) {
+					ctx.movement.newTilePath(pathToOak).reverse().traverse();
+				}
 			}
 		}
 	}
 
 	public boolean atBanker() {
-		for (Npc banker : ctx.npcs.select().id(bankerID).nearest()) {
-			if (banker != null
-					&& banker.isOnScreen()) {
-				return true;
-			}
-		}
-		return false;
+		return ctx.bank.isOnScreen();
 	}
 
 	private class Chopping extends Job {
@@ -181,24 +179,23 @@ public class rOakChopper extends PollingScript implements PaintListener,
 			if (atOaks()) {
 				for (GameObject oak : ctx.objects.select().id(oakID).nearest()) {
 					if (ctx.players.local().getAnimation() == -1) {
-						if (oak != null) {
-							if (oak.isOnScreen()
-									&& oakArea.contains(oak.getLocation())) {
-								status = "Chop";
-								oak.interact("Chop down");
-								final Timer chopTimer = new Timer(
-										Random.nextInt(3000, 3500));
-								while (chopTimer.isRunning()
-										&& ctx.players.local().getAnimation() == -1)
-									sleep(Random.nextInt(150, 250));
-								status = "Chopping...";
+						if (oak.isOnScreen()
+								&& oakArea.contains(oak.getLocation())) {
+							status = "Chop";
+							oak.interact("Chop down");
+							final Timer chopTimer = new Timer(Random.nextInt(
+									3000, 3500));
+							while (chopTimer.isRunning()
+									&& ctx.players.local().getAnimation() == -1)
+								sleep(Random.nextInt(150, 250));
+							status = "Chopping...";
+						} else {
+							if (oakArea.contains(oak.getLocation())) {
+								status = "Turn Camera";
+								ctx.movement.stepTowards(ctx.movement
+										.getClosestOnMap(oak.getLocation()));
 							} else {
-								if (oakArea.contains(oak.getLocation())) {
-									status = "Turn Camera";
-									ctx.movement.stepTowards(ctx.movement.getClosestOnMap(oak.getLocation()));
-								} else {
-									sleep(Random.nextInt(100, 300));
-								}
+								sleep(Random.nextInt(100, 300));
 							}
 						}
 					}
@@ -218,7 +215,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 	public boolean atOaks() {
 		return oakArea.contains(ctx.players.local().getLocation());
 	}
-	
+
 	public class Timer {
 		private long end;
 		private final long start;
@@ -227,11 +224,12 @@ public class rOakChopper extends PollingScript implements PaintListener,
 			start = System.currentTimeMillis();
 			end = start + period;
 		}
+
 		public boolean isRunning() {
 			return System.currentTimeMillis() < end;
 		}
 	}
-	
+
 	private void sTimer(boolean wait4, int int1, int int2) {
 		if (int1 == 0 || int2 == 0) {
 			int1 = 1300;
@@ -259,7 +257,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 		}
 		return "" + start;
 	}
-	
+
 	final static Color black = new Color(25, 0, 0, 200);
 	final static Font font = new Font("Times New Roman", 0, 13);
 	final static Font fontTwo = new Font("Arial", 1, 12);
@@ -316,7 +314,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 				(int) (ctx.mouse.getLocation().getX()), 800);
 
 	}
-	
+
 	public int getGuidePrice(int itemId) {
 		try {
 			final URL website = new URL(
