@@ -76,9 +76,9 @@ public class rTanner extends PollingScript implements PaintListener {
 			blueDragonLeatherPrice, blackDragonLeatherPrice,
 			royalDragonLeatherPrice, snakeLeatherPrice, swampSnakeLeatherPrice,
 			Profit;
-	private static final Tile[] pathToJack = { new Tile(2893, 3529, 0),
-			new Tile(2891, 3517, 0), new Tile(2889, 3510, 0),
-			new Tile(2887, 3502, 0) };
+	private static final Tile[] pathToJack = { new Tile(2893, 3529),
+			new Tile(2891, 3514, 0), new Tile(2889, 3510, 0),
+			new Tile(2887, 3502) };
 	private static final Tile[] pathToEllis = { new Tile(3270, 3168),
 			new Tile(3274, 3178, 0), new Tile(3280, 3187, 0),
 			new Tile(3275, 3195, 0) };
@@ -404,7 +404,7 @@ public class rTanner extends PollingScript implements PaintListener {
 					if (!ctx.players.local().isInMotion()
 							|| ctx.players.local().getLocation()
 									.distanceTo(ctx.movement.getDestination()) < Random
-									.nextInt(10, 12)) {
+									.nextInt(7, 8)) {
 						ctx.movement.newTilePath(pathToJack).reverse()
 								.traverse();
 					}
@@ -421,7 +421,7 @@ public class rTanner extends PollingScript implements PaintListener {
 										.getLocation()
 										.distanceTo(
 												ctx.movement.getDestination()) < Random
-										.nextInt(10, 12)) {
+										.nextInt(7, 8)) {
 							ctx.movement.newTilePath(pathToEllis).reverse()
 									.traverse();
 						}
@@ -607,13 +607,13 @@ public class rTanner extends PollingScript implements PaintListener {
 	public boolean atBank() {
 		return ctx.bank.isOnScreen()
 				&& ctx.players.local().getLocation()
-						.distanceTo(ctx.bank.getNearest()) < 8;
+						.distanceTo(ctx.bank.getNearest()) < 10;
 	}
 
 	public boolean atTanner() {
 		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
 			if (ctx.players.local().getLocation()
-					.distanceTo(Tanner.getLocation()) < 8) {
+					.distanceTo(Tanner.getLocation()) < 10) {
 				return true;
 			}
 		}
@@ -631,21 +631,23 @@ public class rTanner extends PollingScript implements PaintListener {
 	public void tanHides() {
 		final Component CloseButton = ctx.widgets.get(1370, 30);
 		final Component Make = ctx.widgets.get(1370, 20);
-		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
-			if (Make.isVisible()) {
-				calculateMemberProfit();
-				hideCount += backpackHideCount;
-				if (Make.interact("Make")) {
-					final Timer WidgetTimer = new Timer(5600);
-					while (WidgetTimer.isRunning() && hasHide()) {
-						sleep(Random.nextInt(200, 450));
-					}
+		final Npc Tanner = ctx.npcs.select().id(tannerID).first().isEmpty() ? null
+				: ctx.npcs.iterator().next();
+		if (Make.isVisible()) {
+			calculateMemberProfit();
+			hideCount += backpackHideCount;
+			if (Make.interact("Make")) {
+				final Timer WidgetTimer = new Timer(5600);
+				while (WidgetTimer.isRunning() && hasHide()) {
+					sleep(Random.nextInt(200, 450));
 				}
-				if (CloseButton.isVisible()) {
-					CloseButton.interact("Close");
-				}
-				calculateFreeProfit();
-			} else {
+			}
+			if (CloseButton.isVisible()) {
+				CloseButton.interact("Close");
+			}
+			calculateFreeProfit();
+		} else {
+			if (Tanner != null) {
 				if (Tanner.isOnScreen()) {
 					status = "Interact";
 					backpackHideCount = ctx.backpack.select().id(hideID)
@@ -664,8 +666,12 @@ public class rTanner extends PollingScript implements PaintListener {
 						ctx.movement.stepTowards(ctx.movement
 								.getClosestOnMap(Tanner.getLocation()));
 						sleep(Random.nextInt(50, 400));
-					} else {
-						ctx.camera.turnTo(Tanner.getLocation());
+					} else if (atBurthorpe) {
+						if (!ctx.players.local().isInMotion()) {
+							ctx.movement.stepTowards(ctx.movement
+									.getClosestOnMap(Tanner.getLocation()));
+							sleep(Random.nextInt(50, 400));
+						}
 					}
 				}
 			}
