@@ -77,7 +77,7 @@ public class rTanner extends PollingScript implements PaintListener {
 			royalDragonLeatherPrice, snakeLeatherPrice, swampSnakeLeatherPrice,
 			Profit;
 	private static final Tile[] pathToJack = { new Tile(2893, 3529, 0),
-			new Tile(2891, 3519, 0), new Tile(2889, 3510, 0),
+			new Tile(2891, 3517, 0), new Tile(2889, 3510, 0),
 			new Tile(2887, 3502, 0) };
 	private static final Tile[] pathToEllis = { new Tile(3270, 3168),
 			new Tile(3274, 3178, 0), new Tile(3280, 3187, 0),
@@ -350,7 +350,7 @@ public class rTanner extends PollingScript implements PaintListener {
 											.distanceTo(
 													ctx.movement
 															.getDestination()) < Random
-											.nextInt(10, 12)) {
+											.nextInt(7, 8)) {
 								ctx.movement.newTilePath(pathToJack).traverse();
 							}
 						}
@@ -371,7 +371,7 @@ public class rTanner extends PollingScript implements PaintListener {
 												.distanceTo(
 														ctx.movement
 																.getDestination()) < Random
-												.nextInt(10, 12)) {
+												.nextInt(7, 8)) {
 									ctx.movement.newTilePath(pathToEllis)
 											.traverse();
 								}
@@ -632,20 +632,20 @@ public class rTanner extends PollingScript implements PaintListener {
 		final Component CloseButton = ctx.widgets.get(1370, 30);
 		final Component Make = ctx.widgets.get(1370, 20);
 		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
-		if (Make.isVisible()) {
-			calculateMemberProfit();
-			hideCount += backpackHideCount;
-			if (Make.interact("Make")) {
-				final Timer WidgetTimer = new Timer(5600);
-				while (WidgetTimer.isRunning() && hasHide()) {
-					sleep(Random.nextInt(200, 450));
+			if (Make.isVisible()) {
+				calculateMemberProfit();
+				hideCount += backpackHideCount;
+				if (Make.interact("Make")) {
+					final Timer WidgetTimer = new Timer(5600);
+					while (WidgetTimer.isRunning() && hasHide()) {
+						sleep(Random.nextInt(200, 450));
+					}
 				}
-			}
-			if (CloseButton.isVisible()) {
-				CloseButton.interact("Close");
-			}
-			calculateFreeProfit();
-		} else {
+				if (CloseButton.isVisible()) {
+					CloseButton.interact("Close");
+				}
+				calculateFreeProfit();
+			} else {
 				if (Tanner.isOnScreen()) {
 					status = "Interact";
 					backpackHideCount = ctx.backpack.select().id(hideID)
