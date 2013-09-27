@@ -198,7 +198,7 @@ public class rTanner extends PollingScript implements PaintListener {
 
 		@Override
 		public void execute() {
-			ctx.camera.setPitch(true);
+			ctx.camera.setPitch(60);
 			sleep(5, 10);
 			pitch = true;
 		}
@@ -342,7 +342,6 @@ public class rTanner extends PollingScript implements PaintListener {
 						status = "Walk to Jack";
 						if (ctx.bank.isOpen()) {
 							ctx.bank.close();
-							pitch = false;
 						} else {
 							if (!ctx.players.local().isInMotion()
 									|| ctx.players
@@ -364,7 +363,6 @@ public class rTanner extends PollingScript implements PaintListener {
 							status = "Walk to Ellis";
 							if (ctx.bank.isOpen()) {
 								ctx.bank.close();
-								pitch = false;
 							} else {
 								if (!ctx.players.local().isInMotion()
 										|| ctx.players
