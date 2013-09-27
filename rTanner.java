@@ -652,7 +652,7 @@ public class rTanner extends PollingScript implements PaintListener {
 							.count();
 					if (atBurthorpe) {
 						interact(Tanner, "Tan hide", "Jack Oval");
-					} else {
+					} else if (atAlKharid) {
 						interact(Tanner, "Tan hides", "Ellis");
 					}
 					final Timer InteractTimer = new Timer(3500);
