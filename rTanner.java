@@ -93,7 +93,7 @@ public class rTanner extends PollingScript implements PaintListener {
 	@Override
 	public void start() {
 		elapsedTime = System.currentTimeMillis();
-		this.container = new JobContainer(new Job[] { new Camera(ctx),
+		this.container = new JobContainer(new Job[] {
 				new GetPlayerArea(ctx), new CloseWidgets(ctx), new Stairs(ctx),
 				new UseEnergyPotion(ctx), new Tan(ctx), new Banking(ctx) });
 	}
@@ -183,25 +183,6 @@ public class rTanner extends PollingScript implements PaintListener {
 		}
 
 		return 100;
-	}
-
-	private class Camera extends Job {
-		public Camera(MethodContext ctx) {
-			super(ctx);
-		}
-
-		@Override
-		public boolean activate() {
-			return ctx.camera.getPitch() < 40;
-		}
-
-		@Override
-		public void execute() {
-			if (ctx.camera.setPitch(42)) {
-				status = "Set Pitch";
-				sleep(10, 20);
-			}
-		}
 	}
 
 	private class GetPlayerArea extends Job {
