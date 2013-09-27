@@ -182,7 +182,7 @@ public class rTanner extends PollingScript implements PaintListener {
 			return job.delay();
 		}
 
-		return 250;
+		return 100;
 	}
 
 	private class Camera extends Job {
@@ -192,13 +192,13 @@ public class rTanner extends PollingScript implements PaintListener {
 
 		@Override
 		public boolean activate() {
-			return ctx.camera.getPitch() < 55;
+			return ctx.camera.getPitch() < 50;
 		}
 
 		@Override
 		public void execute() {
-			if (ctx.camera.setPitch(57)) {
-				sleep(25, 50);
+			if (ctx.camera.setPitch(52)) {
+				sleep(15, 25);
 			}
 		}
 	}
@@ -628,7 +628,8 @@ public class rTanner extends PollingScript implements PaintListener {
 	public void tanHides() {
 		final Component CloseButton = ctx.widgets.get(1370, 30);
 		final Component Make = ctx.widgets.get(1370, 20);
-		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
+		final Npc Tanner = ctx.npcs.select().id(tannerID).first().isEmpty() ? null
+				: ctx.npcs.iterator().next();
 			if (Make.isVisible()) {
 				calculateMemberProfit();
 				hideCount += backpackHideCount;
@@ -667,7 +668,6 @@ public class rTanner extends PollingScript implements PaintListener {
 				}
 			}
 		}
-	}
 
 	private void logOut() {
 		status = "Log-out";
