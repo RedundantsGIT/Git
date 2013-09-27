@@ -77,8 +77,8 @@ public class rTanner extends PollingScript implements PaintListener {
 			royalDragonLeatherPrice, snakeLeatherPrice, swampSnakeLeatherPrice,
 			Profit;
 	private static final Tile[] pathToJack = { new Tile(2893, 3529, 0),
-			new Tile(2896, 3519, 0), new Tile(2890, 3513, 0),
-			new Tile(2888, 3501, 0) };
+			new Tile(2891, 3519, 0), new Tile(2889, 3510, 0),
+			new Tile(2887, 3502, 0) };
 	private static final Tile[] pathToEllis = { new Tile(3270, 3168),
 			new Tile(3274, 3178, 0), new Tile(3280, 3187, 0),
 			new Tile(3275, 3195, 0) };
