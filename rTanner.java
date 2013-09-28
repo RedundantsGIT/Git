@@ -24,17 +24,15 @@ import javax.imageio.ImageIO;
 import org.powerbot.event.PaintListener;
 import org.powerbot.script.Manifest;
 import org.powerbot.script.PollingScript;
-import org.powerbot.script.lang.Filter;
 import org.powerbot.script.methods.Environment;
-import org.powerbot.script.methods.Game.Crosshair;
-import org.powerbot.script.methods.Menu.Entry;
+import org.powerbot.script.methods.Game;
 import org.powerbot.script.methods.MethodContext;
 import org.powerbot.script.methods.MethodProvider;
 import org.powerbot.script.util.Random;
+import org.powerbot.script.util.Timer;
 import org.powerbot.script.wrappers.Area;
 import org.powerbot.script.wrappers.Component;
 import org.powerbot.script.wrappers.GameObject;
-import org.powerbot.script.wrappers.Interactive;
 import org.powerbot.script.wrappers.Item;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
@@ -51,7 +49,9 @@ public class rTanner extends PollingScript implements PaintListener {
 	private static boolean gotPrices = false;
 	private static boolean atBurthorpe = false;
 	private static boolean atAlKharid = false;
-	private static boolean pitch = false;
+	private static boolean path1 = false;
+	private static boolean path2 = false;
+	private static boolean path3 = false;
 	private static final int[] leatherID = { 1741, 1743, 1745, 2505, 24374,
 			6289, 2507, 2509 }, tannerID = { 14877, 2824 }, hideID = { 1739,
 			1753, 1751, 24372, 6287, 7801, 1749, 1747 }, energyPotionID = {
@@ -76,16 +76,10 @@ public class rTanner extends PollingScript implements PaintListener {
 			blueDragonLeatherPrice, blackDragonLeatherPrice,
 			royalDragonLeatherPrice, snakeLeatherPrice, swampSnakeLeatherPrice,
 			Profit;
-	private static final Tile[] pathToJack = { new Tile(2893, 3529),
-			new Tile(2891, 3514, 0), new Tile(2889, 3510, 0),
-			new Tile(2887, 3502) };
-	private static final Tile[] pathToEllis = { new Tile(3270, 3168),
-			new Tile(3274, 3178, 0), new Tile(3280, 3187, 0),
-			new Tile(3275, 3195, 0) };
 	private static final Area areaBurthorpe = new Area(new Tile[] {
 			new Tile(2877, 3540, 0), new Tile(2900, 3540, 0),
 			new Tile(2899, 3479, 0), new Tile(2875, 3479, 0) });
-	private static final Area areaAlKharid = new Area(new Tile[] {
+	public final Area areaAlKharid = new Area(new Tile[] {
 			new Tile(3239, 3154, 0), new Tile(3315, 3151, 0),
 			new Tile(3319, 3224, 0), new Tile(3250, 3223, 0) });
 
@@ -93,9 +87,10 @@ public class rTanner extends PollingScript implements PaintListener {
 
 	@Override
 	public void start() {
+		path1 = true;
 		elapsedTime = System.currentTimeMillis();
-		this.container = new JobContainer(new Job[] { new Pitch(ctx),
-				new GetPlayerArea(ctx), new CloseWidgets(ctx), new Stairs(ctx),
+		this.container = new JobContainer(new Job[] { new GetPlayerArea(ctx),
+				new CloseWidgets(ctx), new Stairs(ctx),
 				new UseEnergyPotion(ctx), new Tan(ctx), new Banking(ctx) });
 	}
 
@@ -121,7 +116,7 @@ public class rTanner extends PollingScript implements PaintListener {
 		}
 
 		public int delay() {
-			return 100;
+			return 250;
 		}
 
 		public int priority() {
@@ -174,7 +169,7 @@ public class rTanner extends PollingScript implements PaintListener {
 	public int poll() {
 		if (!ctx.game.isLoggedIn()
 				|| ctx.game.getClientState() != org.powerbot.script.methods.Game.INDEX_MAP_LOADED) {
-			return 1500;
+			return 1000;
 		}
 
 		final Job job = container.get();
@@ -183,25 +178,7 @@ public class rTanner extends PollingScript implements PaintListener {
 			return job.delay();
 		}
 
-		return 100;
-	}
-
-	private class Pitch extends Job {
-		public Pitch(MethodContext ctx) {
-			super(ctx);
-		}
-
-		@Override
-		public boolean activate() {
-			return !pitch;
-		}
-
-		@Override
-		public void execute() {
-			ctx.camera.setPitch(60);
-			sleep(5, 10);
-			pitch = true;
-		}
+		return 250;
 	}
 
 	private class GetPlayerArea extends Job {
@@ -340,20 +317,7 @@ public class rTanner extends PollingScript implements PaintListener {
 						tanHides();
 					} else {
 						status = "Walk to Jack";
-						if (ctx.bank.isOpen()) {
-							ctx.bank.close();
-						} else {
-							if (!ctx.players.local().isInMotion()
-									|| ctx.players
-											.local()
-											.getLocation()
-											.distanceTo(
-													ctx.movement
-															.getDestination()) < Random
-											.nextInt(7, 8)) {
-								ctx.movement.newTilePath(pathToJack).traverse();
-							}
-						}
+						walkingPath();
 					}
 				} else {
 					if (atAlKharid) {
@@ -361,21 +325,7 @@ public class rTanner extends PollingScript implements PaintListener {
 							tanHides();
 						} else {
 							status = "Walk to Ellis";
-							if (ctx.bank.isOpen()) {
-								ctx.bank.close();
-							} else {
-								if (!ctx.players.local().isInMotion()
-										|| ctx.players
-												.local()
-												.getLocation()
-												.distanceTo(
-														ctx.movement
-																.getDestination()) < Random
-												.nextInt(7, 8)) {
-									ctx.movement.newTilePath(pathToEllis)
-											.traverse();
-								}
-							}
+							walkingPath();
 						}
 					}
 				}
@@ -398,33 +348,22 @@ public class rTanner extends PollingScript implements PaintListener {
 		public void execute() {
 			if (atBurthorpe) {
 				if (atBank()) {
-					doBanking();
+					if (ctx.bank.isOnScreen()) {
+						doBanking();
+					}
 				} else {
 					status = "Walk to Bank";
-					if (!ctx.players.local().isInMotion()
-							|| ctx.players.local().getLocation()
-									.distanceTo(ctx.movement.getDestination()) < Random
-									.nextInt(7, 8)) {
-						ctx.movement.newTilePath(pathToJack).reverse()
-								.traverse();
-					}
+					walkingPath();
 				}
 			} else {
 				if (atAlKharid) {
 					if (atBank()) {
-						doBanking();
+						if (ctx.bank.isOnScreen()) {
+							doBanking();
+						}
 					} else {
 						status = "Walk to Bank";
-						if (!ctx.players.local().isInMotion()
-								|| ctx.players
-										.local()
-										.getLocation()
-										.distanceTo(
-												ctx.movement.getDestination()) < Random
-										.nextInt(7, 8)) {
-							ctx.movement.newTilePath(pathToEllis).reverse()
-									.traverse();
-						}
+						walkingPath();
 					}
 				}
 			}
@@ -480,6 +419,7 @@ public class rTanner extends PollingScript implements PaintListener {
 					} else if (!hasHide() && bankHasHide()) {
 						status = "Get Hides";
 						withdraw(0, hideID);
+						switchPath();
 						hidesLeft = ctx.bank.select().id(hideID).count(true);
 						potionsLeft = ctx.bank.select().id(energyPotionID)
 								.count(true);
@@ -492,46 +432,6 @@ public class rTanner extends PollingScript implements PaintListener {
 			while (ctx.players.local().isInMotion())
 				sleep(Random.nextInt(5, 15));
 		}
-	}
-
-	public class Timer {
-		private long end;
-		private final long start;
-
-		public Timer(final long period) {
-			start = System.currentTimeMillis();
-			end = start + period;
-		}
-
-		public boolean isRunning() {
-			return System.currentTimeMillis() < end;
-		}
-	}
-
-	public boolean didInteract() {
-		return ctx.game.getCrosshair() == Crosshair.ACTION;
-	}
-
-	public boolean interact(Interactive interactive, final String action,
-			final String option) {
-		if (interactive != null && interactive.isOnScreen()) {
-			final Filter<Entry> filter = new Filter<Entry>() {
-
-				@Override
-				public boolean accept(Entry arg0) {
-					return arg0.action.equalsIgnoreCase(action)
-							&& arg0.option.equalsIgnoreCase(option);
-				}
-
-			};
-			if (ctx.menu.click(filter)) {
-				return didInteract();
-			} else {
-				ctx.mouse.move(interactive);
-				return interact(interactive, action, option);
-			}
-		}
-		return false;
 	}
 
 	private void depositBackpackTimer() {
@@ -607,13 +507,13 @@ public class rTanner extends PollingScript implements PaintListener {
 	public boolean atBank() {
 		return ctx.bank.isOnScreen()
 				&& ctx.players.local().getLocation()
-						.distanceTo(ctx.bank.getNearest()) < 10;
+						.distanceTo(ctx.bank.getNearest()) < 8;
 	}
 
 	public boolean atTanner() {
 		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
 			if (ctx.players.local().getLocation()
-					.distanceTo(Tanner.getLocation()) < 10) {
+					.distanceTo(Tanner.getLocation()) < 8) {
 				return true;
 			}
 		}
@@ -631,47 +531,38 @@ public class rTanner extends PollingScript implements PaintListener {
 	public void tanHides() {
 		final Component CloseButton = ctx.widgets.get(1370, 30);
 		final Component Make = ctx.widgets.get(1370, 20);
-		final Npc Tanner = ctx.npcs.select().id(tannerID).first().isEmpty() ? null
-				: ctx.npcs.iterator().next();
-		if (Make.isVisible()) {
-			calculateMemberProfit();
-			hideCount += backpackHideCount;
-			if (Make.interact("Make")) {
-				final Timer WidgetTimer = new Timer(5600);
-				while (WidgetTimer.isRunning() && hasHide()) {
-					sleep(Random.nextInt(200, 450));
+		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
+			if (Make.isVisible()) {
+				calculateMemberProfit();
+				hideCount += backpackHideCount;
+				if (Make.interact("Make")) {
+					final Timer WidgetTimer = new Timer(5600);
+					while (WidgetTimer.isRunning() && hasHide()) {
+						sleep(Random.nextInt(200, 450));
+					}
 				}
-			}
-			if (CloseButton.isVisible()) {
-				CloseButton.interact("Close");
-			}
-			calculateFreeProfit();
-		} else {
-			if (Tanner != null) {
+				if (CloseButton.isVisible()) {
+					CloseButton.interact("Close");
+				}
+				calculateFreeProfit();
+			} else {
 				if (Tanner.isOnScreen()) {
 					status = "Interact";
 					backpackHideCount = ctx.backpack.select().id(hideID)
 							.count();
-					if (atBurthorpe) {
-						interact(Tanner, "Tan hide", "Jack Oval");
-					} else if (atAlKharid) {
-						interact(Tanner, "Tan hides", "Ellis");
-					}
-					final Timer InteractTimer = new Timer(3500);
-					while (InteractTimer.isRunning() && !Make.isVisible()) {
-						sleep(Random.nextInt(100, 350));
+					if (Tanner.interact("Tan")) {
+						final Timer InteractTimer = new Timer(3500);
+						while (InteractTimer.isRunning() && !Make.isVisible()) {
+							sleep(Random.nextInt(100, 350));
+						}
 					}
 				} else {
 					if (atAlKharid) {
 						ctx.movement.stepTowards(ctx.movement
 								.getClosestOnMap(Tanner.getLocation()));
 						sleep(Random.nextInt(50, 400));
-					} else if (atBurthorpe) {
-						if (!ctx.players.local().isInMotion()) {
-							ctx.movement.stepTowards(ctx.movement
-									.getClosestOnMap(Tanner.getLocation()));
-							sleep(Random.nextInt(50, 400));
-						}
+					} else {
+						ctx.camera.turnTo(Tanner.getLocation());
 					}
 				}
 			}
@@ -689,6 +580,115 @@ public class rTanner extends PollingScript implements PaintListener {
 				ctx.game.logout(false);
 				getController().stop();
 			}
+		}
+	}
+
+	private void walkingPath() {
+		final Tile[] pathToJack1 = { new Tile(2893, 3529, 0),
+				new Tile(2896, 3519, 0), new Tile(2890, 3513, 0),
+				new Tile(2888, 3501, 0) };
+		final Tile[] pathToJack2 = { new Tile(2893, 3529),
+				new Tile(2890, 3516, 0), new Tile(2889, 3510, 0),
+				new Tile(2887, 3502, 0), new Tile(2888, 3502, 0) };
+		final Tile[] pathToJack3 = { new Tile(2893, 3529),
+				new Tile(2891, 3514, 0), new Tile(2889, 3510, 0),
+				new Tile(2887, 3502) };
+		final Tile[] pathToBurthorpeBank1 = { new Tile(2887, 3502, 0),
+				new Tile(2895, 3512, 0), new Tile(2899, 3520, 0),
+				new Tile(2893, 3529, 0) };
+		final Tile[] pathToBurthorpeBank2 = { new Tile(2887, 3502),
+				new Tile(2889, 3511, 0), new Tile(2891, 3516, 0),
+				new Tile(2892, 3530, 0) };
+		final Tile[] pathToBurthorpeBank3 = { new Tile(2887, 3502),
+				new Tile(2893, 3510, 0), new Tile(2892, 3523, 0),
+				new Tile(2893, 3528) };
+
+		final Tile[] pathToEllis1 = { new Tile(3270, 3168),
+				new Tile(3274, 3178, 0), new Tile(3280, 3187, 0),
+				new Tile(3275, 3195, 0) };
+		final Tile[] pathToEllis2 = { new Tile(3272, 3168, 0),
+				new Tile(3276, 3180, 0), new Tile(3274, 3195, 0) };
+		final Tile[] pathToEllis3 = { new Tile(3271, 3168),
+				new Tile(3276, 3179, 0), new Tile(3279, 3185, 0),
+				new Tile(3273, 3196, 0) };
+		final Tile[] pathToAlKharidBank1 = { new Tile(3273, 3195),
+				new Tile(3274, 3182, 0), new Tile(3275, 3173),
+				new Tile(3271, 3168, 0) };
+		final Tile[] pathToAlKharidBank2 = { new Tile(3273, 3195, 0),
+				new Tile(3277, 3182, 0), new Tile(3269, 3168, 0) };
+		final Tile[] pathToAlKharidBank3 = { new Tile(3271, 3195),
+				new Tile(3276, 3184, 0), new Tile(3275, 3173, 0),
+				new Tile(3270, 3168, 0) };
+
+		if (ctx.bank.isOpen()) {
+			ctx.bank.close();
+		} else {
+			if (atBurthorpe) {
+				if (!ctx.players.local().isInMotion()
+						|| ctx.players.local().getLocation()
+								.distanceTo(ctx.movement.getDestination()) < Random
+								.nextInt(7, 8)) {
+					if (hasHide()) {
+						if (path1) {
+							ctx.movement.newTilePath(pathToJack1).traverse();
+						} else if (path2) {
+							ctx.movement.newTilePath(pathToJack2).traverse();
+						} else if (path3) {
+							ctx.movement.newTilePath(pathToJack3).traverse();
+						}
+					} else {
+						if (path1) {
+							ctx.movement.newTilePath(pathToBurthorpeBank1)
+									.traverse();
+						} else if (path2) {
+							ctx.movement.newTilePath(pathToBurthorpeBank2)
+									.traverse();
+						} else if (path3) {
+							ctx.movement.newTilePath(pathToBurthorpeBank3)
+									.traverse();
+						}
+					}
+				}
+			} else if (atAlKharid) {
+				if (!ctx.players.local().isInMotion()
+						|| ctx.players.local().getLocation()
+								.distanceTo(ctx.movement.getDestination()) < Random
+								.nextInt(7, 8)) {
+					if (hasHide()) {
+						if (path1) {
+							ctx.movement.newTilePath(pathToEllis1).traverse();
+						} else if (path2) {
+							ctx.movement.newTilePath(pathToEllis2).traverse();
+						} else if (path3) {
+							ctx.movement.newTilePath(pathToEllis3).traverse();
+						}
+					} else {
+						if (path1) {
+							ctx.movement.newTilePath(pathToAlKharidBank1)
+									.traverse();
+						} else if (path2) {
+							ctx.movement.newTilePath(pathToAlKharidBank2)
+									.traverse();
+						} else if (path3) {
+							ctx.movement.newTilePath(pathToAlKharidBank3)
+									.traverse();
+						}
+					}
+				}
+			}
+		}
+	}
+
+	private void switchPath() {
+		if (path1) {
+			path1 = false;
+			path2 = true;
+		} else if (path2) {
+			path2 = false;
+			path3 = true;
+		} else if (path3) {
+			path3 = false;
+			path1 = true;
 		}
 	}
 
