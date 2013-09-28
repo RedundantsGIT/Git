@@ -584,19 +584,20 @@ public class rTanner extends PollingScript implements PaintListener {
 			}
 		} else {
 			for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
-				if (Tanner.isOnScreen() && !Make.isVisible()) {
-					status = "Interact";
-					backpackHideCount = ctx.backpack.select().id(hideID)
-							.count();
-					if (Tanner.interact("Tan")) {
+				if (!Make.isVisible()) {
+					if (Tanner.isOnScreen()) {
+						status = "Interact";
+						backpackHideCount = ctx.backpack.select().id(hideID)
+								.count();
+						Tanner.interact("Tan");
 						final Timer InteractTimer = new Timer(4000);
 						while (InteractTimer.isRunning() && !Make.isVisible())
 							sleep(Random.nextInt(350, 500));
+					} else {
+						ctx.movement.findPath(Tanner.getLocation()).traverse();
+						sleep(Random.nextInt(50, 400));
+						ctx.camera.turnTo(Tanner.getLocation());
 					}
-				} else {
-					ctx.movement.findPath(Tanner.getLocation()).traverse();
-					sleep(Random.nextInt(50, 400));
-					ctx.camera.turnTo(Tanner.getLocation());
 				}
 
 			}
