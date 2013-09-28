@@ -330,7 +330,7 @@ public class rTanner extends PollingScript implements PaintListener {
 											.distanceTo(
 													ctx.movement
 															.getDestination()) < Random
-											.nextInt(6, 7))
+											.nextInt(8, 9))
 								ctx.movement.newTilePath(pathToJack).traverse();
 						}
 					}
@@ -349,7 +349,7 @@ public class rTanner extends PollingScript implements PaintListener {
 											.distanceTo(
 													ctx.movement
 															.getDestination()) < Random
-											.nextInt(6, 7))
+											.nextInt(8, 9))
 								ctx.movement.newTilePath(pathToEllis)
 										.traverse();
 						}
@@ -548,7 +548,7 @@ public class rTanner extends PollingScript implements PaintListener {
 	public boolean atTanner() {
 		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
 			if (ctx.players.local().getLocation()
-					.distanceTo(Tanner.getLocation()) < 10)
+					.distanceTo(Tanner.getLocation()) < 8)
 				return true;
 		}
 		return false;
