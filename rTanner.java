@@ -216,7 +216,8 @@ public class rTanner extends PollingScript implements PaintListener {
 		@Override
 		public boolean activate() {
 			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
-			final Component CollectionBox = ctx.widgets.get(109).getComponent(12);
+			final Component CollectionBox = ctx.widgets.get(109).getComponent(
+					12);
 			final Component WorldMap = ctx.widgets.get(1422).getComponent(18);
 			final Component Armoury = ctx.widgets.get(1265).getComponent(89);
 			return InfoWindow.isVisible() || CollectionBox.isVisible()
@@ -226,7 +227,8 @@ public class rTanner extends PollingScript implements PaintListener {
 		@Override
 		public void execute() {
 			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
-			final Component CollectionBox = ctx.widgets.get(109).getComponent(12);
+			final Component CollectionBox = ctx.widgets.get(109).getComponent(
+					12);
 			final Component WorldMap = ctx.widgets.get(1422).getComponent(18);
 			final Component Armoury = ctx.widgets.get(1265).getComponent(89);
 			if (InfoWindow.isVisible()
@@ -569,37 +571,38 @@ public class rTanner extends PollingScript implements PaintListener {
 	public void tanHides() {
 		final Component Make = ctx.widgets.get(1370, 20);
 		final Component CloseButton = ctx.widgets.get(1370, 30);
-		if(Make.isVisible()){
+		if (Make.isVisible()) {
 			calculateMemberProfit();
 			hideCount += backpackHideCount;
 			if (Make.interact("Make")) {
 				final Timer WidgetTimer = new Timer(5600);
 				while (WidgetTimer.isRunning() && hasHide())
-					sleep(Random.nextInt(200, 450));
+					sleep(Random.nextInt(300, 500));
 				if (CloseButton.isVisible())
 					CloseButton.interact("Close");
 				calculateFreeProfit();
 			}
-		}else{
-		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
-			if (Tanner.isOnScreen()) {
-				status = "Interact";
-				backpackHideCount = ctx.backpack.select().id(hideID).count();
-				if (Tanner.interact("Tan")) {
-					final Timer InteractTimer = new Timer(4000);
-					while (InteractTimer.isRunning() && !Make.isVisible())
-						sleep(Random.nextInt(100, 350));
-				}
-			} else {
-				if (atAlKharid) {
-					ctx.movement.stepTowards(ctx.movement
-							.getClosestOnMap(Tanner.getLocation()));
-					sleep(Random.nextInt(50, 400));
+		} else {
+			for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
+				if (Tanner.isOnScreen() && !Make.isVisible()) {
+					status = "Interact";
+					backpackHideCount = ctx.backpack.select().id(hideID)
+							.count();
+					if (Tanner.interact("Tan")) {
+						final Timer InteractTimer = new Timer(4000);
+						while (InteractTimer.isRunning() && !Make.isVisible())
+							sleep(Random.nextInt(350, 500));
+					}
 				} else {
-					ctx.camera.turnTo(Tanner.getLocation());
-				}
-				}
+					if (atAlKharid) {
+						ctx.movement.stepTowards(ctx.movement
+								.getClosestOnMap(Tanner.getLocation()));
+						sleep(Random.nextInt(50, 400));
+					} else {
+						ctx.camera.turnTo(Tanner.getLocation());
+					}
 
+				}
 			}
 		}
 	}
