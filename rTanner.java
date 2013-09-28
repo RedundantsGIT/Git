@@ -548,7 +548,7 @@ public class rTanner extends PollingScript implements PaintListener {
 	public boolean atTanner() {
 		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
 			if (ctx.players.local().getLocation()
-					.distanceTo(Tanner.getLocation()) < 8)
+					.distanceTo(Tanner.getLocation()) < 10)
 				return true;
 		}
 		return false;
@@ -594,15 +594,11 @@ public class rTanner extends PollingScript implements PaintListener {
 							sleep(Random.nextInt(350, 500));
 					}
 				} else {
-					if (atAlKharid) {
-						ctx.movement.stepTowards(ctx.movement
-								.getClosestOnMap(Tanner.getLocation()));
-						sleep(Random.nextInt(50, 400));
-					} else {
-						ctx.camera.turnTo(Tanner.getLocation());
-					}
-
+					ctx.movement.findPath(Tanner.getLocation()).traverse();
+					sleep(Random.nextInt(50, 400));
+					ctx.camera.turnTo(Tanner.getLocation());
 				}
+
 			}
 		}
 	}
