@@ -578,10 +578,10 @@ public class rTanner extends PollingScript implements PaintListener {
 				final Timer WidgetTimer = new Timer(5600);
 				while (WidgetTimer.isRunning() && hasHide())
 					sleep(Random.nextInt(300, 500));
-				if (CloseButton.isVisible())
-					CloseButton.interact("Close");
-				calculateFreeProfit();
 			}
+calculateFreeProfit();
+if (CloseButton.isVisible())
+					CloseButton.interact("Close");
 		} else {
 			for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
 				if (!Make.isVisible()) {
