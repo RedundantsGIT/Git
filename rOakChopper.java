@@ -232,7 +232,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 		@Override
 		public void execute() {
 			if (oakArea.contains(ctx.players.local().getLocation())) {
-				for (GameObject oak : ctx.objects.select().id(oakID).nearest()) {
+				for (GameObject oak : ctx.objects.select().id(oakID).nearest().first()) {
 					if (ctx.players.local().getAnimation() == -1) {
 						if (oakArea.contains(oak.getLocation())) {
 							if (ctx.players.local().getLocation()
