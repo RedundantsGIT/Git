@@ -88,7 +88,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 		}
 
 		public int delay() {
-			return 250;
+			return 300;
 		}
 
 		public int priority() {
@@ -150,7 +150,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 			return job.delay();
 		}
 
-		return 100;
+		return 200;
 	}
 
 	private class CloseInterfaces extends Job {
