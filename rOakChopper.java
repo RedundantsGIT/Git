@@ -83,7 +83,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 		}
 
 		public int delay() {
-			return Random.nextInt(50, 75);
+			return 100;
 		}
 
 		public int priority() {
@@ -145,7 +145,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 			return job.delay();
 		}
 
-		return Random.nextInt(50, 75);
+		return 100;
 	}
 
 	private class Banking extends Job {

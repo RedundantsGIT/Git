@@ -121,7 +121,7 @@ public class rTanner extends PollingScript implements PaintListener {
 		}
 
 		public int delay() {
-			return 50;
+			return 100;
 		}
 
 		public int priority() {
@@ -183,7 +183,7 @@ public class rTanner extends PollingScript implements PaintListener {
 			return job.delay();
 		}
 
-		return 50;
+		return 100;
 	}
 
 	private class GetPlayerArea extends Job {
