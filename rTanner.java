@@ -95,7 +95,7 @@ public class rTanner extends PollingScript implements PaintListener {
 	public void start() {
 		elapsedTime = System.currentTimeMillis();
 		rTanner.container = new JobContainer(new Job[] {
-				new GetPlayerArea(ctx), new CloseWidgets(ctx), new Stairs(ctx),
+				new GetPlayerArea(ctx), new CloseInterfaces(ctx), new Stairs(ctx),
 				new UseEnergyPotion(ctx), new Tan(ctx), new Banking(ctx) });
 	}
 
@@ -121,7 +121,7 @@ public class rTanner extends PollingScript implements PaintListener {
 		}
 
 		public int delay() {
-			return 100;
+			return 150;
 		}
 
 		public int priority() {
@@ -183,7 +183,7 @@ public class rTanner extends PollingScript implements PaintListener {
 			return job.delay();
 		}
 
-		return 100;
+		return 150;
 	}
 
 	private class GetPlayerArea extends Job {
@@ -208,40 +208,43 @@ public class rTanner extends PollingScript implements PaintListener {
 		}
 	}
 
-	private class CloseWidgets extends Job {
-		public CloseWidgets(MethodContext ctx) {
+	private class CloseInterfaces extends Job {
+		public CloseInterfaces(MethodContext ctx) {
 			super(ctx);
 		}
 
 		@Override
 		public boolean activate() {
-			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
-			final Component CollectionBox = ctx.widgets.get(109).getComponent(
-					12);
-			final Component WorldMap = ctx.widgets.get(1422).getComponent(18);
-			final Component Armoury = ctx.widgets.get(1265).getComponent(89);
-			return InfoWindow.isVisible() || CollectionBox.isVisible()
-					|| WorldMap.isVisible() || Armoury.isVisible();
+			return canClose();
 		}
 
 		@Override
 		public void execute() {
 			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
-			final Component CollectionBox = ctx.widgets.get(109).getComponent(
-					12);
-			final Component WorldMap = ctx.widgets.get(1422).getComponent(18);
-			final Component Armoury = ctx.widgets.get(1265).getComponent(89);
-			if (InfoWindow.isVisible()
-					&& InfoWindow.getChild(1).interact("Close Window")) {
-				sleep(25, 75);
-			} else if (CollectionBox.isVisible()
-					&& CollectionBox.interact("Close")) {
-				sleep(50, 100);
-			} else if (WorldMap.isVisible() && WorldMap.interact("Close")) {
-				sleep(350, 500);
-			} else if (Armoury.isVisible() && Armoury.interact("Close"))
-				sleep(55, 155);
+			if (InfoWindow.isVisible()) {
+				InfoWindow.getChild(1).click(true);
+				sleep(Random.nextInt(50, 350));
+			} else {
+				getClose().click(true);
+				sleep(Random.nextInt(50, 350));
+			}
 		}
+	}
+	
+	private static final int[][] CLOSE = { { 109, 12 }, { 1422, 18 },
+			{ 1265, 89 }, { 1477, 72 } };
+
+	public Component getClose() {
+		for (int[] i : CLOSE) {
+			Component c = ctx.widgets.get(i[0], i[1]);
+			if (c != null && c.isVisible())
+				return c;
+		}
+		return null;
+	}
+
+	public boolean canClose() {
+		return getClose() != null;
 	}
 
 	private class Stairs extends Job {
@@ -258,16 +261,13 @@ public class rTanner extends PollingScript implements PaintListener {
 
 		@Override
 		public void execute() {
-			for (GameObject Stairs : ctx.objects.select().id(stairsID)
-					.nearest()) {
+			for (GameObject Stairs : ctx.objects.select().id(stairsID).nearest()) {
 				if (Stairs.interact("Climb-down")) {
-					final Timer climbTimer = new Timer(Random.nextInt(3500,
-							4000));
+					final Timer climbTimer = new Timer(Random.nextInt(3500, 4000));
 					while (climbTimer.isRunning() && Stairs.isOnScreen())
 						sleep(Random.nextInt(25, 350));
 				}
 			}
-
 		}
 	}
 
@@ -289,8 +289,7 @@ public class rTanner extends PollingScript implements PaintListener {
 			for (Item EnergyPotion : ctx.backpack.select().id(energyPotionID)) {
 				status = "Use Potion";
 				if (EnergyPotion.interact("Drink")) {
-					final Timer potionTimer = new Timer(Random.nextInt(3500,
-							4000));
+					final Timer potionTimer = new Timer(Random.nextInt(3500, 4000));
 					while (potionTimer.isRunning()
 							&& ctx.movement.getEnergyLevel() < 50)
 						sleep(Random.nextInt(50, 200));
@@ -350,8 +349,7 @@ public class rTanner extends PollingScript implements PaintListener {
 													ctx.movement
 															.getDestination()) < Random
 											.nextInt(8, 9))
-								ctx.movement.newTilePath(pathToEllis)
-										.traverse();
+								ctx.movement.newTilePath(pathToEllis).traverse();
 						}
 					}
 				}
@@ -393,8 +391,7 @@ public class rTanner extends PollingScript implements PaintListener {
 							|| ctx.players.local().getLocation()
 									.distanceTo(ctx.movement.getDestination()) < Random
 									.nextInt(6, 7))
-						ctx.movement.newTilePath(pathToEllis).reverse()
-								.traverse();
+						ctx.movement.newTilePath(pathToEllis).reverse().traverse();
 				}
 			}
 		}
@@ -575,13 +572,13 @@ public class rTanner extends PollingScript implements PaintListener {
 			calculateMemberProfit();
 			hideCount += backpackHideCount;
 			if (Make.interact("Make")) {
-				final Timer WidgetTimer = new Timer(5600);
+				final Timer WidgetTimer = new Timer(Random.nextInt(4500, 5000));
 				while (WidgetTimer.isRunning() && hasHide())
 					sleep(Random.nextInt(300, 500));
 			}
-calculateFreeProfit();
-if (CloseButton.isVisible())
-					CloseButton.interact("Close");
+			if (CloseButton.isVisible())
+				CloseButton.interact("Close");
+			    calculateFreeProfit();
 		} else {
 			for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
 				if (!Make.isVisible()) {
@@ -594,8 +591,9 @@ if (CloseButton.isVisible())
 						while (InteractTimer.isRunning() && !Make.isVisible())
 							sleep(Random.nextInt(350, 500));
 					} else {
-						ctx.movement.findPath(Tanner.getLocation()).traverse();
-						sleep(Random.nextInt(50, 400));
+						ctx.movement.stepTowards(ctx.movement
+								.getClosestOnMap(Tanner.getLocation()));
+						sleep(Random.nextInt(75, 400));
 						ctx.camera.turnTo(Tanner.getLocation());
 					}
 				}
