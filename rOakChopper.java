@@ -20,11 +20,16 @@ import org.powerbot.event.MessageListener;
 import org.powerbot.event.PaintListener;
 import org.powerbot.script.Manifest;
 import org.powerbot.script.PollingScript;
+import org.powerbot.script.lang.Filter;
+import org.powerbot.script.methods.Game.Crosshair;
+import org.powerbot.script.methods.Menu.Entry;
 import org.powerbot.script.methods.MethodContext;
 import org.powerbot.script.methods.MethodProvider;
 import org.powerbot.script.util.Random;
 import org.powerbot.script.wrappers.Area;
+import org.powerbot.script.wrappers.Component;
 import org.powerbot.script.wrappers.GameObject;
+import org.powerbot.script.wrappers.Interactive;
 import org.powerbot.script.wrappers.Tile;
 
 @Manifest(authors = { "Redundant" }, name = "rOakChopper", description = "Chops oak trees at the Grand Exchange", version = 0.2, hidden = true, instances = 30)
@@ -58,8 +63,8 @@ public class rOakChopper extends PollingScript implements PaintListener,
 		System.out.println("Script started");
 		elapsedTime = System.currentTimeMillis();
 		logPrice = getGuidePrice(oakLogID);
-		rOakChopper.container = new JobContainer(new Job[] { new Banking(ctx),
-				new Chopping(ctx) });
+		rOakChopper.container = new JobContainer(new Job[] {
+				new CloseInterfaces(ctx), new Banking(ctx), new Chopping(ctx) });
 	}
 
 	@Override
@@ -83,7 +88,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 		}
 
 		public int delay() {
-			return 100;
+			return 250;
 		}
 
 		public int priority() {
@@ -148,6 +153,29 @@ public class rOakChopper extends PollingScript implements PaintListener,
 		return 100;
 	}
 
+	private class CloseInterfaces extends Job {
+		public CloseInterfaces(MethodContext ctx) {
+			super(ctx);
+		}
+
+		@Override
+		public boolean activate() {
+			return canClose();
+		}
+
+		@Override
+		public void execute() {
+			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
+			if (InfoWindow.isVisible()) {
+				InfoWindow.getChild(1).click(true);
+				sleep(Random.nextInt(50, 350));
+			} else {
+				getClose().click(true);
+				sleep(Random.nextInt(50, 350));
+			}
+		}
+	}
+
 	private class Banking extends Job {
 		public Banking(MethodContext ctx) {
 			super(ctx);
@@ -208,10 +236,10 @@ public class rOakChopper extends PollingScript implements PaintListener,
 					if (ctx.players.local().getAnimation() == -1) {
 						if (oakArea.contains(oak.getLocation())) {
 							if (ctx.players.local().getLocation()
-									.distanceTo(oak.getLocation()) < 3) {
+									.distanceTo(oak.getLocation()) < 4) {
 								if (oak.isOnScreen()) {
 									status = "Chop";
-									if (oak.interact("Chop down")) {
+									if(interact(oak, "Chop down", "Oak")){
 										if (Random.nextInt(1, 5) == 3)
 											mouseMoveSlightly();
 										final Timer chopTimer = new Timer(
@@ -230,11 +258,10 @@ public class rOakChopper extends PollingScript implements PaintListener,
 										ctx.camera.setPitch(Random.nextInt(30, 65));
 									ctx.camera.turnTo(oak.getLocation());
 								}
-								ctx.movement.stepTowards(ctx.movement
-										.getClosestOnMap(oak.getLocation()));
-								sleep(Random.nextInt(300, 500));
-								while (ctx.players.local().isInMotion())
-									sleep(Random.nextInt(25, 75));
+								ctx.movement.findPath(oak.getLocation()).traverse();
+								final Timer walkTimer = new Timer(Random.nextInt(3500, 4000));
+								while (walkTimer.isRunning() && ctx.players.local().getLocation()
+										.distanceTo(oak.getLocation()) > 3);
 							}
 						}
 					}
@@ -269,6 +296,46 @@ public class rOakChopper extends PollingScript implements PaintListener,
 		ctx.mouse.move(p);
 	}
 
+	private static final int[][] CLOSE = { { 109, 12 }, { 1422, 18 },
+			{ 1265, 89 }, { 1477, 72 } };
+
+	public Component getClose() {
+		for (int[] i : CLOSE) {
+			Component c = ctx.widgets.get(i[0], i[1]);
+			if (c != null && c.isVisible())
+				return c;
+		}
+		return null;
+	}
+
+	public boolean canClose() {
+		return getClose() != null;
+	}
+	
+	public boolean didInteract() {
+		return ctx.game.getCrosshair() == Crosshair.ACTION;
+	}
+	
+	public boolean interact(Interactive interactive, final String action, final String option) {
+		if (interactive != null && interactive.isOnScreen()) {
+			final Filter<Entry> filter = new Filter<Entry>() {
+
+				@Override
+				public boolean accept(Entry arg0) {
+					return arg0.action.equalsIgnoreCase(action) && arg0.option.equalsIgnoreCase(option);
+				}
+				
+			};
+			if (ctx.menu.click(filter)) {
+				return didInteract();
+			} else {
+				ctx.mouse.move(interactive);
+				return interact(interactive, action, option);
+			}
+		}
+		return false;
+	}
+
 	public class Timer {
 		private long end;
 		private final long start;
@@ -283,21 +350,12 @@ public class rOakChopper extends PollingScript implements PaintListener,
 		}
 	}
 
-	public String PerHour(int gained) {
-		return formatNumber((int) ((gained) * 3600000D / (System
-				.currentTimeMillis() - elapsedTime)));
-	}
-
-	public String formatNumber(int start) {
-		DecimalFormat nf = new DecimalFormat("0.0");
-		double i = start;
-		if (i >= 1000000) {
-			return nf.format((i / 1000000)) + "m";
+	@Override
+	public void messaged(MessageEvent msg) {
+		String message = msg.getMessage();
+		if (message.contains("You get some oak logs.")) {
+			logsChopped++;
 		}
-		if (i >= 1000) {
-			return nf.format((i / 1000)) + "k";
-		}
-		return "" + start;
 	}
 
 	final static Color black = new Color(25, 0, 0, 200);
@@ -337,12 +395,21 @@ public class rOakChopper extends PollingScript implements PaintListener,
 
 	}
 
-	@Override
-	public void messaged(MessageEvent msg) {
-		String message = msg.getMessage();
-		if (message.contains("You get some oak logs.")) {
-			logsChopped++;
+	public String PerHour(int gained) {
+		return formatNumber((int) ((gained) * 3600000D / (System
+				.currentTimeMillis() - elapsedTime)));
+	}
+
+	public String formatNumber(int start) {
+		DecimalFormat nf = new DecimalFormat("0.0");
+		double i = start;
+		if (i >= 1000000) {
+			return nf.format((i / 1000000)) + "m";
 		}
+		if (i >= 1000) {
+			return nf.format((i / 1000)) + "k";
+		}
+		return "" + start;
 	}
 
 	private void drawCross(Graphics g) {
