@@ -239,7 +239,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 									.distanceTo(oak.getLocation()) < 4) {
 								if (oak.isOnScreen()) {
 									status = "Chop";
-									if(interact(oak, "Chop down", "Oak")){
+									if (interact(oak, "Chop down", "Oak")) {
 										if (Random.nextInt(1, 5) == 3)
 											mouseMoveSlightly();
 										final Timer chopTimer = new Timer(
@@ -255,13 +255,20 @@ public class rOakChopper extends PollingScript implements PaintListener,
 								status = "Walk to tree";
 								if (Random.nextInt(1, 10) == 5) {
 									if (Random.nextInt(1, 5) == 3)
-										ctx.camera.setPitch(Random.nextInt(30, 65));
+										ctx.camera.setPitch(Random.nextInt(30,
+												65));
 									ctx.camera.turnTo(oak.getLocation());
 								}
-								ctx.movement.findPath(oak.getLocation()).traverse();
-								final Timer walkTimer = new Timer(Random.nextInt(3500, 4000));
-								while (walkTimer.isRunning() && ctx.players.local().getLocation()
-										.distanceTo(oak.getLocation()) > 3);
+								ctx.movement.stepTowards(ctx.movement
+										.getClosestOnMap(oak.getLocation()));
+								final Timer walkTimer = new Timer(
+										Random.nextInt(5000, 6000));
+								while (walkTimer.isRunning()
+										&& ctx.players.local().getLocation()
+												.distanceTo(oak.getLocation()) > 3)
+									;
+								while (ctx.players.local().isInMotion())
+									sleep(500, 600);
 							}
 						}
 					}
@@ -311,20 +318,22 @@ public class rOakChopper extends PollingScript implements PaintListener,
 	public boolean canClose() {
 		return getClose() != null;
 	}
-	
+
 	public boolean didInteract() {
 		return ctx.game.getCrosshair() == Crosshair.ACTION;
 	}
-	
-	public boolean interact(Interactive interactive, final String action, final String option) {
+
+	public boolean interact(Interactive interactive, final String action,
+			final String option) {
 		if (interactive != null && interactive.isOnScreen()) {
 			final Filter<Entry> filter = new Filter<Entry>() {
 
 				@Override
 				public boolean accept(Entry arg0) {
-					return arg0.action.equalsIgnoreCase(action) && arg0.option.equalsIgnoreCase(option);
+					return arg0.action.equalsIgnoreCase(action)
+							&& arg0.option.equalsIgnoreCase(option);
 				}
-				
+
 			};
 			if (ctx.menu.click(filter)) {
 				return didInteract();
