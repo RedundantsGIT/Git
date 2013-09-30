@@ -39,7 +39,7 @@ import org.powerbot.script.wrappers.Item;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", website = "http://www.powerbot.org/community/topic/876982-vip-rtanner-all-potions-all-hides-al-kharid-burthorpe/", version = 3.5, instances = 5)
+@Manifest(authors = { "Redundant" }, name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", website = "http://www.powerbot.org/community/topic/876982-vip-rtanner-all-potions-all-hides-al-kharid-burthorpe/", version = 3.6, instances = 5)
 public class rTanner extends PollingScript implements PaintListener {
 
 	private static long elapsedTime = 0;
@@ -86,12 +86,12 @@ public class rTanner extends PollingScript implements PaintListener {
 			new Tile(2891, 3514, 0), new Tile(2889, 3510, 0),
 			new Tile(2887, 3502) };
 	private static final Tile[] pathToBurthorpeBank = { new Tile(2887, 3502),
-		new Tile(2889, 3510, 0), new Tile(2891, 3514, 0),
-		new Tile(2893, 3528) };
+			new Tile(2889, 3510, 0), new Tile(2891, 3514, 0),
+			new Tile(2893, 3528) };
 	private static final Tile[] pathToEllis = { new Tile(3270, 3168, 0),
 			new Tile(3276, 3182, 0), new Tile(3273, 3195, 0) };
 	private static final Tile[] alKharidBank = { new Tile(3273, 3195, 0),
-		new Tile(3276, 3182, 0), new Tile(3270, 3168, 0) };
+			new Tile(3276, 3182, 0), new Tile(3270, 3168, 0) };
 	private static final Area areaBurthorpe = new Area(new Tile[] {
 			new Tile(2877, 3540, 0), new Tile(2900, 3540, 0),
 			new Tile(2899, 3479, 0), new Tile(2875, 3479, 0) });
@@ -344,7 +344,7 @@ public class rTanner extends PollingScript implements PaintListener {
 											.distanceTo(
 													ctx.movement
 															.getDestination()) < Random
-											.nextInt(5, 6))
+											.nextInt(7, 8))
 								ctx.movement.newTilePath(pathToEllis)
 										.traverse();
 						} else if (atBurthorpe) {
@@ -356,7 +356,7 @@ public class rTanner extends PollingScript implements PaintListener {
 											.distanceTo(
 													ctx.movement
 															.getDestination()) < Random
-											.nextInt(5, 6))
+											.nextInt(7, 8))
 								ctx.movement.newTilePath(pathToJack).traverse();
 						}
 					}
@@ -386,7 +386,7 @@ public class rTanner extends PollingScript implements PaintListener {
 					if (!ctx.players.local().isInMotion()
 							|| ctx.players.local().getLocation()
 									.distanceTo(ctx.movement.getDestination()) < Random
-									.nextInt(5, 6)) {
+									.nextInt(7, 8)) {
 						ctx.movement.newTilePath(pathToBurthorpeBank)
 								.traverse();
 						if (Tries < Random.nextInt(4, 5)) {
@@ -398,9 +398,8 @@ public class rTanner extends PollingScript implements PaintListener {
 					if (!ctx.players.local().isInMotion()
 							|| ctx.players.local().getLocation()
 									.distanceTo(ctx.movement.getDestination()) < Random
-									.nextInt(5, 6)) {
-						ctx.movement.newTilePath(alKharidBank)
-								.traverse();
+									.nextInt(7, 8)) {
+						ctx.movement.newTilePath(alKharidBank).traverse();
 						if (Tries < Random.nextInt(4, 5)) {
 							ctx.camera.turnTo(ctx.bank.getNearest());
 							Tries++;
@@ -602,15 +601,12 @@ public class rTanner extends PollingScript implements PaintListener {
 					status = "Interact";
 					backpackHideCount = ctx.backpack.select().id(hideID)
 							.count();
-					if (atBurthorpe) {
-						interact(Tanner, "Tan hide", "Jack Oval");
-					} else if (atAlKharid) {
-						interact(Tanner, "Tan hides", "Ellis");
+					if (Tanner.interact("Tan")) {
+						final Timer InteractTimer = new Timer(4000);
+						while (InteractTimer.isRunning() && !Make.isVisible())
+							sleep(Random.nextInt(25, 50));
+						break;
 					}
-					final Timer InteractTimer = new Timer(4000);
-					while (InteractTimer.isRunning() && !Make.isVisible())
-						sleep(Random.nextInt(25, 50));
-					break;
 				} else {
 					Tile Loc = Tanner.getLocation().randomize(-1, -1);
 					ctx.movement.stepTowards(ctx.movement.getClosestOnMap(Loc));
@@ -638,10 +634,11 @@ public class rTanner extends PollingScript implements PaintListener {
 				}
 
 			};
-			if (ctx.menu.click(filter)) {
+			if (ctx.menu.hover(filter)) {
+				ctx.menu.click(filter);
 				return didInteract();
 			} else {
-				ctx.mouse.move(interactive);
+				ctx.mouse.hop(interactive.getInteractPoint());
 				return interact(interactive, action, option);
 			}
 		}
@@ -818,7 +815,7 @@ public class rTanner extends PollingScript implements PaintListener {
 		g.drawString("Status: " + (status), 350, 340);
 		g.setFont(FONT_THREE);
 		g.setColor(Color.GREEN);
-		g.drawString("v3.5", 490, 360);
+		g.drawString("v3.6", 490, 360);
 		drawMouse(g);
 	}
 
