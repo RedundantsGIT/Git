@@ -241,7 +241,7 @@ public class rTanner extends PollingScript implements PaintListener {
 	}
 
 	private static final int[][] CLOSE = { { 109, 12 }, { 1422, 18 },
-			{ 1265, 89 }, { 1477, 72 } };
+			{ 1265, 89 }, {1401, 37}, { 1477, 72 } };
 
 	public Component getClose() {
 		for (int[] i : CLOSE) {
