@@ -599,7 +599,7 @@ public class rTanner extends PollingScript implements PaintListener {
 					backpackHideCount = ctx.backpack.select().id(hideID)
 							.count();
 					if (atBurthorpe) {
-						interact(Tanner, "Tan hide", "Oval Jack");
+						interact(Tanner, "Tan hide", "Jack Oval");
 					} else if (atAlKharid) {
 						interact(Tanner, "Tan hides", "Ellis");
 					}
