@@ -82,15 +82,12 @@ public class rTanner extends PollingScript implements PaintListener {
 			3008, 3010, 3012, 3014, 23375, 23377, 23379, 23381, 23383, 23385,
 			11453, 11455, 23387, 23389, 23391, 23393, 23395, 23397, 11481,
 			11483, 3016, 3018, 3020, 3022 }, stairsID = { 76222 };
-	
-	final Tile[] pathToJack = { new Tile(2893, 3529, 0),
+	private static final Tile[] pathToJack = { new Tile(2893, 3529, 0),
 			new Tile(2896, 3519, 0), new Tile(2890, 3513, 0),
-			new Tile(2888, 3501, 0) };
-
-	final Tile[] pathToEllis = { new Tile(3271, 3168),
-			new Tile(3276, 3179, 0), new Tile(3279, 3185, 0),
-			new Tile(3273, 3196, 0) };
-
+			new Tile(2888, 3502, 0) };
+	private static final Tile[] pathToEllis = { new Tile(3270, 3168),
+			new Tile(3274, 3178, 0), new Tile(3280, 3187, 0),
+			new Tile(3275, 3195, 0) };
 	private static final Area areaBurthorpe = new Area(new Tile[] {
 			new Tile(2877, 3540, 0), new Tile(2900, 3540, 0),
 			new Tile(2899, 3479, 0), new Tile(2875, 3479, 0) });
