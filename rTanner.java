@@ -340,7 +340,7 @@ public class rTanner extends PollingScript implements PaintListener {
 											.distanceTo(
 													ctx.movement
 															.getDestination()) < Random
-											.nextInt(9, 10))
+											.nextInt(8, 9))
 								ctx.movement.newTilePath(pathToEllis)
 										.traverse();
 						} else if (atBurthorpe) {
@@ -352,7 +352,7 @@ public class rTanner extends PollingScript implements PaintListener {
 											.distanceTo(
 													ctx.movement
 															.getDestination()) < Random
-											.nextInt(9, 10))
+											.nextInt(8, 9))
 								ctx.movement.newTilePath(pathToJack).traverse();
 						}
 					}
@@ -382,7 +382,7 @@ public class rTanner extends PollingScript implements PaintListener {
 					if (!ctx.players.local().isInMotion()
 							|| ctx.players.local().getLocation()
 									.distanceTo(ctx.movement.getDestination()) < Random
-									.nextInt(9, 10)) {
+									.nextInt(8, 9)) {
 						ctx.movement.newTilePath(pathToJack).reverse()
 								.traverse();
 						if (Tries < Random.nextInt(4, 5)) {
@@ -394,7 +394,7 @@ public class rTanner extends PollingScript implements PaintListener {
 					if (!ctx.players.local().isInMotion()
 							|| ctx.players.local().getLocation()
 									.distanceTo(ctx.movement.getDestination()) < Random
-									.nextInt(9, 10)) {
+									.nextInt(8, 9)) {
 						ctx.movement.newTilePath(pathToEllis).reverse().traverse();
 						if (Tries < Random.nextInt(4, 5)) {
 							ctx.camera.turnTo(ctx.bank.getNearest());
