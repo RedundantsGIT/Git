@@ -265,7 +265,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 										Random.nextInt(5000, 6000));
 								while (walkTimer.isRunning()
 										&& ctx.players.local().getLocation()
-												.distanceTo(oak.getLocation()) > 3)
+												.distanceTo(oak.getLocation()) > 2)
 									;
 								while (ctx.players.local().isInMotion())
 									sleep(500, 600);
