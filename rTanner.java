@@ -620,16 +620,11 @@ public class rTanner extends PollingScript implements PaintListener {
 						break;
 					}
 				} else {
-					if (!ctx.players.local().isInMotion()
-							|| ctx.players.local().getLocation()
-									.distanceTo(ctx.movement.getDestination()) < Random
-									.nextInt(4, 5)) {
 						Tile Loc = Tanner.getLocation().randomize(-1, -2);
 						ctx.movement.stepTowards(ctx.movement
 								.getClosestOnMap(Loc));
 						sleep(Random.nextInt(100, 250));
 						ctx.camera.turnTo(Tanner.getLocation());
-					}
 				}
 
 			}
