@@ -324,7 +324,8 @@ public class rTanner extends PollingScript implements PaintListener {
 		@Override
 		public void execute() {
 			if (ctx.backpack.getMoneyPouch() < 600) {
-				System.out.println("[rTanner]: -Gold dropped below 600, logging out...");
+				System.out
+						.println("[rTanner]: -Gold dropped below 600, logging out...");
 				logOut();
 			} else {
 				if (atTanner()) {
@@ -343,9 +344,10 @@ public class rTanner extends PollingScript implements PaintListener {
 											.distanceTo(
 													ctx.movement
 															.getDestination()) < Random
-											.nextInt(8, 9))
+											.nextInt(8, 9)) {
 								ctx.movement.newTilePath(pathToEllis)
 										.traverse();
+							}
 						} else if (atBurthorpe) {
 							status = "Walk to Jack";
 							if (!ctx.players.local().isInMotion()
@@ -355,12 +357,13 @@ public class rTanner extends PollingScript implements PaintListener {
 											.distanceTo(
 													ctx.movement
 															.getDestination()) < Random
-											.nextInt(10, 11))
+											.nextInt(10, 11)) {
 								ctx.movement.stepTowards(ctx.movement
 										.getClosestOnMap(jackTile));
-							if (Turns < 1) {
-								ctx.camera.turnTo(jackTile);
-								Turns++;
+								if (Turns < 1) {
+									ctx.camera.turnTo(jackTile);
+									Turns++;
+								}
 							}
 						}
 					}
@@ -439,7 +442,8 @@ public class rTanner extends PollingScript implements PaintListener {
 					}
 				} else {
 					if (!bankHasHide()) {
-						System.out.println("[rTanner]: -Ran out of hides to tan, logging out...");
+						System.out
+								.println("[rTanner]: -Ran out of hides to tan, logging out...");
 						logOut();
 					} else if (hasPotion() && !hasHide()
 							&& ctx.backpack.count() > 1) {
@@ -620,11 +624,10 @@ public class rTanner extends PollingScript implements PaintListener {
 						break;
 					}
 				} else {
-						Tile Loc = Tanner.getLocation().randomize(-1, -2);
-						ctx.movement.stepTowards(ctx.movement
-								.getClosestOnMap(Loc));
-						sleep(Random.nextInt(100, 250));
-						ctx.camera.turnTo(Tanner.getLocation());
+					Tile Loc = Tanner.getLocation().randomize(-1, -2);
+					ctx.movement.stepTowards(ctx.movement.getClosestOnMap(Loc));
+					sleep(Random.nextInt(100, 250));
+					ctx.camera.turnTo(Tanner.getLocation());
 				}
 
 			}
