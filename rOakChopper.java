@@ -236,7 +236,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 					if (ctx.players.local().getAnimation() == -1) {
 						if (oakArea.contains(oak.getLocation())) {
 							if (ctx.players.local().getLocation()
-									.distanceTo(oak.getLocation()) < 4) {
+									.distanceTo(oak.getLocation()) < 3) {
 								if (oak.isOnScreen()) {
 									status = "Chop";
 									if (interact(oak, "Chop down", "Oak")) {
