@@ -393,7 +393,7 @@ public class rTanner extends PollingScript implements PaintListener {
 									.nextInt(10, 11)) {
 						ctx.movement.stepTowards(ctx.movement
 								.getClosestOnMap(burthBankTile));
-						if (Tries < Random.nextInt(3, 4)) {
+						if (Tries < 1) {
 							ctx.camera.turnTo(ctx.bank.getNearest());
 							Tries++;
 						}
@@ -405,7 +405,7 @@ public class rTanner extends PollingScript implements PaintListener {
 									.nextInt(8, 9)) {
 						ctx.movement.newTilePath(pathToEllis).reverse()
 								.traverse();
-						if (Tries < Random.nextInt(3, 4)) {
+						if (Tries < 1) {
 							ctx.camera.turnTo(ctx.bank.getNearest());
 							Tries++;
 						}
