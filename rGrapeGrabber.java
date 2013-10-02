@@ -24,6 +24,7 @@ import org.powerbot.script.methods.MethodProvider;
 import org.powerbot.script.methods.Menu.Entry;
 import org.powerbot.script.util.Random;
 import org.powerbot.script.wrappers.Area;
+import org.powerbot.script.wrappers.Component;
 import org.powerbot.script.wrappers.GameObject;
 import org.powerbot.script.wrappers.GroundItem;
 import org.powerbot.script.wrappers.Npc;
@@ -60,8 +61,8 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 		scriptTimer = System.currentTimeMillis();
 		grapePrice = getGuidePrice(grapeID);
 		log.info("G.E. Grape Price : " + grapePrice);
-		rGrapeGrabber.container = new JobContainer(new Job[] { new Grapes(ctx),
-				new Banking(ctx) });
+		rGrapeGrabber.container = new JobContainer(new Job[] {
+				new CloseInterfaces(ctx), new Grapes(ctx), new Banking(ctx) });
 	}
 
 	@Override
@@ -148,6 +149,45 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 		}
 
 		return 50;
+	}
+
+	private class CloseInterfaces extends Job {
+		public CloseInterfaces(MethodContext ctx) {
+			super(ctx);
+		}
+
+		@Override
+		public boolean activate() {
+			return canClose();
+		}
+
+		@Override
+		public void execute() {
+			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
+			if (InfoWindow.isVisible()) {
+				InfoWindow.getChild(1).click(true);
+				sleep(Random.nextInt(15, 25));
+			} else {
+				getClose().click(true);
+				sleep(Random.nextInt(10, 20));
+			}
+		}
+	}
+
+	private static final int[][] CLOSE = { { 109, 12 }, { 1422, 18 },
+			{ 1265, 89 }, { 1401, 37 }, { 1477, 72 } };
+
+	public Component getClose() {
+		for (int[] i : CLOSE) {
+			Component c = ctx.widgets.get(i[0], i[1]);
+			if (c != null && c.isVisible())
+				return c;
+		}
+		return null;
+	}
+
+	public boolean canClose() {
+		return getClose() != null;
 	}
 
 	private class Grapes extends Job {
