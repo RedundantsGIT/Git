@@ -41,16 +41,15 @@ public class rOakChopper extends PollingScript implements PaintListener,
 
 	private static String status = "Starting...";
 
-	private static int logsChopped, logPrice, profitGained, logsInBank;
+	private static int logsChopped, logPrice, profitGained, logsInBank, tries;
 
 	private static final int oakLogID = 1521;
 
 	private static int[] oakID = { 38732, 38731 };
 
-	public final Area oakArea = new Area(new Tile[] {
-			new Tile(3168, 3472, 0), new Tile(3228, 3472, 0),
-			new Tile(3220, 3417, 0), new Tile(3176, 3418, 0)
-	});
+	public final Area oakArea = new Area(new Tile[] { new Tile(3168, 3472, 0),
+			new Tile(3228, 3472, 0), new Tile(3220, 3417, 0),
+			new Tile(3176, 3418, 0) });
 	private static final Tile[] pathToOak = new Tile[] {
 			new Tile(3180, 3502, 0), new Tile(3183, 3498, 0),
 			new Tile(3186, 3494, 0), new Tile(3192, 3491, 0),
@@ -58,7 +57,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 			new Tile(3198, 3479, 0), new Tile(3197, 3475, 0),
 			new Tile(3196, 3471, 0), new Tile(3196, 3467, 0),
 			new Tile(3195, 3464, 0) };
-	
+
 	private final Filter<GameObject> FILTER_TREE = new Filter<GameObject>() {
 		public boolean accept(GameObject object) {
 			Arrays.sort(oakID);
@@ -99,7 +98,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 		}
 
 		public int delay() {
-			return 300;
+			return 100;
 		}
 
 		public int priority() {
@@ -161,7 +160,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 			return job.delay();
 		}
 
-		return 200;
+		return 100;
 	}
 
 	private class CloseInterfaces extends Job {
@@ -218,7 +217,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 				if (!ctx.players.local().isInMotion()
 						|| ctx.players.local().getLocation()
 								.distanceTo(ctx.movement.getDestination()) < Random
-								.nextInt(7, 8)){
+								.nextInt(8, 9)) {
 					ctx.movement.newTilePath(pathToOak).reverse().traverse();
 				}
 			}
@@ -244,38 +243,46 @@ public class rOakChopper extends PollingScript implements PaintListener,
 		@Override
 		public void execute() {
 			if (oakArea.contains(ctx.players.local().getLocation())) {
-				for (GameObject oak : ctx.objects.select().select(FILTER_TREE).nearest().first()) {
+				for (GameObject oak : ctx.objects.select().select(FILTER_TREE)
+						.nearest().first()) {
 					if (ctx.players.local().getAnimation() == -1) {
-						if (oakArea.contains(oak.getLocation())) {
-							if (ctx.players.local().getLocation()
-									.distanceTo(oak.getLocation()) < 3) {
-								if (oak.isOnScreen()) {
-									status = "Chop";
-									if (interact(oak, "Chop down", "Oak")) {
-										if (Random.nextInt(1, 5) == 3)
-											mouseMoveSlightly();
-										final Timer chopTimer = new Timer(
-												Random.nextInt(3000, 3500));
-										while (chopTimer.isRunning()
-												&& ctx.players.local()
-														.getAnimation() == -1)
-											sleep(Random.nextInt(150, 250));
-									}
-									status = "Chopping oak...";
-								}
+						if (oak.isOnScreen()) {
+							if (tries > 1) {
+								log.info("Failsafe");
+								ctx.camera.setPitch(false);
+								ctx.camera.turnTo(oak.getLocation());
+								tries = 0;
 							} else {
-								status = "Walk to tree";
-								if (Random.nextInt(1, 10) == 5) {
-									if (Random.nextInt(1, 5) == 3)
-										ctx.camera.setPitch(Random.nextInt(30,
-												65));
-									ctx.camera.turnTo(oak.getLocation());
+								if (Random.nextInt(1, 5) == 3) {
+									mouseMoveSlightly();
 								}
-								ctx.movement.stepTowards(ctx.movement.getClosestOnMap(oak).getLocation());
-								sleep(350, 500);
-								while(ctx.players.local().isInMotion()){
-									sleep(75, 150);
+								if (interact(oak, "Chop down", "Oak")) {
+									tries++;
+									if (Random.nextInt(1, 5) == 3) {
+										mouseMoveSlightly();
+									}
+									final Timer chopTimer = new Timer(
+											Random.nextInt(3000, 3500));
+									while (chopTimer.isRunning()
+											&& ctx.players.local()
+													.getAnimation() == -1)
+										sleep(Random.nextInt(150, 250));
 								}
+							}
+						} else {
+							status = "Walk to tree";
+							if (ctx.camera.getPitch() < 30) {
+								ctx.camera.setPitch(Random.nextInt(35, 60));
+							}
+							if (!ctx.players.local().isInMotion()
+									|| ctx.players
+											.local()
+											.getLocation()
+											.distanceTo(
+													ctx.movement
+															.getDestination()) < 3) {
+								ctx.movement.stepTowards(ctx.movement
+										.getClosestOnMap(oak).getLocation());
 							}
 						}
 					}
@@ -289,10 +296,12 @@ public class rOakChopper extends PollingScript implements PaintListener,
 					if (!ctx.players.local().isInMotion()
 							|| ctx.players.local().getLocation()
 									.distanceTo(ctx.movement.getDestination()) < Random
-									.nextInt(7, 8))
+									.nextInt(8, 9)) {
 						ctx.movement.newTilePath(pathToOak).traverse();
+					}
 				}
 			}
+
 		}
 	}
 
