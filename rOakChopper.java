@@ -256,6 +256,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 								if (Random.nextInt(1, 5) == 3) {
 									mouseMoveSlightly();
 								}
+								status = "Interact with oak";
 								if (interact(oak, "Chop down", "Oak")) {
 									tries++;
 									if (Random.nextInt(1, 5) == 3) {
@@ -268,6 +269,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 													.getAnimation() == -1)
 										sleep(Random.nextInt(150, 250));
 								}
+								status = "Chopping...";
 							}
 						} else {
 							status = "Walk to tree";
