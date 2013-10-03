@@ -44,10 +44,10 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 	private static final int ShootID1 = 24068, ShootID2 = 24067, doorID = 2712,
 			grapeID = 1987;
 
-	private static final Area inGuild = new Area(new Tile[] {
-			new Tile(3137, 3444, 0), new Tile(3144, 3444, 0),
-			new Tile(3146, 3448, 0), new Tile(3147, 3454, 0),
-			new Tile(3138, 3454, 0) });
+	public final Area inGuild = new Area(new Tile[] {
+			new Tile(3147, 3446, 0), new Tile(3144, 3444, 0),
+			new Tile(3142, 3444, 0), new Tile(3138, 3448, 0),
+			new Tile(3140, 3453, 0), new Tile(3148, 3451) });
 
 	public final Tile[] pathToGuild = { new Tile(3182, 3443, 0),
 			new Tile(3183, 3450, 0), new Tile(3176, 3450, 0),
