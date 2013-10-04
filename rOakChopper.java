@@ -33,7 +33,7 @@ import org.powerbot.script.wrappers.GameObject;
 import org.powerbot.script.wrappers.Interactive;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rOakChopper", description = "Chops oak trees at the Grand Exchange", version = 0.2, hidden = true, instances = 30)
+@Manifest(authors = { "Redundant" }, name = "rOakChopper", description = "Chops oak trees at the Grand Exchange", version = 0.3, hidden = true, instances = 30)
 public class rOakChopper extends PollingScript implements PaintListener,
 		MessageListener {
 
@@ -47,9 +47,10 @@ public class rOakChopper extends PollingScript implements PaintListener,
 
 	private static int[] oakID = { 38732, 38731 };
 
-	public final Area oakArea = new Area(new Tile[] { new Tile(3168, 3472, 0),
-			new Tile(3228, 3472, 0), new Tile(3220, 3417, 0),
-			new Tile(3176, 3418, 0) });
+	public final static Area oakArea = new Area(new Tile[] {
+			new Tile(3168, 3472, 0), new Tile(3228, 3472, 0),
+			new Tile(3220, 3417, 0), new Tile(3176, 3418, 0) });
+
 	private static final Tile[] pathToOak = new Tile[] {
 			new Tile(3180, 3502, 0), new Tile(3183, 3498, 0),
 			new Tile(3186, 3494, 0), new Tile(3192, 3491, 0),
@@ -58,7 +59,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 			new Tile(3196, 3471, 0), new Tile(3196, 3467, 0),
 			new Tile(3195, 3464, 0) };
 
-	private final Filter<GameObject> FILTER_TREE = new Filter<GameObject>() {
+	private static final Filter<GameObject> FILTER_TREE = new Filter<GameObject>() {
 		public boolean accept(GameObject object) {
 			Arrays.sort(oakID);
 			return Arrays.binarySearch(oakID, object.getId()) >= 0
@@ -186,6 +187,22 @@ public class rOakChopper extends PollingScript implements PaintListener,
 		}
 	}
 
+	private static final int[][] CLOSE = { { 109, 12 }, { 1422, 18 },
+			{ 1265, 89 }, { 1477, 72 } };
+
+	public Component getClose() {
+		for (int[] i : CLOSE) {
+			Component c = ctx.widgets.get(i[0], i[1]);
+			if (c != null && c.isVisible())
+				return c;
+		}
+		return null;
+	}
+
+	public boolean canClose() {
+		return getClose() != null;
+	}
+
 	private class Banking extends Job {
 		public Banking(MethodContext ctx) {
 			super(ctx);
@@ -217,7 +234,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 				if (!ctx.players.local().isInMotion()
 						|| ctx.players.local().getLocation()
 								.distanceTo(ctx.movement.getDestination()) < Random
-								.nextInt(8, 9)) {
+								.nextInt(7, 9)) {
 					ctx.movement.newTilePath(pathToOak).reverse().traverse();
 				}
 			}
@@ -253,15 +270,12 @@ public class rOakChopper extends PollingScript implements PaintListener,
 								ctx.camera.turnTo(oak.getLocation());
 								tries = 0;
 							} else {
-								if (Random.nextInt(1, 5) == 3) {
-									mouseMoveSlightly();
-								}
 								status = "Interact with oak";
 								if (interact(oak, "Chop down", "Oak")) {
-									tries++;
-									if (Random.nextInt(1, 5) == 3) {
+									if (Random.nextInt(1, 3) == 2) {
 										mouseMoveSlightly();
 									}
+									tries++;
 									final Timer chopTimer = new Timer(
 											Random.nextInt(3000, 3500));
 									while (chopTimer.isRunning()
@@ -298,7 +312,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 					if (!ctx.players.local().isInMotion()
 							|| ctx.players.local().getLocation()
 									.distanceTo(ctx.movement.getDestination()) < Random
-									.nextInt(8, 9)) {
+									.nextInt(7, 9)) {
 						ctx.movement.newTilePath(pathToOak).traverse();
 					}
 				}
@@ -319,22 +333,6 @@ public class rOakChopper extends PollingScript implements PaintListener,
 			return;
 		}
 		ctx.mouse.move(p);
-	}
-
-	private static final int[][] CLOSE = { { 109, 12 }, { 1422, 18 },
-			{ 1265, 89 }, { 1477, 72 } };
-
-	public Component getClose() {
-		for (int[] i : CLOSE) {
-			Component c = ctx.widgets.get(i[0], i[1]);
-			if (c != null && c.isVisible())
-				return c;
-		}
-		return null;
-	}
-
-	public boolean canClose() {
-		return getClose() != null;
 	}
 
 	public boolean didInteract() {
@@ -418,7 +416,7 @@ public class rOakChopper extends PollingScript implements PaintListener,
 		g.drawString("Log Price: " + (logPrice), 13, 305);
 		g.drawString("Logs In Bank: " + (logsInBank), 13, 325);
 		g.drawString("Status: " + (status), 13, 345);
-		drawCross(g);
+		drawMouse(g);
 
 	}
 
@@ -439,12 +437,12 @@ public class rOakChopper extends PollingScript implements PaintListener,
 		return "" + start;
 	}
 
-	private void drawCross(Graphics g) {
-		g.setColor(Color.RED);
-		g.drawLine(0, (int) (ctx.mouse.getLocation().getY()), 800,
-				(int) (ctx.mouse.getLocation().getY()));
-		g.drawLine((int) (ctx.mouse.getLocation().getX()), 0,
-				(int) (ctx.mouse.getLocation().getX()), 800);
+	private void drawMouse(final Graphics g) {
+		final Point m = ctx.mouse.getLocation();
+		g.setColor(ctx.players.local().getAnimation() == -1 ? Color.RED
+				: Color.GREEN);
+		g.drawLine(m.x - 5, m.y + 5, m.x + 5, m.y - 5);
+		g.drawLine(m.x - 5, m.y - 5, m.x + 5, m.y + 5);
 	}
 
 	public int getGuidePrice(int itemId) {
