@@ -30,7 +30,7 @@ import org.powerbot.script.wrappers.GroundItem;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rGrapeGrabber", description = "", version = 0.1, instances = 55, hidden = true)
+@Manifest(authors = { "Redundant" }, name = "rGrapeGrabber", description = "Loots grape from the cooking guild for money.", version = 0.2, instances = 55, hidden = true)
 public class rGrapeGrabber extends PollingScript implements PaintListener {
 	private static long scriptTimer = 0;
 	public Timer wait;
@@ -44,24 +44,24 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 	private static final int ShootID1 = 24068, ShootID2 = 24067, doorID = 2712,
 			grapeID = 1987;
 
-	public final Area inGuild = new Area(new Tile[] {
+	private static final Area inGuild = new Area(new Tile[] {
 			new Tile(3147, 3446, 0), new Tile(3144, 3444, 0),
 			new Tile(3142, 3444, 0), new Tile(3138, 3448, 0),
 			new Tile(3140, 3453, 0), new Tile(3148, 3451) });
 
-	public final Tile[] pathToGuild = { new Tile(3182, 3443, 0),
+	private static final Tile[] pathToGuild = { new Tile(3182, 3443, 0),
 			new Tile(3183, 3450, 0), new Tile(3176, 3450, 0),
 			new Tile(3172, 3450, 0), new Tile(3166, 3451, 0),
 			new Tile(3160, 3450, 0), new Tile(3155, 3449, 0),
 			new Tile(3152, 3446, 0), new Tile(3148, 3443, 0),
-			new Tile(3143, 3440, 0) };
+			new Tile(3143, 3441, 0) };
 
 	@Override
 	public void start() {
 		scriptTimer = System.currentTimeMillis();
 		grapePrice = getGuidePrice(grapeID);
 		log.info("G.E. Grape Price : " + grapePrice);
-		rGrapeGrabber.container = new JobContainer(new Job[] {
+		rGrapeGrabber.container = new JobContainer(new Job[] { new Pitch(ctx),
 				new CloseInterfaces(ctx), new Grapes(ctx), new Banking(ctx) });
 	}
 
@@ -86,7 +86,7 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 		}
 
 		public int delay() {
-			return 50;
+			return 100;
 		}
 
 		public int priority() {
@@ -151,6 +151,22 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 		return 50;
 	}
 
+	private class Pitch extends Job {
+		public Pitch(MethodContext ctx) {
+			super(ctx);
+		}
+
+		@Override
+		public boolean activate() {
+			return ctx.camera.getPitch() < 45;
+		}
+
+		@Override
+		public void execute() {
+			ctx.camera.setPitch(Random.nextInt(47, 50));
+		}
+	}
+
 	private class CloseInterfaces extends Job {
 		public CloseInterfaces(MethodContext ctx) {
 			super(ctx);
@@ -209,53 +225,44 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 				sTimer(!atLevelOne(), 0, 0);
 				while (ctx.players.local().isInMotion())
 					sleep(Random.nextInt(50, 100));
-			} else {
-				if (atLevelOne() || atLevelTwo()) {
-					status = "Go up";
-					goUp();
-				} else {
-					if (atLevelThree()) {
-						if (ctx.players.local().getLocation()
-								.distanceTo(lootTile) > 2) {
-							status = "Walk to grapes";
-							ctx.movement.stepTowards(ctx.movement
-									.getClosestOnMap(lootTile.getLocation()));
-							ctx.camera.turnTo(lootTile);
-							sleep(Random.nextInt(150, 450));
-							while (ctx.players.local().isInMotion()) {
-								sleep(Random.nextInt(100, 200));
-							}
-						} else
-							for (GroundItem Grapes : ctx.groundItems.select()
-									.id(grapeID).nearest()) {
-								if (Grapes != null) {
-									status = "Looting grapes...";
-									take(Grapes);
-								}
-							}
-					} else {
-						if (!ctx.players.local().isInMotion()
-								|| ctx.players
-										.local()
-										.getLocation()
-										.distanceTo(
-												ctx.movement.getDestination()) < Random
-										.nextInt(8, 12)) {
-							if (ctx.bank.isOpen()) {
-								status = "Bank close";
-								ctx.bank.close();
-							} else {
-								status = "Walk to guild";
-								ctx.movement.newTilePath(pathToGuild)
-										.traverse();
-							}
+			} else if (atLevelOne() || atLevelTwo()) {
+				status = "Go up";
+				goUp();
+			} else if (atLevelThree()) {
+				if (ctx.players.local().getLocation().distanceTo(lootTile) > 2) {
+					status = "Walk to grapes";
+					ctx.movement.stepTowards(ctx.movement
+							.getClosestOnMap(lootTile.getLocation()));
+					ctx.camera.turnTo(lootTile);
+					sleep(Random.nextInt(150, 450));
+					while (ctx.players.local().isInMotion()) {
+						sleep(Random.nextInt(100, 200));
+					}
+				} else
+					for (GroundItem Grapes : ctx.groundItems.select()
+							.id(grapeID).nearest()) {
+						if (Grapes != null) {
+							status = "Looting grapes...";
+							take(Grapes);
 						}
 					}
+			} else {
+				if (!ctx.players.local().isInMotion()
+						|| ctx.players.local().getLocation()
+								.distanceTo(ctx.movement.getDestination()) < Random
+								.nextInt(8, 12)) {
+					if (ctx.bank.isOpen()) {
+						status = "Bank close";
+						ctx.bank.close();
+					} else {
+						status = "Walk to guild";
+						ctx.movement.newTilePath(pathToGuild).traverse();
+					}
 				}
-
 			}
 
 		}
+
 	}
 
 	private class Banking extends Job {
@@ -273,34 +280,27 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 			if (atLevelThree() || atLevelTwo()) {
 				status = "Go down";
 				goDown();
-			} else {
-				if (atLevelOne()) {
-					status = "Open door";
-					openDoor();
-				} else {
-					if (!bankerIsOnScreen()) {
-						if (!ctx.players.local().isInMotion()
-								|| ctx.players
-										.local()
-										.getLocation()
-										.distanceTo(
-												ctx.movement.getDestination()) < Random
-										.nextInt(8, 12)) {
-							status = "Walk to bank";
-							ctx.movement.newTilePath(pathToGuild).reverse()
-									.traverse();
-						}
-					} else {
-						if (!ctx.bank.isOpen()) {
-							status = "Bank open";
-							ctx.bank.open();
-						} else {
-							status = "Deposit backpack";
-							ctx.bank.depositInventory();
-							sTimer(ctx.backpack.select().count() == 28, 0, 0);
-						}
-					}
+			} else if (atLevelOne()) {
+				status = "Open door";
+				openDoor();
+			} else if (!bankerIsOnScreen()) {
+				if (!ctx.players.local().isInMotion()
+						|| ctx.players.local().getLocation()
+								.distanceTo(ctx.movement.getDestination()) < Random
+								.nextInt(8, 12)) {
+					status = "Walk to bank";
+					ctx.movement.newTilePath(pathToGuild).reverse().traverse();
 				}
+			} else {
+				if (!ctx.bank.isOpen()) {
+					status = "Bank open";
+					ctx.bank.open();
+				} else {
+					status = "Deposit backpack";
+					ctx.bank.depositInventory();
+					sTimer(ctx.backpack.select().count() == 28, 0, 0);
+				}
+
 			}
 		}
 	}
@@ -366,11 +366,14 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 	private void openDoor() {
 		for (GameObject Door : ctx.objects.select().id(doorID).nearest()) {
 			ctx.camera.turnTo(Door.getLocation());
-			if (Door.isOnScreen()) {
-				Door.interact("Open");
-				sTimer(atLevelOne(), 0, 0);
-				while (ctx.players.local().isInMotion())
-					sleep(Random.nextInt(150, 250));
+			if (ctx.players.local().getLocation()
+					.distanceTo(Door.getLocation()) < 3) {
+				if (Door.isOnScreen()) {
+					Door.interact("Open");
+					sTimer(atLevelOne(), 0, 0);
+					while (ctx.players.local().isInMotion())
+						sleep(Random.nextInt(150, 250));
+				}
 			} else {
 				ctx.movement.stepTowards(ctx.movement.getClosestOnMap(Door
 						.getLocation()));
@@ -381,11 +384,14 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 	private void goUp() {
 		for (GameObject Stairs : ctx.objects.select().id(stairsID).nearest()) {
 			ctx.camera.turnTo(Stairs.getLocation());
-			if (Stairs.isOnScreen()) {
-				Stairs.interact("Climb-up");
-				sleep(Random.nextInt(1000, 1500));
-				while (ctx.players.local().isInMotion())
-					sleep(Random.nextInt(300, 500));
+			if (ctx.players.local().getLocation()
+					.distanceTo(Stairs.getLocation()) < 3) {
+				if (Stairs.isOnScreen()) {
+					Stairs.interact("Climb-up");
+					sleep(Random.nextInt(1000, 1500));
+					while (ctx.players.local().isInMotion())
+						sleep(Random.nextInt(300, 500));
+				}
 			} else {
 				ctx.movement.stepTowards(ctx.movement.getClosestOnMap(Stairs
 						.getLocation()));
@@ -396,11 +402,14 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 	private void goDown() {
 		for (GameObject Stairs : ctx.objects.select().id(stairsID2).nearest()) {
 			ctx.camera.turnTo(Stairs.getLocation());
-			if (Stairs.isOnScreen()) {
-				Stairs.interact("Climb-down");
-				sleep(Random.nextInt(1200, 1600));
-				while (ctx.players.local().isInMotion())
-					sleep(Random.nextInt(300, 500));
+			if (ctx.players.local().getLocation()
+					.distanceTo(Stairs.getLocation()) < 3) {
+				if (Stairs.isOnScreen()) {
+					Stairs.interact("Climb-down");
+					sleep(Random.nextInt(1200, 1600));
+					while (ctx.players.local().isInMotion())
+						sleep(Random.nextInt(300, 500));
+				}
 			} else {
 				ctx.movement.stepTowards(ctx.movement.getClosestOnMap(Stairs
 						.getLocation()));
