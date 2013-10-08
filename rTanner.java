@@ -81,6 +81,7 @@ public class rTanner extends PollingScript implements PaintListener {
 
 	private static Tile doorTile = new Tile(3187, 3403, 0);
 	private static Tile tannerTile = new Tile(3187, 3406, 0);
+	private static int tries;
 
 	private static Tile[] tilePath;
 	private static final Tile[] pathToJack = { new Tile(2893, 3529),
@@ -90,8 +91,8 @@ public class rTanner extends PollingScript implements PaintListener {
 			new Tile(3274, 3178, 0), new Tile(3280, 3187, 0),
 			new Tile(3275, 3195, 0) };
 	public final Tile[] pathToTanner = { new Tile(3183, 3435, 0),
-			new Tile(3182, 3427, 0), new Tile(3181, 3419, 0),
-			new Tile(3182, 3412, 0), new Tile(3187, 3403, 0) };
+			new Tile(3182, 3426, 0), new Tile(3181, 3415, 0),
+			new Tile(3187, 3403, 0) };
 	private static final Area areaBurthorpe = new Area(new Tile[] {
 			new Tile(2877, 3540, 0), new Tile(2900, 3540, 0),
 			new Tile(2899, 3479, 0), new Tile(2875, 3479, 0) });
@@ -108,9 +109,9 @@ public class rTanner extends PollingScript implements PaintListener {
 	public void start() {
 		elapsedTime = System.currentTimeMillis();
 		rTanner.container = new JobContainer(new Job[] {
-				new GetPlayerArea(ctx), new Pitch(ctx),
-				new CloseInterfaces(ctx), new Door(ctx), new Stairs(ctx),
-				new UseEnergyPotion(ctx), new Tan(ctx), new Banking(ctx) });
+				new GetPlayerArea(ctx), new Pitch(ctx), new CloseInterfaces(ctx),
+				new Door(ctx), new Stairs(ctx), new UseEnergyPotion(ctx),
+				new Tan(ctx), new Banking(ctx) });
 	}
 
 	@Override
@@ -197,7 +198,7 @@ public class rTanner extends PollingScript implements PaintListener {
 			return job.delay();
 		}
 
-		return 50;
+		return 100;
 	}
 
 	private class GetPlayerArea extends Job {
@@ -227,7 +228,7 @@ public class rTanner extends PollingScript implements PaintListener {
 			}
 		}
 	}
-
+	
 	private class Pitch extends Job {
 		public Pitch(MethodContext ctx) {
 			super(ctx);
@@ -235,15 +236,15 @@ public class rTanner extends PollingScript implements PaintListener {
 
 		@Override
 		public boolean activate() {
-			return ctx.camera.getPitch() < 45;
+			return ctx.camera.getPitch() < 30;
 		}
 
 		@Override
 		public void execute() {
-			ctx.camera.setPitch(Random.nextInt(47, 50));
-			sleep(Random.nextInt(50, 75));
+			status = "Set Pitch";
+			ctx.camera.setPitch(Random.nextInt(32, 34));
+			sleep(50, 100);
 		}
-
 	}
 
 	private class CloseInterfaces extends Job {
@@ -432,6 +433,10 @@ public class rTanner extends PollingScript implements PaintListener {
 						|| ctx.players.local().getLocation()
 								.distanceTo(ctx.movement.getDestination()) < 8) {
 					ctx.movement.newTilePath(tilePath).reverse().traverse();
+					if (tries < 2) {
+						ctx.camera.turnTo(ctx.bank.getNearest());
+						tries++;
+					}
 				}
 			}
 		}
@@ -439,6 +444,7 @@ public class rTanner extends PollingScript implements PaintListener {
 
 	public void doBanking() {
 		if (ctx.bank.isOpen()) {
+			tries = 0;
 			if (!gotPrices) {
 				getBankPrices();
 				gotPrices = true;
