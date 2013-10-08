@@ -135,7 +135,7 @@ public class rTanner extends PollingScript implements PaintListener {
 		}
 
 		public int delay() {
-			return 25;
+			return 100;
 		}
 
 		public int priority() {
