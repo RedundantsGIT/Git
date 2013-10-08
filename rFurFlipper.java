@@ -181,46 +181,48 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		@Override
 		public void execute() {
 			final Component pressOne = ctx.widgets.get(1188, 2);
-			final Npc baraek = ctx.npcs.select().id(baraekID).first().isEmpty() ? null
-					: ctx.npcs.iterator().next();
 			if (nearBaraek()) {
-				if (baraek != null) {
-					if (ctx.backpack.getMoneyPouch() < 20) {
-						System.out
-								.println("[rFurFlipper]: -Not enough gold left to continue, stopping script.. .");
-						getController().stop();
-					} else if (!baraek.isOnScreen()
-							&& !ctx.players.local().isInMotion()) {
-						ctx.movement.stepTowards(ctx.movement
-								.getClosestOnMap(baraek.getLocation()));
-					} else if (canContinue()) {
-						status = "Press Spacebar";
-						ctx.keyboard.send(" ");
-						final Timer pressTimer = new Timer(Random.nextInt(1600,
-								1800));
-						while (pressTimer.isRunning() && canContinue()) {
-							sleep(10, 35);
-						}
-					} else if (pressOne.isValid()) {
-						status = "Press 1";
-						ctx.keyboard.send("1");
-						final Timer pressTimer = new Timer(Random.nextInt(1600,
-								1800));
-						while (pressTimer.isRunning() && pressOne.isVisible()) {
-							sleep(10, 35);
-						}
-					} else {
+				if (ctx.backpack.getMoneyPouch() < 20) {
+					System.out
+							.println("[rFurFlipper]: -Not enough gold left to continue, stopping script.. .");
+					getController().stop();
+				} else if (canContinue()) {
+					status = "Press Spacebar";
+					ctx.keyboard.send(" ");
+					final Timer pressTimer = new Timer(Random.nextInt(1600,
+							1800));
+					while (pressTimer.isRunning() && canContinue()) {
+						sleep(10, 35);
+					}
+				} else if (pressOne.isValid()) {
+					status = "Press 1";
+					ctx.keyboard.send("1");
+					final Timer pressTimer = new Timer(Random.nextInt(1600,
+							1800));
+					while (pressTimer.isRunning() && pressOne.isVisible()) {
+						sleep(10, 35);
+					}
+				} else {
+					for (Npc baraek : ctx.npcs.select().id(baraekID).nearest()) {
 						status = "Talk to Baraek";
 						if (baraek.isOnScreen()) {
 							baraek.interact("Talk-to", "Baraek");
-						}
-						while (ctx.players.local().isInMotion()) {
-							sleep(25, 300);
-						}
-						final Timer talkTimer = new Timer(Random.nextInt(2000,
-								2500));
-						while (talkTimer.isRunning() && !pressOne.isVisible()) {
-							sleep(15, 50);
+							final Timer talkTimer = new Timer(Random.nextInt(
+									2300, 2600));
+							while (talkTimer.isRunning()
+									&& !pressOne.isVisible()) {
+								sleep(15, 50);
+							}
+							while (ctx.players.local().isInMotion()
+									&& !pressOne.isValid()) {
+								sleep(25, 100);
+							}
+							break;
+						} else if (!baraek.isOnScreen()
+								&& !ctx.players.local().isInMotion()) {
+							ctx.movement.stepTowards(ctx.movement
+									.getClosestOnMap(baraek.getLocation()));
+
 						}
 					}
 				}
@@ -331,8 +333,9 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	public void messaged(MessageEvent msg) {
 		String message = msg.getMessage();
 		if (message
-				.contains("20 coins have been removed from your money pouch."))
+				.contains("20 coins have been removed from your money pouch.")) {
 			furBought++;
+		}
 
 	}
 
