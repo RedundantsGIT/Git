@@ -495,12 +495,8 @@ public class rTanner extends PollingScript implements PaintListener {
 			}
 		} else {
 			status = "Bank Open";
-			if (atVarrock) {
-				ctx.camera.turnTo(ctx.bank.getNearest());
-			}
+			ctx.camera.turnTo(ctx.bank.getNearest());
 			ctx.bank.open();
-			while (ctx.players.local().isInMotion() && !ctx.bank.isOpen())
-				sleep(Random.nextInt(1, 5));
 		}
 	}
 
