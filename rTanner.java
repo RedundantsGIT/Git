@@ -70,8 +70,6 @@ public class rTanner extends PollingScript implements PaintListener {
 			IntTannedSnakeSkinID = 6289, IntTannedSnakeSkinIDTwo = 6289,
 			IntRedDragonLeatherID = 2507, doorID = 24376;
 
-	private static int Tries = 0;
-
 	private static final int[] leatherID = { 1741, 1743, 1745, 2505, 24374,
 			6289, 2507, 2509 },
 			tannerID = { 14877, 2824, 2320 },
@@ -433,10 +431,6 @@ public class rTanner extends PollingScript implements PaintListener {
 						|| ctx.players.local().getLocation()
 								.distanceTo(ctx.movement.getDestination()) < 8) {
 					ctx.movement.newTilePath(tilePath).reverse().traverse();
-					if (Tries < 1) {
-						ctx.camera.turnTo(ctx.bank.getNearest());
-						Tries++;
-					}
 				}
 			}
 		}
@@ -448,7 +442,6 @@ public class rTanner extends PollingScript implements PaintListener {
 				getBankPrices();
 				gotPrices = true;
 			} else {
-				Tries = 0;
 				if (ctx.backpack.select().count() == 28) {
 					if (!hasLeather() && !hasPotion()) {
 						status = "Deposit Backpack";
@@ -495,7 +488,9 @@ public class rTanner extends PollingScript implements PaintListener {
 			}
 		} else {
 			status = "Bank Open";
-			ctx.camera.turnTo(ctx.bank.getNearest());
+			if (atVarrock) {
+				ctx.camera.turnTo(ctx.bank.getNearest());
+			}
 			ctx.bank.open();
 		}
 	}
