@@ -91,7 +91,7 @@ public class rTanner extends PollingScript implements PaintListener {
 			new Tile(3274, 3178, 0), new Tile(3280, 3187, 0),
 			new Tile(3275, 3195, 0) };
 	public final Tile[] pathToTanner = { new Tile(3183, 3435, 0),
-			new Tile(3182, 3426, 0), new Tile(3181, 3415, 0),
+			new Tile(3181, 3426, 0), new Tile(3180, 3416, 0),
 			new Tile(3187, 3403, 0) };
 	private static final Area areaBurthorpe = new Area(new Tile[] {
 			new Tile(2877, 3540, 0), new Tile(2900, 3540, 0),
