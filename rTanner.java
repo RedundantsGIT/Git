@@ -91,7 +91,7 @@ public class rTanner extends PollingScript implements PaintListener {
 	private static final Tile[] pathToEllis = { new Tile(3270, 3168),
 			new Tile(3274, 3178, 0), new Tile(3280, 3187, 0),
 			new Tile(3275, 3195, 0) };
-	public final Tile[] pathToTanner = { new Tile(3182, 3436, 0),
+	public final Tile[] pathToTanner = { new Tile(3183, 3436, 0),
 			new Tile(3182, 3427, 0), new Tile(3181, 3419, 0),
 			new Tile(3182, 3412, 0), new Tile(3187, 3403, 0) };
 	private static final Area areaBurthorpe = new Area(new Tile[] {
@@ -100,8 +100,7 @@ public class rTanner extends PollingScript implements PaintListener {
 	private static final Area areaAlKharid = new Area(new Tile[] {
 			new Tile(3239, 3154, 0), new Tile(3315, 3151, 0),
 			new Tile(3319, 3224, 0), new Tile(3250, 3223, 0) });
-
-	public final Area areaVarrock = new Area(new Tile[] {
+	private static final Area areaVarrock = new Area(new Tile[] {
 			new Tile(3166, 3445, 0), new Tile(3171, 3390, 0),
 			new Tile(3214, 3397, 0), new Tile(3206, 3453, 0) });
 
@@ -496,7 +495,7 @@ public class rTanner extends PollingScript implements PaintListener {
 			}
 		} else {
 			status = "Bank Open";
-			if(atVarrock){
+			if (atVarrock) {
 				ctx.camera.turnTo(ctx.bank.getNearest());
 			}
 			ctx.bank.open();
