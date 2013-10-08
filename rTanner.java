@@ -355,6 +355,7 @@ public class rTanner extends PollingScript implements PaintListener {
 		public void execute() {
 			for (GameObject Door : ctx.objects.select().select().id(doorID)
 					.at(doorTile)) {
+				status = "Door";
 				if (Door.isOnScreen()) {
 					Door.click(true);
 					final Timer doorTimer = new Timer(
@@ -488,9 +489,6 @@ public class rTanner extends PollingScript implements PaintListener {
 			}
 		} else {
 			status = "Bank Open";
-			if (atVarrock) {
-				ctx.camera.turnTo(ctx.bank.getNearest());
-			}
 			ctx.bank.open();
 		}
 	}
