@@ -267,6 +267,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 					furStored = ctx.bank.select().id(furID).count(true);
 				} else {
 					if (!ctx.players.local().isInMotion()) {
+						ctx.camera.turnTo(ctx.bank.getNearest());
 						ctx.bank.open();
 						status = "Bank Open";
 					}
@@ -324,9 +325,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	}
 
 	public boolean nearBank() {
-		return ctx.bank.isOnScreen()
-				&& ctx.players.local().getLocation()
-						.distanceTo(ctx.bank.getNearest()) < 7;
+		return ctx.bank.isOnScreen();
 	}
 
 	@Override
