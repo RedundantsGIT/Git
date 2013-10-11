@@ -45,8 +45,8 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 			grapeID = 1987;
 
 	private static final Area inGuild = new Area(new Tile[] {
-			new Tile(3147, 3446, 0), new Tile(3144, 3444, 0),
-			new Tile(3142, 3444, 0), new Tile(3138, 3448, 0),
+			new Tile(3147, 3446, 0), new Tile(3145, 3444, 0),
+			new Tile(3141, 3444, 0), new Tile(3138, 3448, 0),
 			new Tile(3140, 3453, 0), new Tile(3148, 3451) });
 
 	private static final Tile[] pathToGuild = { new Tile(3182, 3443, 0),
@@ -367,7 +367,7 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 		for (GameObject Door : ctx.objects.select().id(doorID).nearest()) {
 			ctx.camera.turnTo(Door.getLocation());
 			if (ctx.players.local().getLocation()
-					.distanceTo(Door.getLocation()) < 3) {
+					.distanceTo(Door.getLocation()) < 4) {
 				if (Door.isOnScreen()) {
 					Door.interact("Open");
 					sTimer(atLevelOne(), 0, 0);
@@ -385,7 +385,7 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 		for (GameObject Stairs : ctx.objects.select().id(stairsID).nearest()) {
 			ctx.camera.turnTo(Stairs.getLocation());
 			if (ctx.players.local().getLocation()
-					.distanceTo(Stairs.getLocation()) < 3) {
+					.distanceTo(Stairs.getLocation()) < 4) {
 				if (Stairs.isOnScreen()) {
 					Stairs.interact("Climb-up");
 					sleep(Random.nextInt(1000, 1500));
@@ -403,7 +403,7 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 		for (GameObject Stairs : ctx.objects.select().id(stairsID2).nearest()) {
 			ctx.camera.turnTo(Stairs.getLocation());
 			if (ctx.players.local().getLocation()
-					.distanceTo(Stairs.getLocation()) < 3) {
+					.distanceTo(Stairs.getLocation()) < 4) {
 				if (Stairs.isOnScreen()) {
 					Stairs.interact("Climb-down");
 					sleep(Random.nextInt(1200, 1600));
