@@ -32,7 +32,6 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		MessageListener {
 
 	private static JobContainer container;
-	private mouseTrail trail = new mouseTrail();
 	private static String status = "Starting...";
 	private static long scriptTimer = 0;
 	private static int furPrice, furBought, furStored;
@@ -46,9 +45,9 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		System.out.println("Script started");
 		scriptTimer = System.currentTimeMillis();
 		status = "Getting G.E. Fur Price";
-		furPrice = getGuidePrice(furID);
-		rFurFlipper.container = new JobContainer(new Job[] { new Fix(ctx),
-				new BuyFur(ctx), new Banking(ctx) });
+		furPrice = getGuidePrice(furID) - 20;
+		rFurFlipper.container = new JobContainer(new Job[] { new Camera(ctx),
+				new Fix(ctx), new BuyFur(ctx), new Banking(ctx) });
 	}
 
 	@Override
@@ -74,7 +73,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		}
 
 		public int delay() {
-			return 250;
+			return 100;
 		}
 
 		public int priority() {
@@ -138,6 +137,23 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		}
 
 		return 50;
+	}
+
+	private class Camera extends Job {
+		public Camera(MethodContext ctx) {
+			super(ctx);
+		}
+
+		@Override
+		public boolean activate() {
+			return ctx.camera.getPitch() < 35;
+		}
+
+		@Override
+		public void execute() {
+			ctx.camera.setPitch(Random.nextInt(36, 40));
+			sleep(Random.nextInt(25, 150));
+		}
 	}
 
 	private class Fix extends Job {
@@ -257,13 +273,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			if (nearBank()) {
 				if (ctx.bank.isOpen()) {
 					status = "Deposit Inventory";
-					ctx.bank.depositInventory();
-					final Timer depositTimer = new Timer(Random.nextInt(1700,
-							1900));
-					while (depositTimer.isRunning()
-							&& ctx.backpack.select().count() == 28) {
-						sleep(Random.nextInt(50, 550));
-					}
+					depositInventory();
 					furStored = ctx.bank.select().id(furID).count(true);
 				} else {
 					if (!ctx.players.local().isInMotion()) {
@@ -298,6 +308,18 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 	public boolean canContinue() {
 		return getContinue() != null;
+	}
+
+	private void depositInventory() {
+		final Component DepositBackpackButton = ctx.widgets.get(762, 11);
+		if (DepositBackpackButton.isVisible()) {
+			if (DepositBackpackButton.interact("Deposit carried items")) {
+				final Timer depositTimer = new Timer(Random.nextInt(2100, 2300));
+				while (depositTimer.isRunning()
+						&& ctx.backpack.select().count() > 0)
+					sleep(Random.nextInt(5, 15));
+			}
+		}
 	}
 
 	public class Timer {
@@ -372,7 +394,6 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		g.drawString("Profit: " + nf.format(profit()) + "(" + PerHour(profit())
 				+ "/h)", 13, 325);
 		g.drawString("Status: " + (status), 13, 345);
-		drawTrail(g);
 		drawMouse(g);
 	}
 
@@ -393,17 +414,8 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		return "" + start;
 	}
 
-	private int profit() {
-		int cost = 0;
-		if (furBought != 0)
-			cost = -20;
-		return furBought * furPrice - cost;
-	}
-
-	private void drawTrail(final Graphics g) {
-		final Point m = ctx.mouse.getLocation();
-		trail.add(m);
-		trail.draw(g);
+	private static int profit() {
+		return furBought * furPrice;
 	}
 
 	private void drawMouse(final Graphics g) {
@@ -413,40 +425,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		g.drawLine(m.x - 5, m.y - 5, m.x + 5, m.y + 5);
 	}
 
-	private final class mouseTrail {
-		private final int SIZE = 50;
-		private final double ALPHA_STEP = (255.0 / SIZE);
-		private final Point[] points;
-		private int index;
-
-		public mouseTrail() {
-			points = new Point[SIZE];
-			index = 0;
-		}
-
-		public void add(final Point p) {
-			points[index++] = p;
-			index %= SIZE;
-		}
-
-		public void draw(final Graphics g) {
-			double alpha = 0;
-			for (int i = index; i != (index == 0 ? SIZE - 1 : index - 1); i = (i + 1)
-					% SIZE) {
-				if (points[i] != null && points[(i + 1) % SIZE] != null) {
-					Color rainbow = Color.getHSBColor((float) (alpha / 255), 1,
-							1);
-					g.setColor(new Color(rainbow.getRed(), rainbow.getGreen(),
-							rainbow.getBlue(), (int) alpha));
-					g.drawLine(points[i].x, points[i].y,
-							points[(i + 1) % SIZE].x, points[(i + 1) % SIZE].y);
-					alpha += ALPHA_STEP;
-				}
-			}
-		}
-	}
-
-	public int getGuidePrice(int itemId) {
+	private static int getGuidePrice(int itemId) {
 		try {
 			final URL website = new URL(
 					"http://www.tip.it/runescape/json/ge_single_item?item="

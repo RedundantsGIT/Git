@@ -35,7 +35,7 @@ import org.powerbot.script.wrappers.Item;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", website = "http://www.powerbot.org/community/topic/876982-vip-rtanner-all-potions-all-hides-al-kharid-burthorpe/", version = 3.7, instances = 5)
+@Manifest(authors = { "Redundant" }, name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", topic = 876982, version = 3.7, instances = 5)
 public class rTanner extends PollingScript implements PaintListener {
 
 	private static long elapsedTime = 0;
@@ -90,7 +90,7 @@ public class rTanner extends PollingScript implements PaintListener {
 	private static final Tile[] pathToEllis = { new Tile(3270, 3168),
 			new Tile(3274, 3178, 0), new Tile(3280, 3187, 0),
 			new Tile(3275, 3195, 0) };
-	public final Tile[] pathToTanner = { new Tile(3183, 3435, 0),
+	private static final Tile[] pathToTanner = { new Tile(3183, 3435, 0),
 			new Tile(3181, 3426, 0), new Tile(3180, 3416, 0),
 			new Tile(3187, 3403, 0) };
 	private static final Area areaBurthorpe = new Area(new Tile[] {
@@ -109,9 +109,9 @@ public class rTanner extends PollingScript implements PaintListener {
 	public void start() {
 		elapsedTime = System.currentTimeMillis();
 		rTanner.container = new JobContainer(new Job[] {
-				new GetPlayerArea(ctx), new Pitch(ctx), new CloseInterfaces(ctx),
-				new Door(ctx), new Stairs(ctx), new UseEnergyPotion(ctx),
-				new Tan(ctx), new Banking(ctx) });
+				new GetPlayerArea(ctx), new Pitch(ctx),
+				new CloseInterfaces(ctx), new Door(ctx), new Stairs(ctx),
+				new UseEnergyPotion(ctx), new Tan(ctx), new Banking(ctx) });
 	}
 
 	@Override
@@ -228,7 +228,7 @@ public class rTanner extends PollingScript implements PaintListener {
 			}
 		}
 	}
-	
+
 	private class Pitch extends Job {
 		public Pitch(MethodContext ctx) {
 			super(ctx);
@@ -433,7 +433,7 @@ public class rTanner extends PollingScript implements PaintListener {
 						|| ctx.players.local().getLocation()
 								.distanceTo(ctx.movement.getDestination()) < 8) {
 					ctx.movement.newTilePath(tilePath).reverse().traverse();
-					if (tries < 2) {
+					if (tries < 1) {
 						ctx.camera.turnTo(ctx.bank.getNearest());
 						tries++;
 					}
@@ -495,6 +495,9 @@ public class rTanner extends PollingScript implements PaintListener {
 			}
 		} else {
 			status = "Bank Open";
+			if (Random.nextInt(1, 5) == 3) {
+				ctx.camera.turnTo(ctx.bank.getNearest());
+			}
 			ctx.bank.open();
 		}
 	}
@@ -894,7 +897,7 @@ public class rTanner extends PollingScript implements PaintListener {
 		}
 	}
 
-	public int getGuidePrice(int itemId) {
+	private static int getGuidePrice(int itemId) {
 		try {
 			final URL website = new URL(
 					"http://www.tip.it/runescape/json/ge_single_item?item="
