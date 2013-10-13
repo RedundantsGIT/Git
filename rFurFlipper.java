@@ -325,7 +325,9 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	}
 
 	public boolean nearBank() {
-		return ctx.bank.isOnScreen();
+		return ctx.bank.isOnScreen()
+				&& ctx.players.local().getLocation()
+						.distanceTo(ctx.bank.getNearest()) < 9;
 	}
 
 	@Override
