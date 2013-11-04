@@ -35,7 +35,7 @@ import org.powerbot.script.wrappers.Item;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", topic = 876982, version = 3.7, instances = 5)
+@Manifest(authors = { "Redundant" }, name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", topic = 876982, version = 3.8, instances = 5)
 public class rTanner extends PollingScript implements PaintListener {
 
 	private static long elapsedTime = 0;
@@ -259,9 +259,9 @@ public class rTanner extends PollingScript implements PaintListener {
 
 		@Override
 		public void execute() {
-			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
-			if (InfoWindow.isVisible()) {
-				InfoWindow.getChild(1).click(true);
+			final Component Achievements = ctx.widgets.get(1477).getComponent(73);
+			if (Achievements.isVisible()) {
+				Achievements.getChild(1).click(true);
 				sleep(Random.nextInt(15, 25));
 			} else {
 				getClose().click(true);
@@ -270,8 +270,9 @@ public class rTanner extends PollingScript implements PaintListener {
 		}
 	}
 
-	private static final int[][] CLOSE = { { 109, 12 }, { 1422, 18 },
-			{ 1265, 89 }, { 1401, 37 }, { 1477, 72 } };
+	private static final int[][] CLOSE = { { 109, 12 /*deposit box*/ },
+		{1433, 19 /*graphics menu*/ }, {1265, 87 /*Corpral Booth Trade Menu *Burth**/ },
+		{1401, 35 /*Imperial guard menu *Burth***/}};
 
 	public Component getClose() {
 		for (int[] i : CLOSE) {
@@ -612,20 +613,11 @@ public class rTanner extends PollingScript implements PaintListener {
 
 	private void logOut() {
 		status = "Logout";
-		final Component button1 = ctx.widgets.get(1477).getComponent(77);
-		final Component button2 = ctx.widgets.get(26).getComponent(8);
-		if (ctx.bank.isOpen()) {
-			if (ctx.backpack.select().count() > 0)
-				depositInventory();
+		if (ctx.bank.isOpen() && ctx.backpack.select().count() > 0) {
+			depositInventory();
 			ctx.bank.close();
 		}
-		if (button1.isVisible() && button1.getChild(1).interact("Logout")) {
-			final Timer button1Timer = new Timer(Random.nextInt(1800, 2000));
-			while (button1Timer.isRunning() && !button2.isVisible())
-				sleep(Random.nextInt(5, 15));
-		}
-		if (button2.isVisible() && button2.interact("Select")) {
-			sleep(Random.nextInt(1000, 2000));
+		if(ctx.game.logout(false)){
 			getController().stop();
 		}
 	}
@@ -852,7 +844,7 @@ public class rTanner extends PollingScript implements PaintListener {
 		g.drawString("Status: " + (status), 350, 340);
 		g.setFont(FONT_THREE);
 		g.setColor(Color.GREEN);
-		g.drawString("v3.7", 490, 360);
+		g.drawString("v3.8", 490, 360);
 		drawMouse(g);
 		drawTannerTile(g);
 	}
