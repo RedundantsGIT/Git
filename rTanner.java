@@ -272,7 +272,7 @@ public class rTanner extends PollingScript implements PaintListener {
 
 	private static final int[][] CLOSE = { { 109, 12 /*deposit box*/ },
 		{1433, 19 /*graphics menu*/ }, {1265, 87 /*Corpral Booth Trade Menu *Burth**/ },
-		{1401, 35 /*Imperial guard menu *Burth***/}};
+		{1401, 35 /*Imperial guard menu *Burth***/}, {1477, 73 /*Achievements*/ }};
 
 	public Component getClose() {
 		for (int[] i : CLOSE) {
