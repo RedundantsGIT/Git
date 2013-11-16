@@ -27,7 +27,7 @@ import org.powerbot.script.wrappers.Component;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(authors = { "Redundant" }, name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", version = 1.0, hidden = true, instances = 35)
+@Manifest(name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", hidden = true, instances = 35)
 public class rFurFlipper extends PollingScript implements PaintListener,
 		MessageListener {
 
@@ -42,7 +42,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 	@Override
 	public void start() {
-		System.out.println("Script started");
+		log.info("Script started");
 		scriptTimer = System.currentTimeMillis();
 		status = "Getting G.E. Fur Price";
 		furPrice = getGuidePrice(furID) - 20;
@@ -52,19 +52,19 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 	@Override
 	public void suspend() {
-		System.out.println("Script suspended");
+		log.info("Script suspended");
 	}
 
 	@Override
 	public void resume() {
-		System.out.println("Script resumed");
+		log.info("Script resumed");
 	}
 
 	@Override
 	public void stop() {
-		System.out.println("[rFurFlipper]: -Total Fur Purchased: " + furBought);
-		System.out.println("[rFurFlipper]: -Total Profit Gained: " + profit());
-		System.out.println("Script stopped");
+		log.info("[rFurFlipper]: -Total Fur Purchased: " + furBought);
+		log.info("[rFurFlipper]: -Total Profit Gained: " + profit());
+		log.info("Script stopped");
 	}
 
 	public abstract class Job extends MethodProvider {
@@ -125,8 +125,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	@Override
 	public int poll() {
 
-		if (!ctx.game.isLoggedIn()
-				|| ctx.game.getClientState() != org.powerbot.script.methods.Game.INDEX_MAP_LOADED) {
+		if (ctx.game.getClientState() != org.powerbot.script.methods.Game.INDEX_MAP_LOADED) {
 			return 1000;
 		}
 
@@ -164,21 +163,17 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		@Override
 		public boolean activate() {
 			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
-			final Component CollectionBox = ctx.widgets.get(109).getComponent(
-					12);
+			final Component CollectionBox = ctx.widgets.get(109).getComponent(12);
 			return InfoWindow.isVisible() || CollectionBox.isVisible();
 		}
 
 		@Override
 		public void execute() {
-			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
-			final Component CollectionBox = ctx.widgets.get(109).getComponent(
-					12);
-			if (InfoWindow.isVisible()
-					&& InfoWindow.getChild(1).interact("Close Window")) {
+			final Component Achievements = ctx.widgets.get(1477).getComponent(73);
+			final Component CollectionBox = ctx.widgets.get(109).getComponent(12);
+			if (Achievements.isVisible() && Achievements.getChild(1).interact("Close Window")) {
 				sleep(200, 400);
-			} else if (CollectionBox.isVisible()
-					&& CollectionBox.interact("Close")) {
+			} else if (CollectionBox.isVisible() && CollectionBox.interact("Close")) {
 				sleep(50, 200);
 			}
 		}
@@ -199,45 +194,38 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			final Component pressOne = ctx.widgets.get(1188, 2);
 			if (nearBaraek()) {
 				if (ctx.backpack.getMoneyPouch() < 20) {
-					System.out
-							.println("[rFurFlipper]: -Not enough gold left to continue, stopping script.. .");
+					log.info("[rFurFlipper]: -Not enough gold left to continue, stopping script.. .");
 					getController().stop();
-				} else if (canContinue()) {
+				} else if (ctx.chat.isContinue()) {
 					status = "Press Spacebar";
-					ctx.keyboard.send(" ");
-					final Timer pressTimer = new Timer(Random.nextInt(1600,
-							1800));
-					while (pressTimer.isRunning() && canContinue()) {
-						sleep(10, 35);
+					//ctx.keyboard.send(" ");
+					ctx.chat.clickContinue();
+					final Timer pressTimer = new Timer(Random.nextInt(1600, 1800));
+					while (pressTimer.isRunning() && ctx.chat.isContinue()) {
+						sleep(10, 20);
 					}
 				} else if (pressOne.isValid()) {
 					status = "Press 1";
 					ctx.keyboard.send("1");
-					final Timer pressTimer = new Timer(Random.nextInt(1600,
-							1800));
+					final Timer pressTimer = new Timer(Random.nextInt(1600, 1800));
 					while (pressTimer.isRunning() && pressOne.isVisible()) {
-						sleep(10, 35);
+						sleep(10, 25);
 					}
 				} else {
 					for (Npc baraek : ctx.npcs.select().id(baraekID).nearest()) {
 						status = "Talk to Baraek";
 						if (baraek.isOnScreen()) {
 							baraek.interact("Talk-to", "Baraek");
-							final Timer talkTimer = new Timer(Random.nextInt(
-									2300, 2600));
-							while (talkTimer.isRunning()
-									&& !pressOne.isVisible()) {
+							final Timer talkTimer = new Timer(Random.nextInt(2300, 2600));
+							while (talkTimer.isRunning() && !pressOne.isVisible()) {
 								sleep(15, 50);
 							}
-							while (ctx.players.local().isInMotion()
-									&& !pressOne.isValid()) {
+							while (ctx.players.local().isInMotion() && !pressOne.isValid()) {
 								sleep(25, 100);
 							}
 							break;
-						} else if (!baraek.isOnScreen()
-								&& !ctx.players.local().isInMotion()) {
-							ctx.movement.stepTowards(ctx.movement
-									.getClosestOnMap(baraek.getLocation()));
+						} else if (!baraek.isOnScreen() && !ctx.players.local().isInMotion()) {
+							ctx.movement.stepTowards(ctx.movement.getClosestOnMap(baraek.getLocation()));
 
 						}
 					}
@@ -294,21 +282,6 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		}
 	}
 
-	private static final int[][] CONTINUES = { { 1189, 11 }, { 1184, 13 },
-			{ 1186, 6 }, { 1191, 12 } };
-
-	public Component getContinue() {
-		for (int[] i : CONTINUES) {
-			Component c = ctx.widgets.get(i[0], i[1]);
-			if (c != null && c.isValid())
-				return c;
-		}
-		return null;
-	}
-
-	public boolean canContinue() {
-		return getContinue() != null;
-	}
 
 	private void depositInventory() {
 		final Component DepositBackpackButton = ctx.widgets.get(762, 11);
