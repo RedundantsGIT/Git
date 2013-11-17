@@ -125,7 +125,8 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	@Override
 	public int poll() {
 
-		if (ctx.game.getClientState() != org.powerbot.script.methods.Game.INDEX_MAP_LOADED) {
+		if (!ctx.game.isLoggedIn()
+				|| ctx.game.getClientState() != org.powerbot.script.methods.Game.INDEX_MAP_LOADED) {
 			return 1000;
 		}
 
@@ -145,7 +146,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 		@Override
 		public boolean activate() {
-			return ctx.camera.getPitch() < 35;
+			return ctx.camera.getPitch() < 35 && !ctx.bank.isOpen();
 		}
 
 		@Override
@@ -163,17 +164,22 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		@Override
 		public boolean activate() {
 			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
-			final Component CollectionBox = ctx.widgets.get(109).getComponent(12);
+			final Component CollectionBox = ctx.widgets.get(109).getComponent(
+					12);
 			return InfoWindow.isVisible() || CollectionBox.isVisible();
 		}
 
 		@Override
 		public void execute() {
-			final Component Achievements = ctx.widgets.get(1477).getComponent(73);
-			final Component CollectionBox = ctx.widgets.get(109).getComponent(12);
-			if (Achievements.isVisible() && Achievements.getChild(1).interact("Close Window")) {
+			final Component Achievements = ctx.widgets.get(1477).getComponent(
+					73);
+			final Component CollectionBox = ctx.widgets.get(109).getComponent(
+					12);
+			if (Achievements.isVisible()
+					&& Achievements.getChild(1).interact("Close Window")) {
 				sleep(200, 400);
-			} else if (CollectionBox.isVisible() && CollectionBox.interact("Close")) {
+			} else if (CollectionBox.isVisible()
+					&& CollectionBox.interact("Close")) {
 				sleep(50, 200);
 			}
 		}
@@ -198,16 +204,18 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 					getController().stop();
 				} else if (ctx.chat.isContinue()) {
 					status = "Press Spacebar";
-					//ctx.keyboard.send(" ");
+					// ctx.keyboard.send(" ");
 					ctx.chat.clickContinue();
-					final Timer pressTimer = new Timer(Random.nextInt(1600, 1800));
+					final Timer pressTimer = new Timer(Random.nextInt(1600,
+							1800));
 					while (pressTimer.isRunning() && ctx.chat.isContinue()) {
 						sleep(10, 20);
 					}
 				} else if (pressOne.isValid()) {
 					status = "Press 1";
 					ctx.keyboard.send("1");
-					final Timer pressTimer = new Timer(Random.nextInt(1600, 1800));
+					final Timer pressTimer = new Timer(Random.nextInt(1600,
+							1800));
 					while (pressTimer.isRunning() && pressOne.isVisible()) {
 						sleep(10, 25);
 					}
@@ -216,16 +224,21 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 						status = "Talk to Baraek";
 						if (baraek.isOnScreen()) {
 							baraek.interact("Talk-to", "Baraek");
-							final Timer talkTimer = new Timer(Random.nextInt(2300, 2600));
-							while (talkTimer.isRunning() && !pressOne.isVisible()) {
+							final Timer talkTimer = new Timer(Random.nextInt(
+									2300, 2600));
+							while (talkTimer.isRunning()
+									&& !pressOne.isVisible()) {
 								sleep(15, 50);
 							}
-							while (ctx.players.local().isInMotion() && !pressOne.isValid()) {
+							while (ctx.players.local().isInMotion()
+									&& !pressOne.isValid()) {
 								sleep(25, 100);
 							}
 							break;
-						} else if (!baraek.isOnScreen() && !ctx.players.local().isInMotion()) {
-							ctx.movement.stepTowards(ctx.movement.getClosestOnMap(baraek.getLocation()));
+						} else if (!baraek.isOnScreen()
+								&& !ctx.players.local().isInMotion()) {
+							ctx.movement.stepTowards(ctx.movement
+									.getClosestOnMap(baraek.getLocation()));
 
 						}
 					}
@@ -281,7 +294,6 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			}
 		}
 	}
-
 
 	private void depositInventory() {
 		final Component DepositBackpackButton = ctx.widgets.get(762, 11);
