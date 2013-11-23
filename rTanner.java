@@ -127,7 +127,9 @@ public class rTanner extends PollingScript implements PaintListener,
 	}
 
 	public class JobContainer {
-		private List<Job> jobList = new ArrayList<>();
+		List<Job> jobList = new ArrayList<>();
+		
+		//private List<Job> jobList = new ArrayList<>();
 
 		public JobContainer(Job[] jobs) {
 			submit(jobs);
@@ -237,8 +239,7 @@ public class rTanner extends PollingScript implements PaintListener,
 
 		@Override
 		public void execute() {
-			final Component Achievements = ctx.widgets.get(1477).getComponent(
-					73);
+			final Component Achievements = ctx.widgets.get(1477).getComponent(73);
 			if (Achievements.isVisible()) {
 				Achievements.getChild(1).click(true);
 				sleep(Random.nextInt(15, 25));
