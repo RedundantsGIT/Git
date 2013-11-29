@@ -36,7 +36,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	private static long scriptTimer = 0;
 	private static int furPrice, furBought, furStored;
 	private static int baraekID = 547, furID = 948;
-	static final Tile[] pathToNpc = { new Tile(3189, 3435, 0),
+	private static final Tile[] pathToNpc = { new Tile(3189, 3435, 0),
 			new Tile(3197, 3430, 0), new Tile(3206, 3430, 0),
 			new Tile(3216, 3433, 0) };
 
@@ -198,7 +198,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 					log.info("[rFurFlipper]: -Not enough gold left to continue, stopping script.. .");
 					getController().stop();
 				} else if (ctx.chat.isContinue()) {
-					status = "Press Spacebar";
+					status = "Continue";
 					 //ctx.keyboard.send(" ");
 					ctx.chat.clickContinue();
 					final Timer pressTimer = new Timer(Random.nextInt(1600, 1800));
@@ -208,8 +208,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 				} else if (pressOne.isValid()) {
 					status = "Press 1";
 					ctx.keyboard.send("1");
-					final Timer pressTimer = new Timer(Random.nextInt(1600,
-							1800));
+					final Timer pressTimer = new Timer(Random.nextInt(1600, 1800));
 					while (pressTimer.isRunning() && pressOne.isVisible()) {
 						sleep(10, 25);
 					}
@@ -218,10 +217,8 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 						status = "Talk to Baraek";
 						if (baraek.isOnScreen()) {
 							baraek.interact("Talk-to", "Baraek");
-							final Timer talkTimer = new Timer(Random.nextInt(
-									2300, 2600));
-							while (talkTimer.isRunning()
-									&& !pressOne.isVisible()) {
+							final Timer talkTimer = new Timer(Random.nextInt(2300, 2600));
+							while (talkTimer.isRunning() && !pressOne.isVisible()) {
 								sleep(15, 50);
 							}
 							while (ctx.players.local().isInMotion()
@@ -229,8 +226,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 								sleep(25, 100);
 							}
 							break;
-						} else if (!baraek.isOnScreen()
-								&& !ctx.players.local().isInMotion()) {
+						} else {
 							ctx.movement.stepTowards(ctx.movement
 									.getClosestOnMap(baraek.getLocation()));
 
@@ -271,11 +267,9 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 					depositInventory();
 					furStored = ctx.bank.select().id(furID).count(true);
 				} else {
-					if (!ctx.players.local().isInMotion()) {
+						status = "Bank Open";
 						ctx.camera.turnTo(ctx.bank.getNearest());
 						ctx.bank.open();
-						status = "Bank Open";
-					}
 				}
 			} else {
 				status = "Walk to Banker";
@@ -295,7 +289,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			if (DepositBackpackButton.interact("Deposit carried items")) {
 				final Timer depositTimer = new Timer(Random.nextInt(2100, 2300));
 				while (depositTimer.isRunning()
-						&& ctx.backpack.select().count() > 0){
+						&& ctx.backpack.select().count() > 0) {
 					sleep(Random.nextInt(5, 15));
 				}
 			}
@@ -365,8 +359,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		g.drawString("rFurFlipper", 70, 222);
 		g.setFont(font);
 		g.setColor(Color.WHITE);
-		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 13,
-				245);
+		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 13, 245);
 		g.drawString("Fur Bought: " + nf.format(furBought) + "("
 				+ PerHour(furBought) + "/h)", 13, 265);
 		g.drawString("Fur In Bank: " + nf.format(furStored), 13, 285);
