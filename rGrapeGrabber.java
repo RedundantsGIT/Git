@@ -30,7 +30,7 @@ import org.powerbot.script.wrappers.GroundItem;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(name = "rGrapeGrabber", description = "Loots grape from the cooking guild for money.", instances = 30, hidden = true)
+@Manifest(name = "rGrapeGrabber", description = "Loots grape from the cooking guild for money.", hidden = true)
 public class rGrapeGrabber extends PollingScript implements PaintListener {
 
 	private static String status = "Starting...";
@@ -103,7 +103,7 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 	}
 
 	public class JobContainer {
-		private List<Job> jobList = new ArrayList<>();
+		private List<Job> jobList = new ArrayList<Job>();
 
 		public JobContainer(Job[] jobs) {
 			submit(jobs);
