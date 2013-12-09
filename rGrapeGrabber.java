@@ -162,12 +162,12 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 
 		@Override
 		public boolean activate() {
-			return ctx.camera.getPitch() < 45;
+			return ctx.camera.getPitch() < 35;
 		}
 
 		@Override
 		public void execute() {
-			ctx.camera.setPitch(Random.nextInt(47, 50));
+			ctx.camera.setPitch(Random.nextInt(37, 40));
 		}
 	}
 
@@ -246,7 +246,7 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 					for (GroundItem Grapes : ctx.groundItems.select()
 							.id(ID_GRAPE).nearest()) {
 						if (Grapes != null) {
-							status = "Looting grapes...";
+							status = "Looting..";
 							take(Grapes);
 						}
 					}
@@ -486,7 +486,7 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 
 	final static Color black = new Color(25, 0, 0, 200);
 	final static Font font = new Font("Times New Roman", 0, 13);
-	final static Font fontTwo = new Font("Arial", 1, 12);
+	final static Font fontTwo = new Font("Comic Sans MS", 3, 11);
 	final static NumberFormat nf = new DecimalFormat("###,###,###,###");
 
 	@Override
@@ -500,11 +500,11 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 		PROFIT_GAINED = GRAPES_GAINED * GRAPE_PRICE;
 
 		g.setColor(black);
-		g.fillRect(6, 210, 200, 105);
-		g.setColor(Color.RED);
-		g.drawRect(6, 210, 200, 105);
+		g.fillRect(6, 210, 160, 105);
+		g.setColor(Color.MAGENTA);
+		//g.drawRect(6, 210, 50, 105);
 		g.setFont(fontTwo);
-		g.drawString("rGrapeGrabber", 65, 222);
+		g.drawString("rGrapeGrabber", 45, 222);
 		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 13,
 				245);
 		g.drawString("Grapes Picked: " + nf.format(GRAPES_GAINED) + "("
@@ -517,7 +517,7 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 
 	private void drawMouse(final Graphics g) {
 		final Point m = ctx.mouse.getLocation();
-		g.setColor(ctx.mouse.isPressed() ? Color.GREEN : Color.RED);
+		g.setColor(ctx.mouse.isPressed() ? Color.GREEN : Color.MAGENTA);
 		g.drawLine(m.x - 5, m.y + 5, m.x + 5, m.y - 5);
 		g.drawLine(m.x - 5, m.y - 5, m.x + 5, m.y + 5);
 	}
