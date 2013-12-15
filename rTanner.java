@@ -19,19 +19,23 @@ import org.powerbot.event.MessageListener;
 import org.powerbot.event.PaintListener;
 import org.powerbot.script.Manifest;
 import org.powerbot.script.PollingScript;
+import org.powerbot.script.lang.Filter;
 import org.powerbot.script.methods.Environment;
 import org.powerbot.script.methods.MethodContext;
 import org.powerbot.script.methods.MethodProvider;
+import org.powerbot.script.methods.Game.Crosshair;
+import org.powerbot.script.methods.Menu.Entry;
 import org.powerbot.script.util.Condition;
 import org.powerbot.script.util.Random;
 import org.powerbot.script.wrappers.Area;
 import org.powerbot.script.wrappers.Component;
 import org.powerbot.script.wrappers.GameObject;
+import org.powerbot.script.wrappers.Interactive;
 import org.powerbot.script.wrappers.Item;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", topic = 876982, instances = 5)
+@Manifest(name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", topic = 876982)
 public class rTanner extends PollingScript implements PaintListener,
 		MessageListener {
 
@@ -47,20 +51,21 @@ public class rTanner extends PollingScript implements PaintListener,
 	private static boolean atBurthorpe = false;
 	private static boolean atVarrock = false;
 
-	private static int hideCount, hidesLeft, potionsLeft, tries;
+	private static int hideCount, hidesLeft, potionsLeft, tries, tries2;
 
 	private static final int doorID = 24376;
 
+	private static final int[] tannerID = { 14877, 2824, 2320 };
+	private static final int[] hideID = { 1739, 1753, 1751, 24372, 6287, 7801,
+			1749, 1747 };
 	private static final int[] leatherID = { 1741, 1743, 1745, 2505, 24374,
-			6289, 2507, 2509 },
-			tannerID = { 14877, 2824, 2320 },
-			hideID = { 1739, 1753, 1751, 24372, 6287, 7801, 1749, 1747 },
-			energyPotionID = { 3008, 3010, 3012, 3014, 23375, 23377, 23379,
-					23381, 23383, 23385, 11453, 11455, 23387, 23389, 23391,
-					23393, 23395, 23397, 11481, 11483, 3016, 3018, 3020, 3022 };
+			6289, 2507, 2509 };
+	private static final int[] energyPotionID = { 3008, 3010, 3012, 3014,
+			23375, 23377, 23379, 23381, 23383, 23385, 11453, 11455, 23387,
+			23389, 23391, 23393, 23395, 23397, 11481, 11483, 3016, 3018, 3020,
+			3022 };
 
-	private static Tile doorTile = new Tile(3187, 3403, 0);
-	private static Tile tannerTile = new Tile(3187, 3406, 0);
+	private static final Tile doorTile = new Tile(3187, 3403, 0);
 
 	private static Tile[] tilePath;
 	private static final Tile[] pathToJack = { new Tile(2893, 3529),
@@ -127,7 +132,7 @@ public class rTanner extends PollingScript implements PaintListener,
 	}
 
 	public class JobContainer {
-		
+
 		private List<Job> jobList = new ArrayList<Job>();
 
 		public JobContainer(Job[] jobs) {
@@ -221,7 +226,7 @@ public class rTanner extends PollingScript implements PaintListener,
 		@Override
 		public void execute() {
 			status = "Set Pitch";
-			ctx.camera.setPitch(Random.nextInt(34, 38));
+			ctx.camera.setPitch(Random.nextInt(33, 35));
 			sleep(100, 200);
 		}
 	}
@@ -238,7 +243,8 @@ public class rTanner extends PollingScript implements PaintListener,
 
 		@Override
 		public void execute() {
-			final Component Achievements = ctx.widgets.get(1477).getComponent(73);
+			final Component Achievements = ctx.widgets.get(1477).getComponent(
+					73);
 			if (Achievements.isVisible()) {
 				Achievements.getChild(1).click(true);
 				sleep(Random.nextInt(15, 25));
@@ -360,7 +366,7 @@ public class rTanner extends PollingScript implements PaintListener,
 												ctx.movement.getDestination()) < Random
 										.nextInt(7, 9)) {
 							ctx.movement.newTilePath(tilePath).traverse();
-
+							cameraTurnToTanner();
 						}
 					}
 				}
@@ -402,6 +408,7 @@ public class rTanner extends PollingScript implements PaintListener,
 	private void doBanking() {
 		if (ctx.bank.isOpen()) {
 			tries = 0;
+			tries2 = 0;
 			if (ctx.backpack.select().count() == 28) {
 				if (hasLeather() && hasPotion()) {
 					deposit(0, leatherID);
@@ -430,7 +437,7 @@ public class rTanner extends PollingScript implements PaintListener,
 				} else if (!hasPotion() && !hasHide() && bankHasPotion()) {
 					status = "Withdraw Potion";
 					withdraw(1, energyPotionID);
-				} else if (!hasHide() && bankHasHide()) {
+				} else {
 					status = "Withdraw Hides";
 					withdraw(0, hideID);
 					hidesLeft = ctx.bank.select().id(hideID).count(true);
@@ -447,6 +454,66 @@ public class rTanner extends PollingScript implements PaintListener,
 		}
 	}
 
+	private void TanHides() {
+		final Component Make = ctx.widgets.get(1370, 20);
+		final Component CloseButton = ctx.widgets.get(1370, 30);
+		if (Make.isValid()) {
+			if (Make.interact("Make")) {
+				Condition.wait(new Callable<Boolean>() {
+					@Override
+					public Boolean call() throws Exception {
+						return !Make.isVisible();
+					}
+				}, 100, 20);
+			}
+			if (CloseButton.isVisible()) {
+				CloseButton.interact("Close");
+			}
+		} else {
+			for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
+				if (Tanner.isOnScreen()) {
+					status = "Talk to Tanner";
+					if (atAlKharid) {
+						interact(Tanner, "Tan hides", "Ellis");
+					} else if (atBurthorpe) {
+						interact(Tanner, "Tan hide", "Jack Oval");
+					} else {
+						interact(Tanner, "Trade", "Tanner");
+					}
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return Make.isVisible();
+						}
+					}, 250, 20);
+
+					while (ctx.players.local().isInMotion()
+							&& !Make.isVisible()) {
+						sleep(Random.nextInt(10, 50));
+					}
+					break;
+				} else {
+					ctx.movement.stepTowards(ctx.movement
+							.getClosestOnMap(Tanner.getLocation()));
+					sleep(Random.nextInt(150, 300));
+					ctx.camera.turnTo(Tanner.getLocation());
+				}
+
+			}
+		}
+	}
+
+	private boolean cameraTurnToTanner() {
+		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
+			if(tries2 < 3){
+			ctx.camera.turnTo(Tanner.getLocation());
+			tries2++;
+			}
+			return true;
+		}
+		return false;
+	}
+
 	public class Timer {
 		private long end;
 		private final long start;
@@ -459,6 +526,32 @@ public class rTanner extends PollingScript implements PaintListener,
 		public boolean isRunning() {
 			return System.currentTimeMillis() < end;
 		}
+	}
+
+	public boolean didInteract() {
+		return ctx.game.getCrosshair() == Crosshair.ACTION;
+	}
+
+	public boolean interact(Interactive interactive, final String action,
+			final String option) {
+		if (interactive != null && interactive.isOnScreen()) {
+			final Filter<Entry> filter = new Filter<Entry>() {
+
+				@Override
+				public boolean accept(Entry arg0) {
+					return arg0.action.equalsIgnoreCase(action)
+							&& arg0.option.equalsIgnoreCase(option);
+				}
+
+			};
+			if (ctx.menu.click(filter)) {
+				return didInteract();
+			} else {
+				ctx.mouse.move(interactive);
+				return interact(interactive, action, option);
+			}
+		}
+		return false;
 	}
 
 	private void depositInventory() {
@@ -515,6 +608,26 @@ public class rTanner extends PollingScript implements PaintListener,
 		return false;
 	}
 
+	private boolean atTanner() {
+		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
+			if (ctx.players.local().getLocation()
+					.distanceTo(Tanner.getLocation()) < 11)
+				return true;
+		}
+		return false;
+	}
+
+	private boolean tileContainsDoor() {
+		for (GameObject Door : ctx.objects.select().select().id(doorID)
+				.at(doorTile)) {
+			if (Door.isValid()
+					&& ctx.players.local().getLocation()
+							.distanceTo(Door.getLocation()) < 13)
+				return true;
+		}
+		return false;
+	}
+
 	private boolean deposit(final int count, final int... items) {
 		for (int i : items) {
 			if (ctx.bank.deposit(i, count))
@@ -537,26 +650,6 @@ public class rTanner extends PollingScript implements PaintListener,
 						.distanceTo(ctx.bank.getNearest()) < 10;
 	}
 
-	private boolean atTanner() {
-		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
-			if (ctx.players.local().getLocation()
-					.distanceTo(Tanner.getLocation()) < 11)
-				return true;
-		}
-		return false;
-	}
-
-	private boolean tileContainsDoor() {
-		for (GameObject Door : ctx.objects.select().select().id(doorID)
-				.at(doorTile)) {
-			if (Door.isValid()
-					&& ctx.players.local().getLocation()
-							.distanceTo(Door.getLocation()) < 13)
-				return true;
-		}
-		return false;
-	}
-
 	private void logOut() {
 		status = "Logout";
 		if (ctx.bank.isOpen() && ctx.backpack.select().count() > 0) {
@@ -565,56 +658,6 @@ public class rTanner extends PollingScript implements PaintListener,
 		}
 		if (ctx.game.logout(false)) {
 			getController().stop();
-		}
-	}
-
-	private void TanHides() {
-		final Component Make = ctx.widgets.get(1370, 20);
-		final Component CloseButton = ctx.widgets.get(1370, 30);
-		if (Make.isValid()) {
-			if (Make.interact("Make")) {
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return !Make.isVisible();
-					}
-				}, 250, 20);
-			}
-			if (CloseButton.isVisible()) {
-				CloseButton.interact("Close");
-			}
-		} else {
-			for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
-				if (Tanner.isOnScreen()) {
-					status = "Talk to Tanner";
-					if (atVarrock) {
-						Tanner.interact("Trade", "Tanner");
-					} else {
-						Tanner.interact("Tan");
-					}
-					Condition.wait(new Callable<Boolean>() {
-						@Override
-						public Boolean call() throws Exception {
-							return Make.isVisible();
-						}
-					}, 250, 20);
-					break;
-				} else {
-					if (atVarrock) {
-						Tile Loc = tannerTile.randomize(-1, -1);
-						ctx.movement.stepTowards(ctx.movement
-								.getClosestOnMap(Loc));
-						ctx.camera.turnTo(tannerTile);
-					} else {
-						Tile Loc = Tanner.getLocation().randomize(-1, -2);
-						ctx.movement.stepTowards(ctx.movement
-								.getClosestOnMap(Loc));
-						sleep(Random.nextInt(150, 300));
-						ctx.camera.turnTo(Tanner.getLocation());
-					}
-				}
-
-			}
 		}
 	}
 
