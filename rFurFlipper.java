@@ -43,11 +43,9 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	private static int furPrice, furBought, furStored;
 	private static int baraekID = 547, furID = 948;
 	private final Component pressOne = ctx.widgets.get(1188, 2);
-	final Component achievements = ctx.widgets.get(1477).getComponent(73);
-	final Component collectionBox = ctx.widgets.get(109).getComponent(12);
-	private static final Tile[] pathToNpc = { new Tile(3189, 3435, 0),
-			new Tile(3197, 3430, 0), new Tile(3206, 3430, 0),
-			new Tile(3216, 3433, 0) };
+	private final Component achievements = ctx.widgets.get(1477).getComponent(73);
+	private final Component collectionBox = ctx.widgets.get(109).getComponent(12);
+	private static final Tile[] pathToNpc = { new Tile(3189, 3435, 0), new Tile(3197, 3430, 0), new Tile(3206, 3430, 0), new Tile(3216, 3433, 0) };
 
 	@Override
 	public void start() {
@@ -241,10 +239,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 				if (ctx.bank.isOpen()) {
 					ctx.bank.close();
 				} else {
-					if (!ctx.players.local().isInMotion()
-							|| ctx.players.local().getLocation()
-									.distanceTo(ctx.movement.getDestination()) < Random
-									.nextInt(7, 9)) {
+					if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(7, 9)) {
 						ctx.movement.newTilePath(pathToNpc).traverse();
 					}
 				}
@@ -276,10 +271,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 				}
 			} else {
 				status = "Walk to Banker";
-				if (!ctx.players.local().isInMotion()
-						|| ctx.players.local().getLocation()
-								.distanceTo(ctx.movement.getDestination()) < Random
-								.nextInt(7, 9)) {
+				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(7, 9)) {
 					ctx.movement.newTilePath(pathToNpc).reverse().traverse();
 				}
 			}
@@ -327,8 +319,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 	public boolean nearBaraek() {
 		for (Npc baraek : ctx.npcs.select().id(baraekID).nearest()) {
-			if (ctx.players.local().getLocation()
-					.distanceTo(baraek.getLocation()) < 7) {
+			if (ctx.players.local().getLocation().distanceTo(baraek.getLocation()) < 7) {
 				return true;
 			}
 		}
@@ -336,9 +327,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	}
 
 	public boolean nearBank() {
-		return ctx.bank.isOnScreen()
-				&& ctx.players.local().getLocation()
-						.distanceTo(ctx.bank.getNearest()) < 9;
+		return ctx.bank.isOnScreen() && ctx.players.local().getLocation().distanceTo(ctx.bank.getNearest()) < 9;
 	}
 
 	public class Timer {
