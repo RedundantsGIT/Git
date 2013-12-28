@@ -3,6 +3,8 @@ package rFurFlipper;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -30,15 +32,19 @@ import org.powerbot.script.wrappers.Interactive;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", instances = 30, hidden = true)
+@Manifest(name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", hidden = true)
 public class rFurFlipper extends PollingScript implements PaintListener,
 		MessageListener {
 
 	private static JobContainer container;
+	private static RenderingHints antialiasing = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	private static String status = "Starting...";
 	private static long scriptTimer = 0;
 	private static int furPrice, furBought, furStored;
 	private static int baraekID = 547, furID = 948;
+	private final Component pressOne = ctx.widgets.get(1188, 2);
+	final Component achievements = ctx.widgets.get(1477).getComponent(73);
+	final Component collectionBox = ctx.widgets.get(109).getComponent(12);
 	private static final Tile[] pathToNpc = { new Tile(3189, 3435, 0),
 			new Tile(3197, 3430, 0), new Tile(3206, 3430, 0),
 			new Tile(3216, 3433, 0) };
@@ -166,19 +172,14 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 		@Override
 		public boolean activate() {
-			final Component InfoWindow = ctx.widgets.get(1477).getComponent(72);
-			final Component CollectionBox = ctx.widgets.get(109).getComponent(12);
-			return InfoWindow.isVisible() || CollectionBox.isVisible();
+			return achievements.isVisible() || collectionBox.isVisible();
 		}
 
 		@Override
 		public void execute() {
-			final Component Achievements = ctx.widgets.get(1477).getComponent(73);
-			final Component CollectionBox = ctx.widgets.get(109).getComponent(12);
-			if (Achievements.isVisible() && Achievements.getChild(1).interact("Close Window")) {
+			if (achievements.isVisible() && achievements.getChild(1).interact("Close Window")) {
 				sleep(200, 400);
-			} else if (CollectionBox.isVisible()
-					&& CollectionBox.interact("Close")) {
+			} else if (collectionBox.isVisible() && collectionBox.interact("Close")) {
 				sleep(50, 200);
 			}
 		}
@@ -196,14 +197,13 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 		@Override
 		public void execute() {
-			final Component pressOne = ctx.widgets.get(1188, 2);
 			if (nearBaraek()) {
 				if (ctx.backpack.getMoneyPouch() < 20) {
 					log.info("[rFurFlipper]: -Not enough gold left to continue, stopping script.. .");
 					getController().stop();
 				} else if (ctx.chat.isContinue()) {
 					status = "Continue";
-					 ctx.chat.clickContinue();
+					ctx.keyboard.send(" ");
 					final Timer pressTimer = new Timer(Random.nextInt(1600, 1800));
 					while (pressTimer.isRunning() && ctx.chat.isContinue()) {
 						sleep(10, 20);
@@ -219,18 +219,19 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 					for (Npc baraek : ctx.npcs.select().id(baraekID).nearest()) {
 						status = "Talk to Baraek";
 						if (baraek.isOnScreen()) {
-							interact(baraek, "Talk-to", "Baraek");
-							final Timer talkTimer = new Timer(Random.nextInt(2300, 2600));
-							while (talkTimer.isRunning() && !pressOne.isVisible()) {
-								sleep(15, 50);
-							}
-							while (ctx.players.local().isInMotion() && !pressOne.isValid()) {
-								sleep(25, 100);
+							if (interact(baraek, "Talk-to", "Baraek")) {
+								final Timer talkTimer = new Timer(Random.nextInt(2600, 2800));
+								while (talkTimer.isRunning() && !pressOne.isVisible()) {
+									sleep(25, 50);
+								}
+								while (ctx.players.local().isInMotion()
+										&& !pressOne.isValid()) {
+									sleep(25, 100);
+								}
 							}
 							break;
 						} else {
-							ctx.movement.stepTowards(ctx.movement
-									.getClosestOnMap(baraek.getLocation()));
+							ctx.movement.stepTowards(ctx.movement.getClosestOnMap(baraek.getLocation()));
 
 						}
 					}
@@ -284,7 +285,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			}
 		}
 	}
-	
+
 	public boolean didInteract() {
 		return ctx.game.getCrosshair() == Crosshair.ACTION;
 	}
@@ -339,7 +340,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 				&& ctx.players.local().getLocation()
 						.distanceTo(ctx.bank.getNearest()) < 9;
 	}
-	
+
 	public class Timer {
 		private long end;
 		private final long start;
@@ -357,18 +358,20 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	@Override
 	public void messaged(MessageEvent msg) {
 		String message = msg.getMessage();
-		if (message.contains("20 coins have been removed from your money pouch.")) {
+		if (message
+				.contains("20 coins have been removed from your money pouch.")) {
 			furBought++;
 		}
 	}
 
 	final static Color black = new Color(25, 0, 0, 200);
-	//final static Font font = new Font("Times New Roman", 0, 13);
 	final static Font fontTwo = new Font("Comic Sans MS", 1, 12);
 	final static NumberFormat nf = new DecimalFormat("###,###,###,###");
 
 	@Override
-	public void repaint(Graphics g) {
+	public void repaint(Graphics g1) {
+		
+		final Graphics2D g = (Graphics2D) g1;
 
 		long millis = System.currentTimeMillis() - scriptTimer;
 		long hours = millis / (1000 * 60 * 60);
@@ -376,10 +379,11 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		long minutes = millis / (1000 * 60);
 		millis -= minutes * (1000 * 60);
 		long seconds = millis / 1000;
-
+		
+		g.setRenderingHints(antialiasing);
 		g.setColor(black);
 		g.fillRect(6, 210, 200, 145);
-		g.setColor(Color.RED);
+		g.setColor(ctx.chat.isContinue() || pressOne.isValid()  ? Color.GREEN : Color.RED);
 		g.drawRect(6, 210, 200, 145);
 		g.setFont(fontTwo);
 		g.drawString("rFurFlipper", 75, 222);
@@ -415,14 +419,13 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	}
 
 	private void drawMouse(final Graphics g) {
-		g.setColor(ctx.mouse.isPressed() ? Color.GREEN : Color.RED);
+		final Component pressOne = ctx.widgets.get(1188, 2);
+		g.setColor(ctx.chat.isContinue() || pressOne.isValid()  ? Color.GREEN : Color.RED);
 		g.drawLine(0, (int) (ctx.mouse.getLocation().getY()), 800,
 				(int) (ctx.mouse.getLocation().getY()));
 		g.drawLine((int) (ctx.mouse.getLocation().getX()), 0,
 				(int) (ctx.mouse.getLocation().getX()), 800);
 	}
-	
-
 
 	private static int getGuidePrice(int itemId) {
 		try {
