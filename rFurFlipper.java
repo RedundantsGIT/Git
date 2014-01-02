@@ -42,8 +42,8 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 	private static int furPrice, furBought, furStored;
 	private static int baraekID = 547, furID = 948;
 	private final Component pressOne = ctx.widgets.get(1188, 2);
-	private final Component achievements = ctx.widgets.get(1477).getComponent(73);
-	private final Component collectionBox = ctx.widgets.get(109).getComponent(12);
+	private final Component achievements = ctx.widgets.get(1477).getComponent(74);
+	private final Component collectionBox = ctx.widgets.get(109).getComponent(61);
 	private static final Tile[] pathToNpc = { new Tile(3189, 3435, 0), new Tile(3197, 3430, 0), new Tile(3206, 3430, 0), new Tile(3216, 3433, 0) };
 
 	@Override
@@ -172,10 +172,8 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 		@Override
 		public void execute() {
-			if (achievements.isVisible() && achievements.getChild(1).interact("Close Window")) 
-				sleep(200, 400);
-			else if (collectionBox.isVisible() && collectionBox.interact("Close")) 
-				sleep(50, 200);
+			log.info("1");
+		    close();
 		}
 	}
 
@@ -192,10 +190,14 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		@Override
 		public void execute() {
 			final Npc baraek = ctx.npcs.select().id(baraekID).nearest().poll();
+			final Component nameBox = ctx.widgets.get(1184, 10);
 			if (nearBaraek()) {
 				if (ctx.backpack.getMoneyPouch() < 20) {
 					log.info("[rFurFlipper]: -Not enough gold left to continue, stopping script.. .");
 					getController().stop();
+				}else if(nameBox.getText().contains("Snow impling") || nameBox.getText().contains("Benny")){
+					status = "Close";
+					close();
 				}else if (ctx.chat.isContinue()) {
 					status = "Continue";
 					if (Random.nextInt(1, 20) == 10) 
@@ -230,7 +232,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 					if(Random.nextInt(1, 15) == 5)
 					ctx.bank.close();
 					else
-					closeBank();
+					close();
 				} else {
 					status = "Walk to Baraek";
 					if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(7, 9)) 
@@ -305,7 +307,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		}
 	}
 	
-	private boolean closeBank() {
+	private boolean close() {
 		return ctx.keyboard.send("{VK_ESCAPE down}") && ctx.keyboard.send("{VK_ESCAPE up}");
 	}
 
