@@ -96,7 +96,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	}
 
 	public class JobContainer {
-		private List<Job> jobList = new ArrayList<>();
+		private List<Job> jobList = new ArrayList<Job>();
 
 		public JobContainer(Job[] jobs) {
 			submit(jobs);
@@ -456,7 +456,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	}
 
 	private void drawMouse(final Graphics g) {
-		g.setColor(Color.RED);
+		g.setColor(Color.GREEN);
 		g.drawLine(0, (int) (ctx.mouse.getLocation().getY()), 800,
 				(int) (ctx.mouse.getLocation().getY()));
 		g.drawLine((int) (ctx.mouse.getLocation().getX()), 0,
