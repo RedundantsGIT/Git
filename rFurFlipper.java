@@ -21,55 +21,60 @@ import org.powerbot.event.MessageListener;
 import org.powerbot.event.PaintListener;
 import org.powerbot.script.Manifest;
 import org.powerbot.script.PollingScript;
-import org.powerbot.script.lang.Filter;
 import org.powerbot.script.methods.MethodContext;
 import org.powerbot.script.methods.MethodProvider;
-import org.powerbot.script.methods.Game.Crosshair;
-import org.powerbot.script.methods.Menu.Entry;
 import org.powerbot.script.util.Random;
 import org.powerbot.script.wrappers.Component;
-import org.powerbot.script.wrappers.Interactive;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
 @Manifest(name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for (gp)", topic = 1135335)
-public class rFurFlipper extends PollingScript implements PaintListener, MessageListener {
-
+public class rFurFlipper extends PollingScript implements PaintListener,
+		MessageListener {
 	private static JobContainer container;
-	private static RenderingHints antialiasing = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+	private static RenderingHints antialiasing = new RenderingHints(
+			RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	private static String status = "Starting...";
 	private static long scriptTimer = 0;
 	private static int furPrice, furBought, furStored;
 	private static int baraekID = 547, furID = 948;
 	private final Component pressOne = ctx.widgets.get(1188, 2);
-	private final Component achievements = ctx.widgets.get(1477).getComponent(74);
-	private final Component collectionBox = ctx.widgets.get(109).getComponent(61);
-	private static final Tile[] pathToNpc = { new Tile(3189, 3435, 0), new Tile(3197, 3430, 0), new Tile(3206, 3430, 0), new Tile(3216, 3433, 0) };
+	private final Component achievements = ctx.widgets.get(1477).getComponent(
+			74);
+	private final Component collectionBox = ctx.widgets.get(109).getComponent(
+			61);
+	private final Component nameBox = ctx.widgets.get(1184, 10);
+	private static final Tile[] pathToNpc = { new Tile(3189, 3435, 0),
+			new Tile(3197, 3430, 0), new Tile(3206, 3430, 0),
+			new Tile(3216, 3433, 0) };
 
 	@Override
 	public void start() {
-		log.info("Script started");
 		scriptTimer = System.currentTimeMillis();
 		status = "Getting G.E. Fur Price";
 		furPrice = getGuidePrice(furID) - 20;
-		rFurFlipper.container = new JobContainer(new Job[] { new Camera(ctx), new Fix(ctx), new BuyFur(ctx), new Banking(ctx) });
+		rFurFlipper.container = new JobContainer(new Job[] { new Camera(ctx),
+				new Close(ctx), new Fix(ctx), new WalkToBaraek(ctx),
+				new Talk(ctx), new PressOne(ctx), new Continue(ctx),
+				new WalkToBank(ctx), new Banking(ctx) });
 	}
 
 	@Override
 	public void suspend() {
-		log.info("Script suspended");
+		System.out.println("Script suspended");
 	}
 
 	@Override
 	public void resume() {
-		log.info("Script resumed");
+		System.out.println("Script resumed");
 	}
 
 	@Override
 	public void stop() {
 		log.info("[rFurFlipper]: -Total Fur Purchased: " + furBought);
 		log.info("[rFurFlipper]: -Total Profit Gained: " + profit());
-		log.info("Script stopped");
+		System.out.println("Script stopped");
 	}
 
 	public abstract class Job extends MethodProvider {
@@ -91,7 +96,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 	}
 
 	public class JobContainer {
-		private List<Job> jobList = new ArrayList<Job>();
+		private List<Job> jobList = new ArrayList<>();
 
 		public JobContainer(Job[] jobs) {
 			submit(jobs);
@@ -129,7 +134,6 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 	@Override
 	public int poll() {
-
 		if (!ctx.game.isLoggedIn()
 				|| ctx.game.getClientState() != org.powerbot.script.methods.Game.INDEX_MAP_LOADED) {
 			return 1000;
@@ -141,7 +145,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 			return job.delay();
 		}
 
-		return 50;
+		return 100;
 	}
 
 	private class Camera extends Job {
@@ -156,7 +160,26 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 		@Override
 		public void execute() {
+			status = "Set Pitch";
 			ctx.camera.setPitch(Random.nextInt(50, 55));
+		}
+	}
+
+	private class Close extends Job {
+		public Close(MethodContext ctx) {
+			super(ctx);
+		}
+
+		@Override
+		public boolean activate() {
+			return nameBox.getText().contains("Snow impling")
+					|| nameBox.getText().contains("Benny");
+		}
+
+		@Override
+		public void execute() {
+			status = "Close";
+			close();
 		}
 	}
 
@@ -172,72 +195,125 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 		@Override
 		public void execute() {
-			log.info("1");
-		    close();
+			status = "Close";
+			close();
 		}
 	}
 
-	private class BuyFur extends Job {
-		public BuyFur(MethodContext ctx) {
+	private class WalkToBaraek extends Job {
+		public WalkToBaraek(MethodContext ctx) {
 			super(ctx);
 		}
 
 		@Override
 		public boolean activate() {
-			return ctx.backpack.select().count() != 28;
+			return ctx.backpack.select().count() != 28 && !nearBaraek();
 		}
 
 		@Override
 		public void execute() {
-			final Npc baraek = ctx.npcs.select().id(baraekID).nearest().poll();
-			final Component nameBox = ctx.widgets.get(1184, 10);
-			if (nearBaraek()) {
-				if (ctx.backpack.getMoneyPouch() < 20) {
-					log.info("[rFurFlipper]: -Not enough gold left to continue, stopping script.. .");
-					getController().stop();
-				}else if(nameBox.getText().contains("Snow impling") || nameBox.getText().contains("Benny")){
-					status = "Close";
-					close();
-				}else if (ctx.chat.isContinue()) {
-					status = "Continue";
-					if (Random.nextInt(1, 20) == 10) 
-						ctx.chat.clickContinue();
-					 else 
-						ctx.keyboard.send(" ");
-					final Timer pressTimer = new Timer(Random.nextInt(1600, 1800));
-					while (pressTimer.isRunning() && ctx.chat.isContinue()) 
-						sleep(10, 20);
-				} else if (pressOne.isValid()) {
-					status = "Press 1";
-					ctx.keyboard.send("1");
-					final Timer pressTimer = new Timer(Random.nextInt(1600, 1800));
-					while (pressTimer.isRunning() && pressOne.isVisible()) 
-						sleep(10, 25);
-				} else {
-						status = "Talk to Baraek";
-						if (baraek.isOnScreen()) {
-							if (interact(baraek, "Talk-to", "Baraek")) {
-								final Timer talkTimer = new Timer(Random.nextInt(2600, 2800));
-								while (talkTimer.isRunning() && !pressOne.isVisible() || ctx.players.local().isInMotion() && !pressOne.isValid()) 
-									sleep(25, 50);
-						} else {
-							ctx.movement.stepTowards(ctx.movement.getClosestOnMap(baraek.getLocation()));
-						}
+			if (ctx.bank.isOpen()) {
+				status = "Close Bank";
+				close();
+			} else {
+				status = "Walk to Baraek";
+				if (!ctx.players.local().isInMotion()
+						|| ctx.players.local().getLocation()
+								.distanceTo(ctx.movement.getDestination()) < Random
+								.nextInt(7, 9)) {
+					ctx.movement.newTilePath(pathToNpc).traverse();
+				}
+			}
+		}
+	}
+
+	private class Talk extends Job {
+		public Talk(MethodContext ctx) {
+			super(ctx);
+		}
+
+		@Override
+		public boolean activate() {
+			return nearBaraek() && !ctx.chat.isContinue() && !pressOne.isValid() && ctx.backpack.select().count() != 28;
+		}
+
+		@Override
+		public void execute() {
+			status = "Talk";
+			for (Npc baraek : ctx.npcs.select().id(baraekID).nearest()) {
+				if (baraek.isOnScreen()) {
+					if (baraek.interact("Talk")) {
+						final Timer talkTimer = new Timer(Random.nextInt(2800, 3200));
+						while (talkTimer.isRunning() && !pressOne.isValid())
+							sleep(25, 50);
+						break;
+					} else {
+						ctx.movement.stepTowards(ctx.movement
+								.getClosestOnMap(baraek.getLocation()));
 					}
 				}
-			} else {
-				if (ctx.bank.isOpen()) {
-					status = "Close Bank";
-					furStored = ctx.bank.select().id(furID).count(true);
-					if(Random.nextInt(1, 15) == 5)
-					ctx.bank.close();
-					else
-					close();
-				} else {
-					status = "Walk to Baraek";
-					if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(7, 9)) 
-						ctx.movement.newTilePath(pathToNpc).traverse();
-					}
+			}
+		}
+	}
+
+	private class PressOne extends Job {
+		public PressOne(MethodContext ctx) {
+			super(ctx);
+		}
+
+		@Override
+		public boolean activate() {
+			return pressOne.isValid();
+		}
+
+		@Override
+		public void execute() {
+			status = "Press 1";
+			ctx.keyboard.send("1");
+			final Timer pressTimer = new Timer(Random.nextInt(1800, 2000));
+			while (pressTimer.isRunning() && pressOne.isValid())
+				sleep(25, 50);
+		}
+	}
+
+	private class Continue extends Job {
+		public Continue(MethodContext ctx) {
+			super(ctx);
+		}
+
+		@Override
+		public boolean activate() {
+			return ctx.chat.isContinue();
+		}
+
+		@Override
+		public void execute() {
+			status = "Continue";
+			ctx.keyboard.send(" ");
+			final Timer pressTimer = new Timer(Random.nextInt(1800, 2000));
+			while (pressTimer.isRunning() && ctx.chat.isContinue())
+				sleep(25, 50);
+		}
+	}
+
+	private class WalkToBank extends Job {
+		public WalkToBank(MethodContext ctx) {
+			super(ctx);
+		}
+
+		@Override
+		public boolean activate() {
+			return ctx.backpack.select().count() == 28 && !nearBank();
+		}
+
+		@Override
+		public void execute() {
+			status = "Walk to Bank";
+			if (!ctx.players.local().isInMotion()
+					|| ctx.players.local().getLocation()
+							.distanceTo(ctx.movement.getDestination()) < Random
+							.nextInt(7, 9)) {
+				ctx.movement.newTilePath(pathToNpc).reverse().traverse();
 			}
 		}
 	}
@@ -249,75 +325,45 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 		@Override
 		public boolean activate() {
-			return ctx.backpack.select().count() == 28;
+			return ctx.backpack.select().count() == 28 && nearBank();
 		}
 
 		@Override
 		public void execute() {
-			if (nearBank()) {
-				if (ctx.bank.isOpen()) {
-					status = "Deposit Inventory";
-					depositInventory();
-				} else {
-					status = "Bank Open";
-					ctx.camera.turnTo(ctx.bank.getNearest());
-					ctx.bank.open();
-				}
+			if (ctx.bank.isOpen()) {
+				status = "Deposit Inventory";
+				ctx.bank.depositInventory();
+				final Timer depositTimer = new Timer(Random.nextInt(2100, 2300));
+				while (depositTimer.isRunning()
+						&& ctx.backpack.select().count() > 0)
+					sleep(Random.nextInt(5, 15));
 			} else {
-				status = "Walk to Banker";
-				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(7, 9)) 
-					ctx.movement.newTilePath(pathToNpc).reverse().traverse();
+				status = "Bank Open";
+				ctx.camera.turnTo(ctx.bank.getNearest());
+				ctx.bank.open();
 			}
 		}
 	}
 
-	public boolean didInteract() {
-		return ctx.game.getCrosshair() == Crosshair.ACTION;
+	private boolean close() {
+		return ctx.keyboard.send("{VK_ESCAPE down}")
+				&& ctx.keyboard.send("{VK_ESCAPE up}");
 	}
 
-	public boolean interact(Interactive interactive, final String action,
-			final String option) {
-		if (interactive != null && interactive.isOnScreen()) {
-			final Filter<Entry> filter = new Filter<Entry>() {
-
-				@Override
-				public boolean accept(Entry arg0) {
-					return arg0.action.equalsIgnoreCase(action) && arg0.option.equalsIgnoreCase(option);
-				}
-
-			};
-			if (ctx.menu.click(filter)) {
-				return didInteract();
-			} else {
-				ctx.mouse.move(interactive);
-				return interact(interactive, action, option);
+	public boolean nearBaraek() {
+		for (Npc baraek : ctx.npcs.select().id(baraekID).nearest()) {
+			if (ctx.players.local().getLocation()
+					.distanceTo(baraek.getLocation()) < 7) {
+				return true;
 			}
 		}
 		return false;
 	}
 
-	private void depositInventory() {
-		final Component DepositBackpackButton = ctx.widgets.get(762, 11);
-		if (DepositBackpackButton.isVisible()) {
-			if (DepositBackpackButton.interact("Deposit carried items")) {
-				final Timer depositTimer = new Timer(Random.nextInt(2100, 2300));
-				while (depositTimer.isRunning() && ctx.backpack.select().count() > 0) 
-					sleep(Random.nextInt(5, 15));
-			}
-		}
-	}
-	
-	private boolean close() {
-		return ctx.keyboard.send("{VK_ESCAPE down}") && ctx.keyboard.send("{VK_ESCAPE up}");
-	}
-
-	public boolean nearBaraek() {
-		final Npc baraek = ctx.npcs.select().id(baraekID).nearest().poll();
-		return ctx.players.local().getLocation().distanceTo(baraek.getLocation()) < 7;
-	}
-
 	public boolean nearBank() {
-		return ctx.bank.isOnScreen() && ctx.players.local().getLocation().distanceTo(ctx.bank.getNearest()) < 9;
+		return ctx.bank.isOnScreen()
+				&& ctx.players.local().getLocation()
+						.distanceTo(ctx.bank.getNearest()) < 9;
 	}
 
 	public class Timer {
@@ -337,7 +383,8 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 	@Override
 	public void messaged(MessageEvent msg) {
 		String message = msg.getMessage();
-		if (message.contains("20 coins have been removed from your money pouch.")) {
+		if (message
+				.contains("20 coins have been removed from your money pouch.")) {
 			furBought++;
 		}
 	}
@@ -366,11 +413,14 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		g.setFont(fontTwo);
 		g.drawString("rFurFlipper", 75, 222);
 		g.setColor(Color.WHITE);
-		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 13, 245);
-		g.drawString("Fur Bought: " + nf.format(furBought) + "(" + PerHour(furBought) + "/h)", 13, 265);
+		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 13,
+				245);
+		g.drawString("Fur Bought: " + nf.format(furBought) + "("
+				+ PerHour(furBought) + "/h)", 13, 265);
 		g.drawString("Fur In Bank: " + nf.format(furStored), 13, 285);
 		g.drawString("Fur Price: " + furPrice, 13, 305);
-		g.drawString("Profit: " + nf.format(profit()) + "(" + PerHour(profit()) + "/h)", 13, 325);
+		g.drawString("Profit: " + nf.format(profit()) + "(" + PerHour(profit())
+				+ "/h)", 13, 325);
 		g.drawString("Status: " + (status), 13, 345);
 		drawMouse(g);
 		drawBaraekTile(g);
@@ -406,21 +456,30 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 	}
 
 	private void drawMouse(final Graphics g) {
-		g.setColor(Color.GREEN);
-		g.drawLine(0, (int) (ctx.mouse.getLocation().getY()), 800, (int) (ctx.mouse.getLocation().getY()));
-		g.drawLine((int) (ctx.mouse.getLocation().getX()), 0, (int) (ctx.mouse.getLocation().getX()), 800);
+		g.setColor(Color.RED);
+		g.drawLine(0, (int) (ctx.mouse.getLocation().getY()), 800,
+				(int) (ctx.mouse.getLocation().getY()));
+		g.drawLine((int) (ctx.mouse.getLocation().getX()), 0,
+				(int) (ctx.mouse.getLocation().getX()), 800);
 	}
 
 	private static int getGuidePrice(int itemId) {
 		try {
-			final URL website = new URL("http://www.tip.it/runescape/json/ge_single_item?item=" + itemId);
+			final URL website = new URL(
+					"http://www.tip.it/runescape/json/ge_single_item?item="
+							+ itemId);
 
 			final URLConnection conn = website.openConnection();
-			conn.addRequestProperty( "User-Agent", "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1547.57 Safari/537.36");
+			conn.addRequestProperty(
+					"User-Agent",
+					"Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1547.57 Safari/537.36");
 			conn.setRequestProperty("Connection", "close");
-			final BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+			final BufferedReader br = new BufferedReader(new InputStreamReader(
+					conn.getInputStream()));
 			final String json = br.readLine();
-			return Integer.parseInt(json.substring(json.indexOf("mark_price") + 13, json.indexOf(",\"daily_gp") - 1).replaceAll(",", ""));
+			return Integer.parseInt(json.substring(
+					json.indexOf("mark_price") + 13,
+					json.indexOf(",\"daily_gp") - 1).replaceAll(",", ""));
 		} catch (Exception a) {
 			System.out.println("Error looking up price for item: " + itemId);
 			return -1;
