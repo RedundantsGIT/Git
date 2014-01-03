@@ -83,7 +83,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		}
 
 		public int delay() {
-			return 100;
+			return 50;
 		}
 
 		public int priority() {
@@ -145,7 +145,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			return job.delay();
 		}
 
-		return 100;
+		return 50;
 	}
 
 	private class Camera extends Job {
@@ -270,9 +270,9 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		public void execute() {
 			status = "Press 1";
 			ctx.keyboard.send("1");
-			final Timer pressTimer = new Timer(Random.nextInt(1800, 2000));
+			final Timer pressTimer = new Timer(Random.nextInt(1600, 1800));
 			while (pressTimer.isRunning() && pressOne.isValid())
-				sleep(25, 50);
+				sleep(15, 30);
 		}
 	}
 
@@ -290,9 +290,9 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		public void execute() {
 			status = "Continue";
 			ctx.keyboard.send(" ");
-			final Timer pressTimer = new Timer(Random.nextInt(1800, 2000));
+			final Timer pressTimer = new Timer(Random.nextInt(1600, 1800));
 			while (pressTimer.isRunning() && ctx.chat.isContinue())
-				sleep(25, 50);
+				sleep(15, 30);
 		}
 	}
 
