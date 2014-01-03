@@ -214,6 +214,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		public void execute() {
 			if (ctx.bank.isOpen()) {
 				status = "Close Bank";
+				furStored = ctx.bank.select().id(furID).count(true);
 				close();
 			} else {
 				status = "Walk to Baraek";
