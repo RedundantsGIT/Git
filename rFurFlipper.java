@@ -32,7 +32,7 @@ import org.powerbot.script.wrappers.Interactive;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
-@Manifest(name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.", hidden = true)
+@Manifest(name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for profit.")
 public class rFurFlipper extends PollingScript implements PaintListener, MessageListener {
 
 	private static JobContainer container;
