@@ -29,12 +29,9 @@ import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
 @Manifest(name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for (gp)", topic = 1135335)
-public class rFurFlipper extends PollingScript implements PaintListener,
-		MessageListener {
+public class rFurFlipper extends PollingScript implements PaintListener, MessageListener {
 	private static JobContainer container;
-
-	private static RenderingHints antialiasing = new RenderingHints(
-			RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+	private static RenderingHints antialiasing = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	private static String status = "Starting...";
 	private static long scriptTimer = 0;
 	private static int furPrice, furBought, furStored;
@@ -43,19 +40,15 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	private final Component achievements = ctx.widgets.get(1477).getComponent(74);
 	private final Component collectionBox = ctx.widgets.get(109).getComponent(61);
 	private final Component nameBox = ctx.widgets.get(1184, 10);
-	private static final Tile[] pathToNpc = { new Tile(3189, 3435, 0),
-			new Tile(3197, 3430, 0), new Tile(3206, 3430, 0),
-			new Tile(3216, 3433, 0) };
+	private static final Tile[] pathToNpc = { new Tile(3189, 3435, 0), new Tile(3197, 3430, 0), new Tile(3206, 3430, 0), new Tile(3216, 3433, 0) };
 
 	@Override
 	public void start() {
 		scriptTimer = System.currentTimeMillis();
 		status = "Getting G.E. Fur Price";
 		furPrice = getGuidePrice(furID) - 20;
-		rFurFlipper.container = new JobContainer(new Job[] { new Camera(ctx),
-				new Close(ctx), new Fix(ctx), new WalkToBaraek(ctx),
-				new Talk(ctx), new PressOne(ctx), new Continue(ctx),
-				new WalkToBank(ctx), new Banking(ctx) });
+		rFurFlipper.container = new JobContainer(new Job[] { new Camera(ctx), new Close(ctx), new Fix(ctx), new WalkToBaraek(ctx), new Talk(ctx), new PressOne(ctx), new Continue1(ctx),
+				new Continue2(ctx), new Continue3(ctx), new WalkToBank(ctx), new Banking(ctx) });
 	}
 
 	@Override
@@ -81,7 +74,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		}
 
 		public int delay() {
-			return 100;
+			return 50;
 		}
 
 		public int priority() {
@@ -170,8 +163,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 		@Override
 		public boolean activate() {
-			return nameBox.getText().contains("Snow impling")
-					|| nameBox.getText().contains("Benny");
+			return nameBox.getText().contains("Snow impling") || nameBox.getText().contains("Benny");
 		}
 
 		@Override
@@ -216,10 +208,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 				close();
 			} else {
 				status = "Walk to Baraek";
-				if (!ctx.players.local().isInMotion()
-						|| ctx.players.local().getLocation()
-								.distanceTo(ctx.movement.getDestination()) < Random
-								.nextInt(7, 9)) {
+				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(7, 9)) {
 					ctx.movement.newTilePath(pathToNpc).traverse();
 				}
 			}
@@ -233,7 +222,12 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 		@Override
 		public boolean activate() {
-			return nearBaraek() && !ctx.chat.isContinue() && !pressOne.isValid() && ctx.backpack.select().count() != 28;
+			return nearBaraek()
+	                && !pressOne.isValid()
+					&& !ctx.widgets.get(1191, 10).getText().contains("Can you sell me some furs?")
+					&& !ctx.widgets.get(1184, 9).getText().contains("Yeah, sure. They're 20 gold coins each.")
+					&& !ctx.widgets.get(1191, 10).getText().contains("Yeah, OK, here you go.")
+					&& ctx.backpack.select().count() != 28;
 		}
 
 		@Override
@@ -247,8 +241,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 							sleep(25, 50);
 						break;
 					} else {
-						ctx.movement.stepTowards(ctx.movement
-								.getClosestOnMap(baraek.getLocation()));
+						ctx.movement.stepTowards(ctx.movement.getClosestOnMap(baraek.getLocation()));
 					}
 				}
 			}
@@ -262,7 +255,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 		@Override
 		public boolean activate() {
-			return pressOne.isVisible();
+			return pressOne.isValid();
 		}
 
 		@Override
@@ -275,22 +268,62 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		}
 	}
 
-	private class Continue extends Job {
-		public Continue(MethodContext ctx) {
+	private class Continue1 extends Job {
+		public Continue1(MethodContext ctx) {
 			super(ctx);
 		}
 
 		@Override
 		public boolean activate() {
-			return ctx.chat.isContinue();
+			return ctx.widgets.get(1191, 10).getText().contains("Can you sell me some furs?");
 		}
 
 		@Override
 		public void execute() {
-			status = "Continue";
+			status = "Continue1";
 			ctx.keyboard.send(" ");
-			final Timer pressTimer = new Timer(Random.nextInt(2100, 2200));
-			while (pressTimer.isRunning() && ctx.chat.isContinue() && !pressOne.isVisible())
+			final Timer pressTimer = new Timer(Random.nextInt(2300, 2400));
+			while (pressTimer.isRunning() && !ctx.widgets.get(1184, 9).getText().contains("Yeah, sure. They're 20 gold coins each."))
+				sleep(100);
+		}
+	}
+
+	private class Continue2 extends Job {
+		public Continue2(MethodContext ctx) {
+			super(ctx);
+		}
+
+		@Override
+		public boolean activate() {
+			return ctx.widgets.get(1184, 9).getText().contains("Yeah, sure. They're 20 gold coins each.");
+		}
+
+		@Override
+		public void execute() {
+			status = "Continue2";
+			ctx.keyboard.send(" ");
+			final Timer pressTimer = new Timer(Random.nextInt(2300, 2400));
+			while (pressTimer.isRunning() && !pressOne.isVisible());
+				sleep(100);
+		}
+	}
+
+	private class Continue3 extends Job {
+		public Continue3(MethodContext ctx) {
+			super(ctx);
+		}
+
+		@Override
+		public boolean activate() {
+			return ctx.widgets.get(1191, 10).getText().contains("Yeah, OK, here you go.");
+		}
+
+		@Override
+		public void execute() {
+			status = "Continue3";
+			ctx.keyboard.send(" ");
+			final Timer pressTimer = new Timer(Random.nextInt(2300, 2400));
+			while (pressTimer.isRunning() && !ctx.widgets.get(1189, 2).getText().contains("Baraek sells you a fur."))
 				sleep(100);
 		}
 	}
@@ -308,10 +341,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		@Override
 		public void execute() {
 			status = "Walk to Bank";
-			if (!ctx.players.local().isInMotion()
-					|| ctx.players.local().getLocation()
-							.distanceTo(ctx.movement.getDestination()) < Random
-							.nextInt(7, 9)) {
+			if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation() .distanceTo(ctx.movement.getDestination()) < Random.nextInt(7, 9)) {
 				ctx.movement.newTilePath(pathToNpc).reverse().traverse();
 			}
 		}
@@ -333,8 +363,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 				status = "Deposit Inventory";
 				ctx.bank.depositInventory();
 				final Timer depositTimer = new Timer(Random.nextInt(2100, 2300));
-				while (depositTimer.isRunning()
-						&& ctx.backpack.select().count() > 0)
+				while (depositTimer.isRunning() && ctx.backpack.select().count() > 0)
 					sleep(Random.nextInt(5, 15));
 			} else {
 				status = "Bank Open";
@@ -345,8 +374,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	}
 
 	private boolean close() {
-		return ctx.keyboard.send("{VK_ESCAPE down}")
-				&& ctx.keyboard.send("{VK_ESCAPE up}");
+		return ctx.keyboard.send("{VK_ESCAPE down}") && ctx.keyboard.send("{VK_ESCAPE up}");
 	}
 
 	public boolean nearBaraek() {
@@ -360,9 +388,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	}
 
 	public boolean nearBank() {
-		return ctx.bank.isOnScreen()
-				&& ctx.players.local().getLocation()
-						.distanceTo(ctx.bank.getNearest()) < 9;
+		return ctx.bank.isOnScreen() && ctx.players.local().getLocation().distanceTo(ctx.bank.getNearest()) < 9;
 	}
 
 	public class Timer {
@@ -382,8 +408,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	@Override
 	public void messaged(MessageEvent msg) {
 		String message = msg.getMessage();
-		if (message
-				.contains("20 coins have been removed from your money pouch.")) {
+		if (message.contains("20 coins have been removed from your money pouch.")) {
 			furBought++;
 		}
 	}
@@ -412,14 +437,11 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		g.setFont(fontTwo);
 		g.drawString("rFurFlipper", 75, 222);
 		g.setColor(Color.WHITE);
-		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 13,
-				245);
-		g.drawString("Fur Bought: " + nf.format(furBought) + "("
-				+ PerHour(furBought) + "/h)", 13, 265);
+		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 13, 245);
+		g.drawString("Fur Bought: " + nf.format(furBought) + "(" + PerHour(furBought) + "/h)", 13, 265);
 		g.drawString("Fur In Bank: " + nf.format(furStored), 13, 285);
 		g.drawString("Fur Price: " + furPrice, 13, 305);
-		g.drawString("Profit: " + nf.format(profit()) + "(" + PerHour(profit())
-				+ "/h)", 13, 325);
+		g.drawString("Profit: " + nf.format(profit()) + "(" + PerHour(profit()) + "/h)", 13, 325);
 		g.drawString("Status: " + (status), 13, 345);
 		drawMouse(g);
 		drawBaraekTile(g);
@@ -456,29 +478,19 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 	private void drawMouse(final Graphics g) {
 		g.setColor(Color.GREEN);
-		g.drawLine(0, (int) (ctx.mouse.getLocation().getY()), 800,
-				(int) (ctx.mouse.getLocation().getY()));
-		g.drawLine((int) (ctx.mouse.getLocation().getX()), 0,
-				(int) (ctx.mouse.getLocation().getX()), 800);
+		g.drawLine(0, (int) (ctx.mouse.getLocation().getY()), 800, (int) (ctx.mouse.getLocation().getY()));
+		g.drawLine((int) (ctx.mouse.getLocation().getX()), 0, (int) (ctx.mouse.getLocation().getX()), 800);
 	}
 
 	private static int getGuidePrice(int itemId) {
 		try {
-			final URL website = new URL(
-					"http://www.tip.it/runescape/json/ge_single_item?item="
-							+ itemId);
+			final URL website = new URL("http://www.tip.it/runescape/json/ge_single_item?item=" + itemId);
 
-			final URLConnection conn = website.openConnection();
-			conn.addRequestProperty(
-					"User-Agent",
-					"Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1547.57 Safari/537.36");
+			final URLConnection conn = website.openConnection(); conn.addRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1547.57 Safari/537.36");
 			conn.setRequestProperty("Connection", "close");
-			final BufferedReader br = new BufferedReader(new InputStreamReader(
-					conn.getInputStream()));
+			final BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
 			final String json = br.readLine();
-			return Integer.parseInt(json.substring(
-					json.indexOf("mark_price") + 13,
-					json.indexOf(",\"daily_gp") - 1).replaceAll(",", ""));
+			return Integer.parseInt(json.substring(json.indexOf("mark_price") + 13, json.indexOf(",\"daily_gp") - 1).replaceAll(",", ""));
 		} catch (Exception a) {
 			System.out.println("Error looking up price for item: " + itemId);
 			return -1;
