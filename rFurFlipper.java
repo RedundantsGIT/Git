@@ -83,7 +83,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		}
 
 		public int delay() {
-			return 75;
+			return 100;
 		}
 
 		public int priority() {
@@ -291,9 +291,9 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		public void execute() {
 			status = "Continue";
 			ctx.keyboard.send(" ");
-			final Timer pressTimer = new Timer(Random.nextInt(1500, 1600));
+			final Timer pressTimer = new Timer(Random.nextInt(1900, 2000));
 			while (pressTimer.isRunning() && !ctx.chat.isContinue())
-				sleep(25, 50);
+				sleep(75, 100);
 		}
 	}
 
