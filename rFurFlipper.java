@@ -40,10 +40,8 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 	private static int furPrice, furBought, furStored;
 	private static int baraekID = 547, furID = 948;
 	private final Component pressOne = ctx.widgets.get(1188, 2);
-	private final Component achievements = ctx.widgets.get(1477).getComponent(
-			74);
-	private final Component collectionBox = ctx.widgets.get(109).getComponent(
-			61);
+	private final Component achievements = ctx.widgets.get(1477).getComponent(74);
+	private final Component collectionBox = ctx.widgets.get(109).getComponent(61);
 	private final Component nameBox = ctx.widgets.get(1184, 10);
 	private static final Tile[] pathToNpc = { new Tile(3189, 3435, 0),
 			new Tile(3197, 3430, 0), new Tile(3206, 3430, 0),
@@ -145,7 +143,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			return job.delay();
 		}
 
-		return 100;
+		return 50;
 	}
 
 	private class Camera extends Job {
@@ -272,7 +270,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			status = "Press 1";
 			ctx.keyboard.send("1");
 			final Timer pressTimer = new Timer(Random.nextInt(2100, 2200));
-			while (pressTimer.isRunning() && !ctx.chat.isContinue() || !pressOne.isValid())
+			while (pressTimer.isRunning() && !ctx.chat.isContinue())
 				sleep(100);
 		}
 	}
@@ -292,7 +290,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			status = "Continue";
 			ctx.keyboard.send(" ");
 			final Timer pressTimer = new Timer(Random.nextInt(2100, 2200));
-			while (pressTimer.isRunning() && !ctx.chat.isContinue())
+			while (pressTimer.isRunning() && ctx.chat.isContinue())
 				sleep(100);
 		}
 	}
