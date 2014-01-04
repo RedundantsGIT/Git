@@ -145,7 +145,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			return job.delay();
 		}
 
-		return 50;
+		return 100;
 	}
 
 	private class Camera extends Job {
@@ -292,7 +292,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			status = "Continue";
 			ctx.keyboard.send(" ");
 			final Timer pressTimer = new Timer(Random.nextInt(2000, 2200));
-			while (pressTimer.isRunning() && !ctx.chat.isContinue() || pressOne.isValid())
+			while (pressTimer.isRunning() && !ctx.chat.isContinue() || !pressOne.isValid())
 				sleep(100);
 		}
 	}
