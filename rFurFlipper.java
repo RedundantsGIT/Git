@@ -272,7 +272,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			status = "Press 1";
 			ctx.keyboard.send("1");
 			final Timer pressTimer = new Timer(Random.nextInt(2100, 2200));
-			while (pressTimer.isRunning() && !ctx.chat.isContinue())
+			while (pressTimer.isRunning() && !ctx.chat.isContinue() || !pressOne.isValid())
 				sleep(100);
 		}
 	}
