@@ -271,9 +271,9 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		public void execute() {
 			status = "Press 1";
 			ctx.keyboard.send("1");
-			final Timer pressTimer = new Timer(Random.nextInt(1700, 1800));
+			final Timer pressTimer = new Timer(Random.nextInt(2100, 2200));
 			while (pressTimer.isRunning() && !ctx.chat.isContinue())
-				sleep(25, 50);
+				sleep(100);
 		}
 	}
 
@@ -291,9 +291,9 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		public void execute() {
 			status = "Continue";
 			ctx.keyboard.send(" ");
-			final Timer pressTimer = new Timer(Random.nextInt(1900, 2000));
-			while (pressTimer.isRunning() && !ctx.chat.isContinue())
-				sleep(75, 100);
+			final Timer pressTimer = new Timer(Random.nextInt(2000, 2200));
+			while (pressTimer.isRunning() && !ctx.chat.isContinue() || pressOne.isValid())
+				sleep(100);
 		}
 	}
 
