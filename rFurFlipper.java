@@ -83,7 +83,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 		}
 
 		public int delay() {
-			return 100;
+			return 75;
 		}
 
 		public int priority() {
