@@ -262,7 +262,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 
 		@Override
 		public boolean activate() {
-			return pressOne.isValid();
+			return pressOne.isVisible();
 		}
 
 		@Override
@@ -270,7 +270,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			status = "Press 1";
 			ctx.keyboard.send("1");
 			final Timer pressTimer = new Timer(Random.nextInt(2100, 2200));
-			while (pressTimer.isRunning() && !ctx.chat.isContinue())
+			while (pressTimer.isRunning() && pressOne.isVisible() && !ctx.chat.isContinue())
 				sleep(100);
 		}
 	}
@@ -290,7 +290,7 @@ public class rFurFlipper extends PollingScript implements PaintListener,
 			status = "Continue";
 			ctx.keyboard.send(" ");
 			final Timer pressTimer = new Timer(Random.nextInt(2100, 2200));
-			while (pressTimer.isRunning() && ctx.chat.isContinue())
+			while (pressTimer.isRunning() && ctx.chat.isContinue() && !pressOne.isVisible())
 				sleep(100);
 		}
 	}
