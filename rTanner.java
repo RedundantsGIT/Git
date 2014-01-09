@@ -452,8 +452,8 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 							}
 						}, 250, 20);
 						while (ctx.players.local().isInMotion()
-								&& !Make.isVisible() && didInteract()) {
-							sleep(Random.nextInt(10, 50));
+								&& !Make.isVisible()) {
+							sleep(Random.nextInt(25, 50));
 						}
 					}break;
 				} else {
