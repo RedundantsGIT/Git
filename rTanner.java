@@ -22,6 +22,7 @@ import org.powerbot.script.PollingScript;
 import org.powerbot.script.methods.Environment;
 import org.powerbot.script.methods.MethodContext;
 import org.powerbot.script.methods.MethodProvider;
+import org.powerbot.script.methods.Game.Crosshair;
 import org.powerbot.script.util.Condition;
 import org.powerbot.script.util.Random;
 import org.powerbot.script.wrappers.Area;
@@ -443,17 +444,18 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 					} else {
 						Tanner.interact("Trade", "Tanner");
 					}
-					Condition.wait(new Callable<Boolean>() {
-						@Override
-						public Boolean call() throws Exception {
-							return Make.isVisible();
+					if (didInteract()) {
+						Condition.wait(new Callable<Boolean>() {
+							@Override
+							public Boolean call() throws Exception {
+								return Make.isVisible();
+							}
+						}, 250, 20);
+						while (ctx.players.local().isInMotion()
+								&& !Make.isVisible() && didInteract()) {
+							sleep(Random.nextInt(10, 50));
 						}
-					}, 250, 20);
-
-					while (ctx.players.local().isInMotion() && !Make.isVisible()) {
-						sleep(Random.nextInt(10, 50));
-					}
-					break;
+					}break;
 				} else {
 					ctx.movement.stepTowards(ctx.movement.getClosestOnMap(Tanner.getLocation()));
 					sleep(Random.nextInt(150, 300));
@@ -462,6 +464,10 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 
 			}
 		}
+	}
+	
+	public boolean didInteract() {
+		return ctx.game.getCrosshair() == Crosshair.ACTION;
 	}
 
 	private boolean cameraTurnToTanner() {
@@ -616,10 +622,8 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		g.setColor(Color.RED);
 		g.drawString("rTanner", 190, 300);
 		g.setFont(font);
-		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 25,
-				320);
-		g.drawString("Tanned: " + nf.format(hideCount) + "("
-				+ perHour(hideCount) + ")", 25, 345);
+		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 25, 320);
+		g.drawString("Tanned: " + nf.format(hideCount) + "(" + perHour(hideCount) + ")", 25, 345);
 		g.drawString("Hides Left: " + nf.format(hidesLeft), 150, 345);
 		g.drawString("Potions Left: " + nf.format(potionsLeft), 150, 320);
 		g.drawString("User: " + Environment.getDisplayName(), 275, 320);
@@ -629,7 +633,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		g.drawString("*" + (status) + "*", 150, 370);
 		g.setFont(fontThree);
 		g.setColor(Color.RED);
-		g.drawString("v4.4", 382, 370);
+		g.drawString("v4.3", 382, 370);
 		drawMouse(g);
 		drawTannerTile(g);
 	}
