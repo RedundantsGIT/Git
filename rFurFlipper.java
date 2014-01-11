@@ -281,7 +281,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 			Condition.wait(new Callable<Boolean>() {
 				@Override
 				public Boolean call() throws Exception {
-					return pressOne.isVisible() || ctx.widgets.get(1184, 9).getText().contains("Yeah, sure. They're 20 gold coins each.") ||
+					return pressOne.isValid() || ctx.widgets.get(1184, 9).getText().contains("Yeah, sure. They're 20 gold coins each.") ||
 						   ctx.widgets.get(1189, 2).getText().contains("Baraek sells you a fur.");
 				}
 			}, 250, 20);
