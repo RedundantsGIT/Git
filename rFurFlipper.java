@@ -281,8 +281,8 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 			Condition.wait(new Callable<Boolean>() {
 				@Override
 				public Boolean call() throws Exception {
-					return pressOne.isValid() || ctx.widgets.get(1184, 9).getText().contains("Yeah, sure. They're 20 gold coins each.") ||
-						   ctx.widgets.get(1189, 2).getText().contains("Baraek sells you a fur.");
+					return ctx.widgets.get(1184, 9).getText().contains("Yeah, sure. They're 20 gold coins each.") ||
+						   ctx.widgets.get(1189, 2).getText().contains("Baraek sells you a fur.") || pressOne.isVisible();
 				}
 			}, 250, 20);
 		}
@@ -335,6 +335,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 			}
 		}
 	}
+	
 
 	private boolean close() {
 		return ctx.keyboard.send("{VK_ESCAPE down}") && ctx.keyboard.send("{VK_ESCAPE up}");
