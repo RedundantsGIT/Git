@@ -21,6 +21,7 @@ import org.powerbot.script.Manifest;
 import org.powerbot.script.PollingScript;
 import org.powerbot.script.methods.MethodContext;
 import org.powerbot.script.methods.MethodProvider;
+import org.powerbot.script.methods.Game.Crosshair;
 import org.powerbot.script.util.GeItem;
 import org.powerbot.script.util.Random;
 import org.powerbot.script.wrappers.Component;
@@ -238,9 +239,11 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 			for (Npc baraek : ctx.npcs.select().id(baraekID).nearest()) {
 				if (baraek.isOnScreen()) {
 					if (baraek.interact("Talk")) {
+						if(didInteract()){
 						final Timer talkTimer = new Timer(Random.nextInt(2800, 3200));
 						while (talkTimer.isRunning() && !pressOne.isValid())
 							sleep(25, 50);
+						}
 						break;
 					} else {
 						ctx.movement.stepTowards(ctx.movement.getClosestOnMap(baraek.getLocation()));
@@ -373,6 +376,10 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 				ctx.bank.open();
 			}
 		}
+	}
+	
+	public boolean didInteract() {
+		return ctx.game.getCrosshair() == Crosshair.ACTION;
 	}
 
 	private boolean close() {
