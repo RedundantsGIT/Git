@@ -204,7 +204,10 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 			if (ctx.bank.isOpen()) {
 				status = "Close Bank";
 				furStored = ctx.bank.select().id(furID).count(true);
+				if(Random.nextInt(1, 10) == 5)
 				close();
+				else
+					ctx.bank.close();
 			} else {
 				status = "Walk to Baraek";
 				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(7, 9)) {
