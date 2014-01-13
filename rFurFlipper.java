@@ -243,8 +243,8 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 						final Timer talkTimer = new Timer(Random.nextInt(2800, 3200));
 						while (talkTimer.isRunning() && !pressOne.isValid())
 							sleep(25, 50);
+break;
 						}
-						break;
 					} else {
 						ctx.movement.stepTowards(ctx.movement.getClosestOnMap(baraek.getLocation()));
 					}
