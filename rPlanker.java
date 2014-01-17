@@ -460,30 +460,21 @@ public class rPlanker extends PollingScript implements PaintListener, MessageLis
 			contentPane.setLayout(null);
 
 			ScriptTitle.setText("rPlanker Setup");
-			ScriptTitle
-					.setFont(new Font("Segoe Print", java.awt.Font.BOLD, 14));
+			ScriptTitle.setFont(new Font("Segoe Print", java.awt.Font.BOLD, 14));
 			contentPane.add(ScriptTitle);
-			ScriptTitle.setBounds(35, 5, 110,
-					ScriptTitle.getPreferredSize().height);
+			ScriptTitle.setBounds(35, 5, 110, ScriptTitle.getPreferredSize().height);
 
 			TypeOfPlankLabel.setText("Type of plank:");
-			TypeOfPlankLabel
-					.setFont(TypeOfPlankLabel.getFont().deriveFont(
-							TypeOfPlankLabel.getFont().getStyle()
-									| java.awt.Font.BOLD));
+			TypeOfPlankLabel.setFont(TypeOfPlankLabel.getFont().deriveFont(TypeOfPlankLabel.getFont().getStyle() | java.awt.Font.BOLD));
 			contentPane.add(TypeOfPlankLabel);
-			TypeOfPlankLabel.setBounds(new Rectangle(new Point(0, 50),
-					TypeOfPlankLabel.getPreferredSize()));
+			TypeOfPlankLabel.setBounds(new Rectangle(new Point(0, 50), TypeOfPlankLabel.getPreferredSize()));
 
-			PlanksToMake.setModel(new DefaultComboBoxModel<>(new String[] {
-					"Normal", "Oak", "Teak", "Mahogany" }));
+			PlanksToMake.setModel(new DefaultComboBoxModel<String>(new String[] { "Normal", "Oak", "Teak", "Mahogany" }));
 			contentPane.add(PlanksToMake);
-			PlanksToMake.setBounds(85, 45, 100,
-					PlanksToMake.getPreferredSize().height);
+			PlanksToMake.setBounds(85, 45, 100, PlanksToMake.getPreferredSize().height);
 
 			startButton.setText("Start");
-			startButton.setFont(startButton.getFont().deriveFont(
-					startButton.getFont().getStyle() | java.awt.Font.BOLD));
+			startButton.setFont(startButton.getFont().deriveFont(startButton.getFont().getStyle() | java.awt.Font.BOLD));
 			startButton.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
@@ -491,31 +482,24 @@ public class rPlanker extends PollingScript implements PaintListener, MessageLis
 				}
 			});
 			contentPane.add(startButton);
-			startButton.setBounds(new Rectangle(new Point(60, 105), startButton
-					.getPreferredSize()));
+			startButton.setBounds(new Rectangle(new Point(60, 105), startButton.getPreferredSize()));
 
 			checkBox1.setText("Use potions?");
-			checkBox1.setFont(checkBox1.getFont().deriveFont(
-					checkBox1.getFont().getStyle() | java.awt.Font.BOLD));
+			checkBox1.setFont(checkBox1.getFont().deriveFont(checkBox1.getFont().getStyle() | java.awt.Font.BOLD));
 			contentPane.add(checkBox1);
-			checkBox1.setBounds(new Rectangle(new Point(0, 75), checkBox1
-					.getPreferredSize()));
+			checkBox1.setBounds(new Rectangle(new Point(0, 75), checkBox1.getPreferredSize()));
 
 			checkBox2.setText("Use teletabs?");
-			checkBox2.setFont(checkBox2.getFont().deriveFont(
-					checkBox2.getFont().getStyle() | java.awt.Font.BOLD));
+			checkBox2.setFont(checkBox2.getFont().deriveFont(checkBox2.getFont().getStyle() | java.awt.Font.BOLD));
 			contentPane.add(checkBox2);
-			checkBox2.setBounds(new Rectangle(new Point(95, 75), checkBox2
-					.getPreferredSize()));
+			checkBox2.setBounds(new Rectangle(new Point(95, 75), checkBox2.getPreferredSize()));
 
 			{
 				Dimension preferredSize = new Dimension();
 				for (int i = 0; i < contentPane.getComponentCount(); i++) {
 					Rectangle bounds = contentPane.getComponent(i).getBounds();
-					preferredSize.width = Math.max(bounds.x + bounds.width,
-							preferredSize.width);
-					preferredSize.height = Math.max(bounds.y + bounds.height,
-							preferredSize.height);
+					preferredSize.width = Math.max(bounds.x + bounds.width, preferredSize.width);
+					preferredSize.height = Math.max(bounds.y + bounds.height, preferredSize.height);
 				}
 				Insets insets = contentPane.getInsets();
 				preferredSize.width += insets.right;
