@@ -450,7 +450,7 @@ public class rPlanker extends PollingScript implements PaintListener, MessageLis
 		private void initComponents() {
 			ScriptTitle = new JLabel();
 			TypeOfPlankLabel = new JLabel();
-			PlanksToMake = new JComboBox<>();
+			PlanksToMake = new JComboBox<String>();
 			startButton = new JButton();
 			checkBox1 = new JCheckBox();
 			checkBox2 = new JCheckBox();
