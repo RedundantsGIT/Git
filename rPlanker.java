@@ -1,4 +1,4 @@
-package VEPlanker;
+package rPlanker;
 
 import java.awt.Color;
 import java.awt.Container;
@@ -205,8 +205,7 @@ public class rPlanker extends PollingScript implements PaintListener, MessageLis
 					}, 250, 20);
 				}
 			} else {
-				if (BankContainsTeletab() && !InventoryContainsTeletab()
-						&& USE_TELETABS) {
+				if (BankContainsTeletab() && !InventoryContainsTeletab() && USE_TELETABS) {
 					ctx.bank.withdraw(VARROCK_TELEPORT_ID, 28);
 				} else if (BankContainsPotions() && !InventoryContainsPotions() && USE_POTIONS) {
 					withdraw(1, ENERGY_POTION_ID);
