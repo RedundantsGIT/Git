@@ -32,6 +32,7 @@ import org.powerbot.script.methods.Hud.Window;
 import org.powerbot.script.util.Condition;
 import org.powerbot.script.util.GeItem;
 import org.powerbot.script.util.Random;
+import org.powerbot.script.wrappers.GameObject;
 import org.powerbot.script.wrappers.Item;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
@@ -62,7 +63,7 @@ public class rPlanker extends PollingScript implements PaintListener,
 			VARROCK_TELEPORT_ID = 8007;
 	private static final int NORMAL_LOG_ID = 1511, OAK_LOG_ID = 1521,
 			TEAK_LOG_ID = 6333, MAHOGANY_LOG_ID = 6332;
-	private static final int BANKER_ID = 553, OPERATOR_ID = 4250;
+	private static final int OPERATOR_ID = 4250, STAIRS_ID = 24353;
 
 	private final Tile[] WALK_TO_BANK_PATH = new Tile[] {
 			new Tile(3213, 3425, 0), new Tile(3219, 3427, 0),
@@ -103,29 +104,24 @@ public class rPlanker extends PollingScript implements PaintListener,
 
 	@Override
 	public int poll() {
-		if (!ctx.game.isLoggedIn()
-				|| ctx.game.getClientState() != org.powerbot.script.methods.Game.INDEX_MAP_LOADED) {
+		if (!ctx.game.isLoggedIn() || ctx.game.getClientState() != org.powerbot.script.methods.Game.INDEX_MAP_LOADED) 
 			return 500;
-		}
-		if (potionUsable()) {
+		if(atStairs())
+			climbDown();
+		else
+		if (potionUsable()) 
 			usePotion();
-		} else {
-			if (InventoryContainsLogs()) {
+		 else if (InventoryContainsLogs()) 
 				Plank();
-			} else {
-				if (USE_TELETABS) {
+			 else if (USE_TELETABS) 
 					Teletab();
-				} else {
+				 else 
 					Bank();
-				}
-			}
-		}
 		return 50;
 	}
 
 	private void usePotion() {
-		final Item EnergyPotion = ctx.backpack.select().id(ENERGY_POTION_ID)
-				.poll();
+		final Item EnergyPotion = ctx.backpack.select().id(ENERGY_POTION_ID).poll();
 		status = "Use Potion";
 		if (!ctx.hud.isVisible(Window.BACKPACK)) {
 			ctx.hud.view(Hud.Window.BACKPACK);
@@ -143,19 +139,14 @@ public class rPlanker extends PollingScript implements PaintListener,
 
 	private void Plank() {
 		final Npc Planker = ctx.npcs.select().id(OPERATOR_ID).poll();
-		final org.powerbot.script.wrappers.Widget PlankMenu = ctx.widgets
-				.get(WIDGET_PLANK_MENU);
+		final org.powerbot.script.wrappers.Widget PlankMenu = ctx.widgets.get(WIDGET_PLANK_MENU);
 		if (ctx.backpack.getMoneyPouch() < POUCH_AMOUNT) {
 			getController().stop();
 		} else {
 			if (!nearMillOperator()) {
 				status = "Walk to npc";
-				if (!ctx.players.local().isInMotion()
-						|| ctx.players.local().getLocation()
-								.distanceTo(ctx.movement.getDestination()) < Random
-								.nextInt(9, 10)) {
+				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(9, 10)) 
 					ctx.movement.newTilePath(WALK_TO_OPERATOR_PATH).traverse();
-				}
 			} else {
 				if (!PlankMenu.getComponent(WIDGET_CHOSEN).isOnScreen()) {
 					status = "Buy";
@@ -186,24 +177,17 @@ public class rPlanker extends PollingScript implements PaintListener,
 	}
 
 	private void Bank() {
-		if (!nearBanker()) {
-			status = "Walk to bank";
-			if (!ctx.players.local().isInMotion()
-					|| ctx.players.local().getLocation()
-							.distanceTo(ctx.movement.getDestination()) < Random
-							.nextInt(9, 10)) {
-				ctx.movement.newTilePath(WALK_TO_OPERATOR_PATH).reverse()
-						.traverse();
+		if (nearBanker()) {
+			if (ctx.bank.isOpen()) {
+				Banking();
+			} else {
+				ctx.bank.open();
 			}
 		} else {
-			if (!ctx.bank.isOpen()) {
-				status = "Bank open";
-				ctx.bank.open();
-			} else {
-				Banking();
-			}
+			status = "Walk to bank";
+			if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(9, 10))
+				ctx.movement.newTilePath(WALK_TO_OPERATOR_PATH).reverse().traverse();
 		}
-
 	}
 
 	private void Banking() {
@@ -226,11 +210,9 @@ public class rPlanker extends PollingScript implements PaintListener,
 					}, 250, 20);
 				}
 			} else {
-				if (BankContainsTeletab() && !InventoryContainsTeletab()
-						&& USE_TELETABS) {
+				if (BankContainsTeletab() && !InventoryContainsTeletab() && USE_TELETABS) {
 					ctx.bank.withdraw(VARROCK_TELEPORT_ID, 28);
-				} else if (BankContainsPotions() && !InventoryContainsPotions()
-						&& USE_POTIONS) {
+				} else if (BankContainsPotions() && !InventoryContainsPotions() && USE_POTIONS) {
 					withdraw(1, ENERGY_POTION_ID);
 				} else {
 					withdraw(28, LOG_CHOSEN);
@@ -242,34 +224,33 @@ public class rPlanker extends PollingScript implements PaintListener,
 	}
 
 	private void Teletab() {
-		final Item VarrockTeleport = ctx.backpack.select()
-				.id(VARROCK_TELEPORT_ID).poll();
+		final Item VarrockTeleport = ctx.backpack.select().id(VARROCK_TELEPORT_ID).poll();
 		if (nearMillOperator()) {
 			status = "Use teletab";
-			if (VarrockTeleport.interact("Break")) {
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return !nearMillOperator();
-					}
-				}, 250, 20);
+			if (!ctx.hud.isVisible(Window.BACKPACK)) {
+				ctx.hud.view(Hud.Window.BACKPACK);
+			} else {
+				if (VarrockTeleport.interact("Break")) {
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return !nearMillOperator();
+						}
+					}, 250, 20);
+				}
 			}
 		} else {
-			if (!nearBanker()) {
-				status = "Walk to bank";
-				if (!ctx.players.local().isInMotion()
-						|| ctx.players.local().getLocation()
-								.distanceTo(ctx.movement.getDestination()) < Random
-								.nextInt(7, 8)) {
-					ctx.movement.newTilePath(WALK_TO_BANK_PATH).traverse();
-				}
-			} else {
+			if (nearBanker()) {
 				if (ctx.bank.isOpen()) {
 					Banking();
 				} else {
 					status = "Bank open";
 					ctx.bank.open();
 				}
+			}else{
+				status = "Walk to bank";
+				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(7, 8)) 
+					ctx.movement.newTilePath(WALK_TO_BANK_PATH).traverse();
 			}
 		}
 
@@ -287,8 +268,7 @@ public class rPlanker extends PollingScript implements PaintListener,
 	}
 
 	private boolean nearBanker() {
-		final Npc Banker = ctx.npcs.select().id(BANKER_ID).poll();
-		return Banker.isOnScreen();
+		return ctx.bank.isOnScreen() && ctx.players.local().getLocation().distanceTo(ctx.bank.getNearest()) < Random.nextInt(4, 5);
 	}
 
 	public boolean withdraw(final int count, final int... items) {
@@ -339,6 +319,24 @@ public class rPlanker extends PollingScript implements PaintListener,
 		return Planker.isOnScreen()
 				&& ctx.players.local().getLocation()
 						.distanceTo(Planker.getLocation()) < 5;
+	}
+	
+	private void climbDown(){
+		final GameObject Stairs = ctx.objects.select().id(STAIRS_ID).nearest().poll();
+		if(Stairs.interact("Climb-down", "Staircase")){
+			Condition.wait(new Callable<Boolean>() {
+				@Override
+				public Boolean call() throws Exception {
+					return !atStairs();
+				}
+			}, 250, 20);
+			
+		}
+	}
+	
+	private boolean atStairs(){
+		final GameObject Stairs = ctx.objects.select().id(STAIRS_ID).nearest().poll();
+		return Stairs.isOnScreen();
 	}
 
 	public class Timer {
