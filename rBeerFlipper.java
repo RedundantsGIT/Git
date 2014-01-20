@@ -89,7 +89,7 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 	}
 
 	public class JobContainer {
-		private List<Job> jobList = new ArrayList<>();
+		private List<Job> jobList = new ArrayList<Job>();
 
 		public JobContainer(Job[] jobs) {
 			submit(jobs);
