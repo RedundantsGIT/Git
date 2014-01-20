@@ -146,13 +146,13 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 		@Override
 		public boolean activate() {
-			return ctx.camera.getPitch() < 40 && !ctx.bank.isOpen();
+			return ctx.camera.getPitch() < 45 && !ctx.bank.isOpen();
 		}
 
 		@Override
 		public void execute() {
 			status = "Set Pitch";
-			ctx.camera.setPitch(Random.nextInt(50, 55));
+			ctx.camera.setPitch(50);
 		}
 	}
 
@@ -243,8 +243,8 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 						final Timer talkTimer = new Timer(Random.nextInt(2800, 3200));
 						while (talkTimer.isRunning() && !pressOne.isValid())
 							sleep(25, 50);
-break;
 						}
+						break;
 					} else {
 						ctx.movement.stepTowards(ctx.movement.getClosestOnMap(baraek.getLocation()));
 					}
@@ -388,8 +388,7 @@ break;
 
 	public boolean nearBaraek() {
 		for (Npc baraek : ctx.npcs.select().id(baraekID).nearest()) {
-			if (ctx.players.local().getLocation()
-					.distanceTo(baraek.getLocation()) < 7) {
+			if (ctx.players.local().getLocation().distanceTo(baraek.getLocation()) < 7) {
 				return true;
 			}
 		}
@@ -397,7 +396,7 @@ break;
 	}
 
 	public boolean nearBank() {
-		return ctx.bank.isOnScreen() && ctx.players.local().getLocation().distanceTo(ctx.bank.getNearest()) < 9;
+		return ctx.bank.isOnScreen() && ctx.players.local().getLocation().distanceTo(ctx.bank.getNearest()) < 6;
 	}
 
 	public class Timer {
@@ -452,7 +451,7 @@ break;
 		g.drawString("Fur Price: " + furPrice, 13, 305);
 		g.drawString("Profit: " + nf.format(profit()) + "(" + PerHour(profit()) + "/h)", 13, 325);
 		g.drawString("Status: " + (status), 13, 345);
-		g.drawString("v0.3", 175, 345);
+		g.drawString("v0.4", 175, 345);
 		drawMouse(g);
 		drawBaraekTile(g);
 	}
