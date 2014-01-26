@@ -3,16 +3,13 @@ package rBeerFlipper;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import org.powerbot.event.MessageEvent;
 import org.powerbot.event.MessageListener;
@@ -24,8 +21,9 @@ import org.powerbot.script.methods.MethodContext;
 import org.powerbot.script.methods.MethodProvider;
 import org.powerbot.script.methods.Game.Crosshair;
 import org.powerbot.script.methods.Menu.Entry;
+import org.powerbot.script.util.Condition;
+import org.powerbot.script.util.GeItem;
 import org.powerbot.script.util.Random;
-import org.powerbot.script.util.Timer;
 import org.powerbot.script.wrappers.Component;
 import org.powerbot.script.wrappers.GameObject;
 import org.powerbot.script.wrappers.Interactive;
@@ -52,7 +50,7 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 	public void start() {
 		elapsedTime = System.currentTimeMillis();
 		beerPrice = getGuidePrice(beerID) - 2;
-		rBeerFlipper.container = new JobContainer(new Job[] { new Buy(ctx), new Banking(ctx) });
+		rBeerFlipper.container = new JobContainer(new Job[] { new Camera(ctx), new Buy(ctx), new Banking(ctx) });
 	}
 
 	@Override
@@ -138,6 +136,24 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 
 		return 50;
 	}
+	
+	private class Camera extends Job {
+		public Camera(MethodContext ctx) {
+			super(ctx);
+		}
+
+		@Override
+		public boolean activate() {
+
+			return ctx.camera.getPitch() < 52;
+		}
+
+		@Override
+		public void execute() {
+			ctx.camera.setPitch(50);
+		}
+
+	}
 
 	private class Buy extends Job {
 		public Buy(MethodContext ctx) {
@@ -160,17 +176,23 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 					tries = 0;
 					status = "Press Spacebar";
 					ctx.keyboard.send(" ");
-					final Timer pressTimer = new Timer(Random.nextInt(2000, 2200));
-					while (pressTimer.isRunning() && ctx.chat.isContinue()) {
-						sleep(15, 50);
-					}
+					
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return !ctx.chat.isContinue();
+						}
+					}, 250, 20);
 				} else if (pressOne.isValid()) {
 					status = "Press 1";
 					ctx.keyboard.send("1");
-					final Timer pressTimer = new Timer(Random.nextInt(2000, 2200));
-					while (pressTimer.isRunning() && pressOne.isVisible()) {
-						sleep(10, 50);
-					}
+					
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return !pressOne.isValid();
+						}
+					}, 250, 20);
 				} else {
 					for (Npc Bartender : ctx.npcs.select().id(barTenderID).nearest()) {
 						if (Bartender.isOnScreen()) {
@@ -178,10 +200,12 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 							if (!ctx.players.local().isInMotion()) {
 								if (interact(Bartender, "Talk-to", "Bartender")) {
 									tries ++;
-									final Timer talkTimer = new Timer(Random.nextInt(1800, 2000));
-									while (talkTimer.isRunning() && !ctx.chat.isContinue()) {
-										sleep(15, 50);
-									}
+									Condition.wait(new Callable<Boolean>() {
+										@Override
+										public Boolean call() throws Exception {
+											return ctx.chat.isContinue();
+										}
+									}, 250, 20);
 									if(tries > 1){
 										ctx.camera.turnTo(Bartender.getLocation());
 									}
@@ -225,10 +249,12 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 						tries = 0;
 						status = "Deposit Inventory";
 						ctx.bank.depositInventory();
-						final Timer depositTimer = new Timer(1800);
-						while (depositTimer.isRunning() && ctx.backpack.select().count() == 28) {
-							sleep(Random.nextInt(100, 650));
-						}
+						Condition.wait(new Callable<Boolean>() {
+							@Override
+							public Boolean call() throws Exception {
+								return ctx.backpack.select().isEmpty();
+							}
+						}, 250, 20);
 					} else if (ctx.bank.isOnScreen()) {
 						status = "Bank Open";
 						ctx.bank.open();
@@ -245,15 +271,17 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 	}
 
 	private void openDoor() {
-		for (GameObject Door : ctx.objects.select().at(doorTile).nearest()) {
+		for (final GameObject Door : ctx.objects.select().at(doorTile).nearest()) {
 			status = "Door";
 			if (!ctx.players.local().isInMotion()) {
 				if (Door.isOnScreen()) {
 					Door.click(true);
-					final Timer doorTimer = new Timer(1800);
-					while (doorTimer.isRunning() && Door != null) {
-						sleep(Random.nextInt(100, 200));
-					}
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return Door == null;
+						}
+					}, 250, 20);
 				} else if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(4, 5)) {
 					ctx.movement.stepTowards(ctx.movement.getClosestOnMap(Door));
 				}
@@ -369,29 +397,8 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 		return "" + start;
 	}
 
-	public int getGuidePrice(int itemId) {
-		try {
-			final URL website = new URL(
-					"http://www.tip.it/runescape/json/ge_single_item?item="
-							+ itemId);
-
-			final URLConnection conn = website.openConnection();
-			conn.addRequestProperty(
-					"User-Agent",
-					"Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1547.57 Safari/537.36");
-			conn.setRequestProperty("Connection", "close");
-
-			final BufferedReader br = new BufferedReader(new InputStreamReader(
-					conn.getInputStream()));
-			final String json = br.readLine();
-
-			return Integer.parseInt(json.substring(
-					json.indexOf("mark_price") + 13,
-					json.indexOf(",\"daily_gp") - 1).replaceAll(",", ""));
-		} catch (Exception a) {
-			System.out.println("Error looking up price for item: " + itemId);
-			return -1;
-		}
+	private static int getGuidePrice(final int id) {
+		return GeItem.getPrice(id);
 	}
 }
 
