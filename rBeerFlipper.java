@@ -172,21 +172,37 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 			if (nearClosedDoor()) {
 				openDoor();
 			} else if (atBartender()) {
-				if (ctx.chat.isContinue()) {
+				if (ctx.widgets.get(1184, 9).getText().contains("What can I do yer for?")) {
 					tries = 0;
 					status = "Press Spacebar";
 					ctx.keyboard.send(" ");
-					
 					Condition.wait(new Callable<Boolean>() {
 						@Override
 						public Boolean call() throws Exception {
-							return !ctx.chat.isContinue();
+							return pressOne.isValid();
 						}
 					}, 250, 20);
-				} else if (pressOne.isValid()) {
+				}else if (ctx.widgets.get(1191, 10).getText().contains("A glass of your finest ale please.")){
+					status = "Press Spacebar";
+					ctx.keyboard.send(" ");
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return ctx.widgets.get(1184, 9).getText().contains("No problemo. That'll be 2 coins.");
+						}
+					}, 250, 20);
+					}else if  (ctx.widgets.get(1184, 9).getText().contains("No problemo. That'll be 2 coins.")){
+						status = "Press Spacebar";
+						ctx.keyboard.send(" ");
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return !ctx.widgets.get(1184, 9).getText().contains("No problemo. That'll be 2 coins.");
+						}
+					}, 250, 20);
+			} else if (pressOne.isValid()) {
 					status = "Press 1";
 					ctx.keyboard.send("1");
-					
 					Condition.wait(new Callable<Boolean>() {
 						@Override
 						public Boolean call() throws Exception {
@@ -290,8 +306,7 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 	}
 
 	public boolean atBank() {
-		return ctx.players.local().getLocation()
-				.distanceTo(ctx.bank.getNearest()) < 4;
+		return ctx.players.local().getLocation().distanceTo(ctx.bank.getNearest()) < 4;
 	}
 
 	private boolean atBartender() {
@@ -312,19 +327,21 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 		return ctx.game.getCrosshair() == Crosshair.ACTION;
 	}
 
-	public boolean interact(Interactive interactive, final String action,
-			final String option) {
+	public boolean interact(Interactive interactive, final String action, final String option) {
 		if (interactive != null && interactive.isOnScreen()) {
 			final Filter<Entry> filter = new Filter<Entry>() {
-
 				@Override
 				public boolean accept(Entry arg0) {
-					return arg0.action.equalsIgnoreCase(action)
-							&& arg0.option.equalsIgnoreCase(option);
+					return arg0.action.equalsIgnoreCase(action) && arg0.option.equalsIgnoreCase(option);
 				}
 
 			};
+			
+			if(Random.nextInt(1, 3) == 2)
+			ctx.mouse.move(ctx.mouse.getLocation().x + Random.nextInt(1, 10), ctx.mouse.getLocation().y + Random.nextInt(1, 6));
 			if (ctx.menu.click(filter)) {
+				if(Random.nextInt(1, 5) == 3)
+				ctx.mouse.move(ctx.mouse.getLocation().x + Random.nextInt(1, 15), ctx.mouse.getLocation().y + Random.nextInt(1, 12));
 				return didInteract();
 			} else {
 				ctx.mouse.move(interactive);
@@ -337,9 +354,8 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 	@Override
 	public void messaged(MessageEvent msg) {
 		String message = msg.getMessage();
-		if (message.contains("You buy a pint of beer.")) {
+		if (message.contains("You buy a pint of beer."))
 			beerBought++;
-		}
 	}
 
 	final static Color black = new Color(25, 0, 0, 200);
@@ -371,6 +387,7 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 		g.drawString("Beer In Bank: " + (beerInBank), 13, 305);
 		g.drawString("Profit: " + nf.format(profitGained) + "(" + perHour(profitGained) + "/h)", 13, 325);
 		g.drawString("Status: " + (status), 13, 345);
+		g.drawString("v0.2", 175, 345);
 		drawCross(g);
 	}
 
