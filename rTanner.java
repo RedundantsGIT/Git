@@ -472,7 +472,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 							public Boolean call() throws Exception {
 								return ctx.bank.isOpen();
 							}
-						}, 250, 20);
+						}, 250, 20);break;
 					}
 				}
 			}
@@ -485,7 +485,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 							public Boolean call() throws Exception {
 								return ctx.bank.isOpen();
 							}
-						}, 250, 20);
+						}, 250, 20);break;
 					}
 
 				}
