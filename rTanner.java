@@ -463,7 +463,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 	}
 	
 	private void openBank() {
-		for (Npc Banker : ctx.npcs.select().id(bankerID).first()) {
+		for (Npc Banker : ctx.npcs.select().id(bankerID).nearest()) {
 		if (atVarrock) {
 			if (Banker.click(true)) {
 				if (didInteract()) {
@@ -476,7 +476,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 				}
 			} 
 		}else {
-				for (GameObject Bank : ctx.objects.select().id(boothID).nearest().first()) {
+				for (GameObject Bank : ctx.objects.select().id(boothID).nearest()) {
 					if (Bank.click(true)) {
 						if (didInteract()) {
 							Condition.wait(new Callable<Boolean>() {
