@@ -461,33 +461,33 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 			}
 		}
 	}
-	
-	private void openBank() {
-		for (Npc Banker : ctx.npcs.select().id(bankerID).nearest()) {
-		if (atVarrock) {
-			if (Banker.click(true)) {
-				if (didInteract()) {
-					Condition.wait(new Callable<Boolean>() {
-						@Override
-						public Boolean call() throws Exception {
-							return ctx.bank.isOpen();
-						}
-					}, 250, 20);
-				}
-			} 
-		}else {
-				for (GameObject Bank : ctx.objects.select().id(boothID).nearest()) {
-					if (Bank.click(true)) {
-						if (didInteract()) {
-							Condition.wait(new Callable<Boolean>() {
-								@Override
-								public Boolean call() throws Exception {
-									return ctx.bank.isOpen();
-								}
-							}, 250, 20);
 
-						}
+	private void openBank() {
+		if (atVarrock) {
+			for (Npc Banker : ctx.npcs.select().id(bankerID).nearest()) {
+				if (Banker.click(true)) {
+					if (didInteract()) {
+						Condition.wait(new Callable<Boolean>() {
+							@Override
+							public Boolean call() throws Exception {
+								return ctx.bank.isOpen();
+							}
+						}, 250, 20);
 					}
+				}
+			}
+		} else {
+			for (GameObject Bank : ctx.objects.select().id(boothID).nearest()) {
+				if (Bank.click(true)) {
+					if (didInteract()) {
+						Condition.wait(new Callable<Boolean>() {
+							@Override
+							public Boolean call() throws Exception {
+								return ctx.bank.isOpen();
+							}
+						}, 250, 20);
+					}
+
 				}
 			}
 
