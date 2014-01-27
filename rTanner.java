@@ -52,7 +52,8 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 
 	private static final int doorID = 24376;
 
-	private static final int[] bankID = { 20980, 42192, 76274};
+	private static final int[] boothID = { 42192, 76274};
+	private static final int[] bankerID = { 553 };
 	private static final int[] tannerID = { 14877, 2824, 2320 };
 	private static final int[] hideID = { 1739, 1753, 1751, 24372, 6287, 7801, 1749, 1747 };
 	private static final int[] leatherID = { 1741, 1743, 1745, 2505, 24374, 6289, 2507, 2509 };
@@ -411,7 +412,6 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 			}
 		} else {
 			status = "Opening Bank";
-			ctx.camera.turnTo(ctx.bank.getNearest());
 			openBank();
 		}
 	}
@@ -461,9 +461,10 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		}
 	}
 	
-	private void openBank(){
-		for (GameObject Bank : ctx.objects.select().id(bankID).nearest().first()) {
-			if (Bank.click(true)) {
+	private void openBank() {
+		for (Npc Banker : ctx.npcs.select().id(bankerID).first()) {
+		if (atVarrock) {
+			if (Banker.click(true)) {
 				if (didInteract()) {
 					Condition.wait(new Callable<Boolean>() {
 						@Override
@@ -471,6 +472,22 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 							return ctx.bank.isOpen();
 						}
 					}, 250, 20);
+				}
+			} 
+		}else {
+				for (GameObject Bank : ctx.objects.select().id(boothID).nearest().first()) {
+					ctx.camera.turnTo(ctx.bank.getNearest());
+					if (Bank.click(true)) {
+						if (didInteract()) {
+							Condition.wait(new Callable<Boolean>() {
+								@Override
+								public Boolean call() throws Exception {
+									return ctx.bank.isOpen();
+								}
+							}, 250, 20);
+
+						}
+					}
 				}
 			}
 
