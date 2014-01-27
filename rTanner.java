@@ -48,10 +48,11 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 	private static boolean atBurthorpe = false;
 	private static boolean atVarrock = false;
 
-	private static int hideCount, hidesLeft, potionsLeft, tries, tries2;
+	private static int hideCount, hidesLeft, potionsLeft;
 
 	private static final int doorID = 24376;
 
+	private static final int[] bankID = { 20980, 42192, 76274};
 	private static final int[] tannerID = { 14877, 2824, 2320 };
 	private static final int[] hideID = { 1739, 1753, 1751, 24372, 6287, 7801, 1749, 1747 };
 	private static final int[] leatherID = { 1741, 1743, 1745, 2505, 24374, 6289, 2507, 2509 };
@@ -229,13 +230,13 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 			status = "Close";
 			if (Achievements.isVisible()) {
 				Achievements.getChild(1).click(true);
-				sleep(Random.nextInt(100, 200));
+				sleep(Random.nextInt(100, 500));
 			} else if (CollectionBox.isVisible()) {
 				CollectionBox.getChild(1).interact("Close");
-				sleep(Random.nextInt(100, 200));
+				sleep(Random.nextInt(100, 500));
 			} else {
 				getClose().click(true);
-				sleep(Random.nextInt(100, 200));
+				sleep(Random.nextInt(100, 500));
 			}
 		}
 	}
@@ -270,7 +271,6 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		public void execute() {
 			if (!ctx.hud.isVisible(Window.BACKPACK)) {
 				ctx.hud.view(Hud.Window.BACKPACK);
-				sleep(100);
 			} else {
 			for (Item EnergyPotion : ctx.backpack.select().id(energyPotionID)) {
 				status = "Use Potion";
@@ -373,10 +373,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 				status = "Walking to Bank";
 				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(10, 11)) {
 					ctx.movement.newTilePath(tilePath).reverse().traverse();
-					if (tries < 1) {
-						ctx.camera.turnTo(ctx.bank.getNearest());
-						tries++;
-					}
+					ctx.camera.turnTo(ctx.bank.getNearest());
 				}
 			}
 		}
@@ -384,7 +381,6 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 
 	private void doBanking() {
 		if (ctx.bank.isOpen()) {
-			tries = 0;
 			if (ctx.backpack.select().count() == 28) {
 				if (hasLeather() && hasPotion()) {
 					deposit(0, leatherID);
@@ -415,10 +411,8 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 			}
 		} else {
 			status = "Opening Bank";
-			if (Random.nextInt(1, 3) == 2) {
-				ctx.camera.turnTo(ctx.bank.getNearest());
-			}
-			ctx.bank.open();
+			ctx.camera.turnTo(ctx.bank.getNearest());
+			openBank();
 		}
 	}
 
@@ -452,7 +446,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 						Condition.wait(new Callable<Boolean>() {
 							@Override
 							public Boolean call() throws Exception {
-								return Make.isVisible();
+								return Make.isVisible()  || hasLeather();
 							}
 						}, 250, 20);
 						while (ctx.players.local().isInMotion() && !Make.isVisible());
@@ -467,12 +461,25 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		}
 	}
 	
+	private void openBank(){
+		for (GameObject Bank : ctx.objects.select().id(bankID).nearest().first()) {
+			if (Bank.click(true)) {
+				if (didInteract()) {
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return ctx.bank.isOpen();
+						}
+					}, 250, 20);
+				}
+			}
+
+		}
+	}
+	
 	private boolean cameraTurnToTanner() {
 		for (Npc Tanner : ctx.npcs.select().id(tannerID).nearest()) {
-			if (tries2 < 3) {
-				ctx.camera.turnTo(Tanner.getLocation());
-				tries2++;
-			}
+			ctx.camera.turnTo(Tanner.getLocation());
 			return true;
 		}
 		return false;
@@ -633,7 +640,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		g.drawString("*" + (status) + "*", 150, 370);
 		g.setFont(fontThree);
 		g.setColor(Color.RED);
-		g.drawString("v4.5", 382, 370);
+		g.drawString("v4.6", 382, 370);
 		drawMouse(g);
 		drawTannerTile(g);
 	}
