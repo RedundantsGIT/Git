@@ -412,6 +412,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 			}
 		} else {
 			status = "Opening Bank";
+			ctx.camera.turnTo(ctx.bank.getNearest());
 			openBank();
 		}
 	}
@@ -476,7 +477,6 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 			} 
 		}else {
 				for (GameObject Bank : ctx.objects.select().id(boothID).nearest().first()) {
-					ctx.camera.turnTo(ctx.bank.getNearest());
 					if (Bank.click(true)) {
 						if (didInteract()) {
 							Condition.wait(new Callable<Boolean>() {
