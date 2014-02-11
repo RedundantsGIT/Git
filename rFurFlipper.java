@@ -387,7 +387,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 				Condition.wait(new Callable<Boolean>() {
 					@Override
 					public Boolean call() throws Exception {
-						return ctx.backpack.isEmpty();
+						return ctx.backpack.select().isEmpty();
 					}
 				}, 250, 20);
 			} else {
