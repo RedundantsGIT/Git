@@ -596,7 +596,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		g.drawString("*" + (status) + "*", 150, 370);
 		g.setFont(fontThree);
 		g.setColor(Color.RED);
-		g.drawString("v4.8", 382, 370);
+		g.drawString("v4.7", 382, 370);
 		drawMouse(g);
 		drawTannerTile(g);
 	}
