@@ -357,7 +357,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 					} else {
 						status = "Walking to Tanner";
 						if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(10, 11)) {
-							ctx.movement.newTilePath(tilePath).randomize(1, 3).traverse();
+							ctx.movement.newTilePath(tilePath).traverse();
 							cameraTurnToTanner();
 						}
 					}
@@ -385,7 +385,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 			} else {
 				status = "Walking to Bank";
 				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(10, 11)) {
-					ctx.movement.newTilePath(tilePath).randomize(1, 3).reverse().traverse();
+					ctx.movement.newTilePath(tilePath).reverse().traverse();
 					ctx.camera.turnTo(ctx.bank.getNearest());
 				}
 			}
@@ -459,7 +459,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 						Condition.wait(new Callable<Boolean>() {
 							@Override
 							public Boolean call() throws Exception {
-								return Make.isVisible()  || hasLeather();
+								return Make.isVisible() || hasLeather();
 							}
 						}, 250, 20);
 						while (ctx.players.local().isInMotion() && !Make.isVisible());
