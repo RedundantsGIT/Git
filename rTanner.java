@@ -50,7 +50,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 
 	private static int hideCount, hidesLeft, potionsLeft;
 
-	private static final int doorID = 24376;
+	private static final int doorID = 24376, mangleID = 24920;
 	final Component Make = ctx.widgets.get(1370, 20);
 
 	private static final int[] tannerID = { 14877, 2824, 2320 };
@@ -313,18 +313,24 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 
 		@Override
 		public void execute() {
-			final GameObject Door = ctx.objects.select().select().id(doorID).at(doorTile).poll();
+			final GameObject Door = ctx.objects.select().id(doorID).at(doorTile).poll();
+			final GameObject Mangle = ctx.objects.select().id(mangleID).nearest().poll();
 				status = "Door";
 				if (Door.isInViewport()) {
-					Door.click(true);
+					int x = Door.getLocation().getMatrix(ctx).getInteractPoint().x;
+					int y = Door.getLocation().getMatrix(ctx).getInteractPoint().y - Random.nextInt(15, 30);
+					if(!ctx.players.local().isInMotion()) {
+					ctx.camera.turnTo(Mangle.getLocation());
+					ctx.mouse.click(x, y, true);
+					}
 					Condition.wait(new Callable<Boolean>() {
 						@Override
 						public Boolean call() throws Exception {
 							return !tileContainsDoor();
 						}
 					}, 250, 20);
-				} else {
-					ctx.movement.stepTowards(ctx.movement.getClosestOnMap(doorTile));
+			} else {
+				ctx.movement.stepTowards(ctx.movement.getClosestOnMap(doorTile));
 			}
 		}
 	}
@@ -395,16 +401,15 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 				if (hasLeather() && hasPotion()) {
 					deposit(0, leatherID);
 				} else {
-					status = "Depositing Backpack";
 					depositInventory();
 				}
 			} else {
 				if (bankHasHide()) {
-					if (hasPotion() && !hasHide() && ctx.backpack.count() > 1 || hasLeather() && !hasPotion() 
+					if (hasPotion() && !hasHide() && ctx.backpack.select().count() > 1 || hasLeather() && !hasPotion() 
 					|| hasLeather() && !hasPotion() || ctx.backpack.select().count() > 0 && !hasHide() && !hasPotion()) {
 						depositInventory();
 					} else if (hasLeather() && hasPotion()) {
-						status = "Deposit Leather";
+						status = "Depositing Leather";
 						deposit(0, leatherID);
 					} else if (bankHasPotion() && !hasPotion() && !hasHide()) {
 						status = "Withdraw Potion";
@@ -469,8 +474,9 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 	}
 	
 
-	private void depositInventory() {
+	private boolean depositInventory() {
 		final Component DepositBackpackButton = ctx.widgets.get(762, 11);
+		status = "Depositing Backpack";
 		if (DepositBackpackButton.isVisible()) {
 			if (DepositBackpackButton.interact("Deposit carried items")) {
 				Condition.wait(new Callable<Boolean>() {
@@ -480,18 +486,22 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 					}
 				}, 250, 20);
 			}
+			return true;
 		}
+		return false;
 	}
-	
-	private void logOut() {
+
+	private boolean logOut() {
 		status = "Logout";
-		if (ctx.bank.isOpen() && ctx.backpack.select().count() > 0) {
+		if (ctx.bank.isOpen() && !ctx.backpack.select().isEmpty()) {
 			depositInventory();
 			ctx.bank.close();
 		}
 		if (ctx.game.logout(true)) {
 			getController().stop();
+			return true;
 		}
+		return false;
 	}
 	
 	private boolean didInteract() {
@@ -596,7 +606,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		g.drawString("*" + (status) + "*", 150, 370);
 		g.setFont(fontThree);
 		g.setColor(Color.RED);
-		g.drawString("v4.7", 382, 370);
+		g.drawString("v4.8", 382, 370);
 		drawMouse(g);
 		drawTannerTile(g);
 	}
