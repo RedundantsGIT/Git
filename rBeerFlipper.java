@@ -3,6 +3,7 @@ package rBeerFlipper;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Point;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -38,18 +39,15 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 	private static final Tile bartenderTile = new Tile(3224, 3399, 0), doorTile = new Tile(3215, 3395, 0);
 	private static final int barTenderID = 733, beerID = 1917;
 	private static int beerBought, beerPrice, beerInBank, profitGained, tries;
-	
-	private static final Tile[] pathToBartender = { new Tile(3189, 3435, 0),
-			new Tile(3195, 3428, 0), new Tile(3198, 3420, 0),
-			new Tile(3204, 3410, 0), new Tile(3209, 3405, 0),
-			new Tile(3211, 3402, 0), new Tile(3212, 3396, 0), 
-			new Tile(3224, 3399, 0) };
+	private static final Tile[] pathToBartender = { new Tile(3189, 3435, 0), new Tile(3195, 3428, 0), new Tile(3198, 3420, 0), new Tile(3204, 3410, 0), new Tile(3209, 3405, 0),
+			new Tile(3211, 3402, 0), new Tile(3212, 3396, 0), new Tile(3224, 3399, 0) };
 	
 
 	@Override
 	public void start() {
 		elapsedTime = System.currentTimeMillis();
 		beerPrice = getGuidePrice(beerID) - 2;
+		ctx.properties.setProperty("bank.antipattern", "disable");
 		rBeerFlipper.container = new JobContainer(new Job[] { new Camera(ctx), new Buy(ctx), new Banking(ctx) });
 	}
 
@@ -125,8 +123,8 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 
 	@Override
 	public int poll() {
-		if (!ctx.game.isLoggedIn() || ctx.game.getClientState() != org.powerbot.script.methods.Game.INDEX_MAP_LOADED) 
-			return 500;
+		if (!ctx.game.isLoggedIn() || ctx.game.getClientState() != org.powerbot.script.methods.Game.INDEX_MAP_LOADED)
+			return 1000;
 
 		final Job job = container.get();
 		if (job != null) {
@@ -134,7 +132,7 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 			return job.delay();
 		}
 
-		return 50;
+		return Random.nextInt(100, 200);
 	}
 	
 	private class Camera extends Job {
@@ -150,7 +148,7 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 
 		@Override
 		public void execute() {
-			ctx.camera.setPitch(50);
+			ctx.camera.setPitch(55);
 		}
 
 	}
@@ -169,6 +167,7 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 		@Override
 		public void execute() {
 			final Component pressOne = ctx.widgets.get(1188, 3);
+			final Npc Bartender = ctx.npcs.select().id(barTenderID).nearest().poll();
 			if (nearClosedDoor()) {
 				openDoor();
 			} else if (atBartender()) {
@@ -210,8 +209,7 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 						}
 					}, 250, 20);
 				} else {
-					for (Npc Bartender : ctx.npcs.select().id(barTenderID).nearest()) {
-						if (Bartender.isOnScreen()) {
+						if (Bartender.isInViewport()) {
 							status = "Interact";
 							if (!ctx.players.local().isInMotion()) {
 								if (interact(Bartender, "Talk-to", "Bartender")) {
@@ -222,16 +220,14 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 											return ctx.chat.isContinue();
 										}
 									}, 250, 20);
-									if(tries > 1){
+									if(tries > 1)
 										ctx.camera.turnTo(Bartender.getLocation());
-									}
 								}
 							}
 						} else {
 							ctx.camera.turnTo(bartenderTile);
 						}
 					}
-				}
 			} else if (ctx.bank.isOpen()) {
 				status = "Close Bank";
 				beerInBank = ctx.bank.select().id(beerID).count(true);
@@ -271,11 +267,9 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 								return ctx.backpack.select().isEmpty();
 							}
 						}, 250, 20);
-					} else if (ctx.bank.isOnScreen()) {
+					} else {
 						status = "Bank Open";
 						ctx.bank.open();
-					} else {
-						ctx.movement.stepTowards(ctx.movement.getClosestOnMap(ctx.bank.getNearest()));
 					}
 				} else {
 					status = "Walk to Banker";
@@ -287,26 +281,28 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 	}
 
 	private void openDoor() {
-		for (final GameObject Door : ctx.objects.select().at(doorTile).nearest()) {
+		final GameObject Door = ctx.objects.select().at(doorTile).nearest().poll();
 			status = "Door";
-			if (!ctx.players.local().isInMotion()) {
-				if (Door.isOnScreen()) {
-					Door.click(true);
+				if (Door.isInViewport()) {
+					int x = Door.getLocation().getMatrix(ctx).getInteractPoint().x;
+					int y = Door.getLocation().getMatrix(ctx).getInteractPoint().y - Random.nextInt(20, 40);
+					ctx.camera.turnTo(bartenderTile);
+					ctx.mouse.click(x, y, true);
 					Condition.wait(new Callable<Boolean>() {
 						@Override
 						public Boolean call() throws Exception {
-							return Door == null;
+							return !Door.isValid();
 						}
 					}, 250, 20);
-				} else if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(4, 5)) {
-					ctx.movement.stepTowards(ctx.movement.getClosestOnMap(Door));
-				}
+				} else {
+					if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(4, 5)) {
+						ctx.movement.stepTowards(ctx.movement.getClosestOnMap(Door));
 			}
 		}
 	}
 
 	public boolean atBank() {
-		return ctx.players.local().getLocation().distanceTo(ctx.bank.getNearest()) < 4;
+		return ctx.bank.isInViewport();
 	}
 
 	private boolean atBartender() {
@@ -314,12 +310,8 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 	}
 
 	private boolean nearClosedDoor() {
-		for (GameObject Door : ctx.objects.select().at(doorTile).nearest()) {
-			if (ctx.players.local().getLocation().distanceTo(Door) < 10) {
-				return true;
-			}
-		}
-		return false;
+		final GameObject Door = ctx.objects.select().at(doorTile).nearest().poll();
+		return Door.isValid();
 	}
 	
 
@@ -328,7 +320,7 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 	}
 
 	public boolean interact(Interactive interactive, final String action, final String option) {
-		if (interactive != null && interactive.isOnScreen()) {
+		if (interactive != null && interactive.isInViewport()) {
 			final Filter<Entry> filter = new Filter<Entry>() {
 				@Override
 				public boolean accept(Entry arg0) {
@@ -387,14 +379,15 @@ public class rBeerFlipper extends PollingScript implements PaintListener, Messag
 		g.drawString("Beer In Bank: " + (beerInBank), 13, 305);
 		g.drawString("Profit: " + nf.format(profitGained) + "(" + perHour(profitGained) + "/h)", 13, 325);
 		g.drawString("Status: " + (status), 13, 345);
-		g.drawString("v0.2", 175, 345);
-		drawCross(g);
+		g.drawString("v0.3", 175, 345);
+		drawMouse(g);
 	}
 
-	private void drawCross(Graphics g) {
+	private void drawMouse(final Graphics g) {
+		final Point m = ctx.mouse.getLocation();
 		g.setColor(ctx.mouse.isPressed() ? Color.RED : Color.GREEN);
-		g.drawLine(0, (int) (ctx.mouse.getLocation().getY()), 800,(int) (ctx.mouse.getLocation().getY()));
-		g.drawLine((int) (ctx.mouse.getLocation().getX()), 0, (int) (ctx.mouse.getLocation().getX()), 800);
+		g.drawLine(m.x - 5, m.y + 5, m.x + 5, m.y - 5);
+		g.drawLine(m.x - 5, m.y - 5, m.x + 5, m.y + 5);
 	}
 
 	public String perHour(int gained) {
