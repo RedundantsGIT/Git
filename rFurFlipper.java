@@ -47,7 +47,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 	public void start() {
 		scriptTimer = System.currentTimeMillis();
 		ctx.properties.setProperty("bank.antipattern", "disable");
-		status = "Getting prices..";
+		status = "Get prices..";
 		furPrice = getGuidePrice(furID) - 20;
 		rFurFlipper.container = new JobContainer(new Job[] { new Camera(ctx), new Fix(ctx), new WalkToBaraek(ctx), new Talk(ctx), new PressOne(ctx), new PhraseOne(ctx),
 				new PhraseTwo(ctx), new PhraseThree(ctx), new WalkToBank(ctx), new Banking(ctx) });
@@ -76,7 +76,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		}
 
 		public int delay() {
-			return 250;
+			return 50;
 		}
 
 		public int priority() {
@@ -136,7 +136,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 			return job.delay();
 		}
 
-		return Random.nextInt(100, 200);
+		return 50;
 	}
 
 	private class Camera extends Job {
@@ -191,7 +191,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 				furStored = ctx.bank.select().id(furID).count(true);
 				ctx.bank.close();
 			} else {
-				status = "Walk to Baraek";
+				status = "Walk to Npc";
 				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(7, 9)) {
 					ctx.movement.newTilePath(pathToNpc).traverse();
 				}
@@ -362,7 +362,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		@Override
 		public void execute() {
 			if (ctx.bank.isOpen()) {
-				status = "Deposit Inventory";
+				status = "Deposit";
 				ctx.bank.depositInventory();
 				Condition.wait(new Callable<Boolean>() {
 					@Override
@@ -378,9 +378,9 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		}
 	}
 	
-	private void logOut() {
+	private boolean logOut() {
 		status = "Logout";
-		if (ctx.bank.isOpen() && ctx.backpack.select().count() > 0) {
+		if (ctx.bank.isOpen() && !ctx.backpack.select().isEmpty()) {
 			ctx.bank.depositInventory();
 			Condition.wait(new Callable<Boolean>() {
 				@Override
@@ -392,7 +392,9 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		}
 		if (ctx.game.logout(true)) {
 			getController().stop();
+			return true;
 		}
+		return false;
 	}
 	
 	public boolean didInteract() {
@@ -438,28 +440,30 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 		g.setRenderingHints(antialiasing);
 		g.setColor(black);
-		g.fillRect(6, 210, 200, 145);
-		g.setColor(Color.GREEN);
-		g.drawRect(6, 210, 200, 145);
+		g.fillRect(5, 5, 190, 145);
+		g.setColor(Color.RED);
+		g.drawRect(5, 5, 190, 145);
 		g.setFont(fontTwo);
-		g.drawString("rFurFlipper", 75, 222);
+		g.drawString("rFurFlipper", 70, 20);
 		g.setColor(Color.WHITE);
-		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 13, 245);
-		g.drawString("Fur Bought: " + nf.format(furBought) + "(" + PerHour(furBought) + "/h)", 13, 265);
-		g.drawString("Fur In Bank: " + nf.format(furStored), 13, 285);
-		g.drawString("Fur Price: " + furPrice, 13, 305);
-		g.drawString("Profit: " + nf.format(profit()) + "(" + PerHour(profit()) + "/h)", 13, 325);
-		g.drawString("Status: " + (status), 13, 345);
-		g.drawString("v0.6", 175, 345);
+		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 10, 40);
+		g.drawString("Fur Bought: " + nf.format(furBought) + "(" + PerHour(furBought) + "/h)", 10, 60);
+		g.drawString("Fur In Bank: " + nf.format(furStored), 10, 80);
+		g.drawString("Fur Price: " + furPrice, 10, 100);
+		g.drawString("Profit: " + nf.format(profit()) + "(" + PerHour(profit()) + "/h)", 13, 120);
+		g.drawString("Status: " + (status), 10, 140);
+		g.setColor(Color.RED);
+		g.drawString("v0.6", 165, 140);
 		drawMouse(g);
 		drawBaraekTile(g);
 	}
 
 	private void drawBaraekTile(final Graphics g) {
 		final Npc baraek = ctx.npcs.select().id(baraekID).nearest().poll();
-		if (baraek.isInViewport() && ctx.backpack.select().count() != 28) {
-			if (baraek.isInViewport())
+		if (ctx.backpack.select().count() != 28) {
+			if (baraek.isInViewport()){
 				baraek.getLocation().getMatrix(ctx).draw(g);
+			}
 		}
 	}
 
@@ -485,7 +489,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 	private void drawMouse(final Graphics g) {
 		final Point m = ctx.mouse.getLocation();
-		g.setColor(ctx.mouse.isPressed() ? Color.RED : Color.GREEN);
+		g.setColor(ctx.mouse.isPressed() ? Color.GREEN : Color.RED);
 		g.drawLine(m.x - 5, m.y + 5, m.x + 5, m.y - 5);
 		g.drawLine(m.x - 5, m.y - 5, m.x + 5, m.y + 5);
 	}
