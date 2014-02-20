@@ -272,7 +272,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 				} else {
 					if (baraek.isInViewport()) {
 						status = "Talk to Baraek";
-						if (baraek.interact("Talk")) {
+						if (baraek.interact("Talk-to", "Baraek")) {
 							if (didInteract()) {
 								Condition.wait(new Callable<Boolean>() {
 									@Override
