@@ -49,8 +49,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		ctx.properties.setProperty("bank.antipattern", "disable");
 		status = "Get prices..";
 		furPrice = getGuidePrice(furID) - 20;
-		container = new JobContainer(new Job[] { new Camera(ctx), new Fix(ctx), new CloseBank(ctx), new PressOne(ctx), new PhraseOne(ctx),
-				new PhraseTwo(ctx), new PhraseThree(ctx), new Talking(ctx), new Banking(ctx) });
+		container = new JobContainer(new Job[] { new Camera(ctx), new Fix(ctx), new CloseBank(ctx), new PressOne(ctx), new Continue(ctx), new Talking(ctx), new Banking(ctx) });
 	}
 
 	@Override
@@ -207,7 +206,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 		@Override
 		public void execute() {
-			status = "Press 1";
+			status = "Select Option";
 			ctx.keyboard.send("1");
 			Condition.wait(new Callable<Boolean>() {
 				@Override
@@ -218,75 +217,42 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		}
 	}
 
-	private class PhraseOne extends Job {
-		public PhraseOne(MethodContext ctx) {
+	private class Continue extends Job {
+		public Continue(MethodContext ctx) {
 			super(ctx);
 		}
 
 		@Override
 		public boolean activate() {
-			return ctx.widgets.get(1191, 10).getText().contains("Can you sell me some furs?");
+			return ctx.widgets.get(1191, 10).isValid() || ctx.widgets.get(1184, 9).isValid();
 		}
 
 		@Override
 		public void execute() {
 			status = "Continue";
-			ctx.keyboard.send(" ");
-			Condition.wait(new Callable<Boolean>() {
-				@Override
-				public Boolean call() throws Exception {
-					return ctx.widgets.get(1184, 9).getText().contains("Yeah, sure. They're 20 gold coins each.");
+			if (ctx.widgets.get(1191, 10).getText().contains("Can you sell me some furs?") || ctx.widgets.get(1191, 10).getText().contains("Yeah, OK, here you go.")) {
+				ctx.keyboard.send(" ");
+				Condition.wait(new Callable<Boolean>() {
+					@Override
+					public Boolean call() throws Exception {
+						return ctx.widgets.get(1184, 9).getText().contains("Yeah, sure. They're 20 gold coins each.") || ctx.widgets.get(1189, 2).getText().contains("Baraek sells you a fur.");
+					}
+				}, 250, 20);
+			} else {
+				if (ctx.widgets.get(1184, 9).getText().contains("Yeah, sure. They're 20 gold coins each.")) {
+					ctx.keyboard.send(" ");
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return pressOne.isVisible();
+						}
+					}, 250, 20);
 				}
-			}, 250, 20);
+			}
 		}
+
 	}
 
-	private class PhraseTwo extends Job {
-		public PhraseTwo(MethodContext ctx) {
-			super(ctx);
-		}
-
-		@Override
-		public boolean activate() {
-			return ctx.widgets.get(1184, 9).getText().contains("Yeah, sure. They're 20 gold coins each.");
-		}
-
-		@Override
-		public void execute() {
-			status = "Continue";
-			ctx.keyboard.send(" ");
-			Condition.wait(new Callable<Boolean>() {
-				@Override
-				public Boolean call() throws Exception {
-					return pressOne.isVisible();
-				}
-			}, 250, 20);
-		}
-	}
-
-	private class PhraseThree extends Job {
-		public PhraseThree(MethodContext ctx) {
-			super(ctx);
-		}
-
-		@Override
-		public boolean activate() {
-			return ctx.widgets.get(1191, 10).getText().contains("Yeah, OK, here you go.");
-		}
-
-		@Override
-		public void execute() {
-			status = "Continue";
-			ctx.keyboard.send(" ");
-			Condition.wait(new Callable<Boolean>() {
-				@Override
-				public Boolean call() throws Exception {
-					return ctx.widgets.get(1189, 2).getText().contains("Baraek sells you a fur.");
-				}
-			}, 250, 20);
-		}
-	}
-	
 	private class Talking extends Job {
 		public Talking(MethodContext ctx) {
 			super(ctx);
@@ -300,12 +266,12 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		@Override
 		public void execute() {
 			final Npc baraek = ctx.npcs.select().id(baraekID).nearest().poll();
-			if (ctx.players.local().getLocation().distanceTo(baraek.getLocation()) < 7) {
+			if (ctx.players.local().getLocation().distanceTo(baraek.getLocation()) < 8) {
 				if (ctx.backpack.getMoneyPouch() < 20) {
 					logOut();
 				} else {
 					if (baraek.isInViewport()) {
-						status = "Talk";
+						status = "Talk to Baraek";
 						if (baraek.interact("Talk")) {
 							if (didInteract()) {
 								Condition.wait(new Callable<Boolean>() {
@@ -317,6 +283,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 							}
 						}
 					} else {
+						ctx.camera.turnTo(baraek.getLocation());
 						ctx.movement.stepTowards(ctx.movement.getClosestOnMap(baraek.getLocation()));
 						while (ctx.players.local().isInMotion() && !baraek.isInViewport());
 					}
@@ -389,7 +356,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 	
 	private void close() {
 		ctx.keyboard.send("{VK_ESCAPE down}");
-		final Timer DelayTimer = new Timer(Random.nextInt(50, 500));
+		final Timer DelayTimer = new Timer(Random.nextInt(50, 750));
 		while (DelayTimer.isRunning());
 		ctx.keyboard.send("{VK_ESCAPE up}");
 	}
