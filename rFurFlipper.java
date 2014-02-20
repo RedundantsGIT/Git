@@ -49,18 +49,18 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		ctx.properties.setProperty("bank.antipattern", "disable");
 		status = "Get prices..";
 		furPrice = getGuidePrice(furID) - 20;
-		rFurFlipper.container = new JobContainer(new Job[] { new Camera(ctx), new Fix(ctx), new WalkToBaraek(ctx), new Talk(ctx), new PressOne(ctx), new PhraseOne(ctx),
-				new PhraseTwo(ctx), new PhraseThree(ctx), new WalkToBank(ctx), new Banking(ctx) });
+		container = new JobContainer(new Job[] { new Camera(ctx), new Fix(ctx), new CloseBank(ctx), new PressOne(ctx), new PhraseOne(ctx),
+				new PhraseTwo(ctx), new PhraseThree(ctx), new Talking(ctx), new Banking(ctx) });
 	}
 
 	@Override
 	public void suspend() {
-		System.out.println("Script suspended");
+		log.info("Script suspended");
 	}
 
 	@Override
 	public void resume() {
-		System.out.println("Script resumed");
+		log.info("Script resumed");
 	}
 
 	@Override
@@ -146,7 +146,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 		@Override
 		public boolean activate() {
-			return ctx.camera.getPitch() < 45 && !ctx.bank.isOpen();
+			return ctx.camera.getPitch() < 45;
 		}
 
 		@Override
@@ -173,69 +173,25 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 			close();
 		}
 	}
-
-	private class WalkToBaraek extends Job {
-		public WalkToBaraek(MethodContext ctx) {
+	
+	private class CloseBank extends Job {
+		public CloseBank(MethodContext ctx) {
 			super(ctx);
 		}
 
 		@Override
 		public boolean activate() {
-			return ctx.backpack.select().count() != 28 && !nearBaraek();
+			return ctx.bank.isOpen() && ctx.backpack.select().count() != 28;
 		}
 
 		@Override
 		public void execute() {
-			if (ctx.bank.isOpen()) {
 				status = "Close Bank";
 				furStored = ctx.bank.select().id(furID).count(true);
+				if(Random.nextInt(1, 15) == 10)
 				ctx.bank.close();
-			} else {
-				status = "Walk to Npc";
-				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(7, 9)) {
-					ctx.movement.newTilePath(pathToNpc).traverse();
-				}
-			}
-		}
-	}
-
-	private class Talk extends Job {
-		public Talk(MethodContext ctx) {
-			super(ctx);
-		}
-
-		@Override
-		public boolean activate() {
-			return nearBaraek()
-				   && !pressOne.isValid()
-				   && !ctx.widgets.get(1191, 10).getText().contains("Can you sell me some furs?")
-				   && !ctx.widgets.get(1184, 9).getText().contains("Yeah, sure. They're 20 gold coins each.")
-				   && !ctx.widgets.get(1191, 10).getText().contains("Yeah, OK, here you go.")
-				   && ctx.backpack.select().count() != 28;
-		}
-
-		@Override
-		public void execute() {
-			final Npc baraek = ctx.npcs.select().id(baraekID).nearest().poll();
-			if (ctx.backpack.getMoneyPouch() < 20) {
-				logOut();
-			} else {
-				if (baraek.isInViewport()) {
-					status = "Talk";
-					if (baraek.interact("Talk")) {
-						if (didInteract()) {
-							Condition.wait(new Callable<Boolean>() {
-								@Override
-								public Boolean call() throws Exception {
-									return pressOne.isValid();
-								}
-							}, 250, 20);
-						}
-					}
-				} else {
-					ctx.movement.stepTowards(ctx.movement.getClosestOnMap(baraek.getLocation()));
-				}
-			}
+				else
+					close();
 		}
 	}
 
@@ -330,22 +286,46 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 			}, 250, 20);
 		}
 	}
-
-	private class WalkToBank extends Job {
-		public WalkToBank(MethodContext ctx) {
+	
+	private class Talking extends Job {
+		public Talking(MethodContext ctx) {
 			super(ctx);
 		}
 
 		@Override
 		public boolean activate() {
-			return ctx.backpack.select().count() == 28 && !nearBank();
+			return ctx.backpack.select().count() != 28;
 		}
 
 		@Override
 		public void execute() {
-			status = "Walk to Bank";
-			if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation() .distanceTo(ctx.movement.getDestination()) < Random.nextInt(7, 9)) 
-				ctx.movement.newTilePath(pathToNpc).reverse().traverse();
+			final Npc baraek = ctx.npcs.select().id(baraekID).nearest().poll();
+			if (ctx.players.local().getLocation().distanceTo(baraek.getLocation()) < 7) {
+				if (ctx.backpack.getMoneyPouch() < 20) {
+					logOut();
+				} else {
+					if (baraek.isInViewport()) {
+						status = "Talk";
+						if (baraek.interact("Talk")) {
+							if (didInteract()) {
+								Condition.wait(new Callable<Boolean>() {
+									@Override
+									public Boolean call() throws Exception {
+										return pressOne.isValid();
+									}
+								}, 250, 20);
+							}
+						}
+					} else {
+						ctx.movement.stepTowards(ctx.movement.getClosestOnMap(baraek.getLocation()));
+						while (ctx.players.local().isInMotion() && !baraek.isInViewport());
+					}
+				}
+			} else {
+				status = "Walk to Npc";
+				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(7, 9)) 
+					ctx.movement.newTilePath(pathToNpc).traverse();
+			}
 		}
 	}
 
@@ -356,24 +336,30 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 		@Override
 		public boolean activate() {
-			return nearBank() && ctx.backpack.select().count() == 28;
+			return ctx.backpack.select().count() == 28;
 		}
 
 		@Override
 		public void execute() {
-			if (ctx.bank.isOpen()) {
-				status = "Deposit";
-				ctx.bank.depositInventory();
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return ctx.backpack.select().isEmpty();
-					}
-				}, 250, 20);
+			if (ctx.bank.isInViewport() && ctx.players.local().getLocation().distanceTo(ctx.bank.getNearest()) < 6) {
+				if (ctx.bank.isOpen()) {
+					status = "Deposit";
+					ctx.bank.depositInventory();
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return ctx.backpack.select().isEmpty();
+						}
+					}, 250, 20);
+				} else {
+					status = "Bank Open";
+					ctx.camera.turnTo(ctx.bank.getNearest());
+					ctx.bank.open();
+				}
 			} else {
-				status = "Bank Open";
-				ctx.camera.turnTo(ctx.bank.getNearest());
-				ctx.bank.open();
+			status = "Walk to Bank";
+			if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation() .distanceTo(ctx.movement.getDestination()) < Random.nextInt(7, 9)) 
+				ctx.movement.newTilePath(pathToNpc).reverse().traverse();
 			}
 		}
 	}
@@ -397,29 +383,34 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		return false;
 	}
 	
-	public boolean didInteract() {
+	private boolean didInteract() {
 		return ctx.game.getCrosshair() == Crosshair.ACTION;
 	}
 	
-	private boolean close() {
-		return ctx.keyboard.send("{VK_ESCAPE down}") && ctx.keyboard.send("{VK_ESCAPE up}");
+	private void close() {
+		ctx.keyboard.send("{VK_ESCAPE down}");
+		final Timer DelayTimer = new Timer(Random.nextInt(50, 500));
+		while (DelayTimer.isRunning());
+		ctx.keyboard.send("{VK_ESCAPE up}");
 	}
-
-	public boolean nearBaraek() {
-		final Npc baraek = ctx.npcs.select().id(baraekID).nearest().poll();
-			return ctx.players.local().getLocation().distanceTo(baraek.getLocation()) < 7;
-	}
-
-	public boolean nearBank() {
-		return ctx.bank.isInViewport() && ctx.players.local().getLocation().distanceTo(ctx.bank.getNearest()) < 6;
+	
+	public class Timer {
+		private long end;
+		private final long start;
+		public Timer(final long period) {
+			start = System.currentTimeMillis();
+			end = start + period;
+		}
+		public boolean isRunning() {
+			return System.currentTimeMillis() < end;
+		}
 	}
 
 	@Override
 	public void messaged(MessageEvent msg) {
 		String message = msg.getMessage();
-		if (message.contains("20 coins have been removed from your money pouch.")) {
+		if (message.contains("20 coins have been removed from your money pouch.")) 
 			furBought++;
-		}
 	}
 
 	final static Color black = new Color(25, 0, 0, 200);
@@ -453,19 +444,18 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		g.drawString("Profit: " + nf.format(profit()) + "(" + PerHour(profit()) + "/h)", 13, 120);
 		g.drawString("Status: " + (status), 10, 140);
 		g.setColor(Color.RED);
-		g.drawString("v0.6", 165, 140);
+		g.drawString("v0.7", 165, 140);
 		drawMouse(g);
+		drawTrail(g);
 		drawBaraekTile(g);
 	}
 
 	private void drawBaraekTile(final Graphics g) {
 		final Npc baraek = ctx.npcs.select().id(baraekID).nearest().poll();
-		if (ctx.backpack.select().count() != 28) {
-			if (baraek.isInViewport()){
+		if (ctx.backpack.select().count() != 28) 
+			if (baraek.isInViewport())
 				baraek.getLocation().getMatrix(ctx).draw(g);
-			}
 		}
-	}
 
 	public String PerHour(int gained) {
 		return formatNumber((int) ((gained) * 3600000D / (System.currentTimeMillis() - scriptTimer)));
@@ -481,6 +471,46 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 			return nf.format((i / 1000)) + "k";
 		}
 		return "" + start;
+	}
+	
+	private mouseTrail trail = new mouseTrail();
+	private void drawTrail(final Graphics g) {
+		final Point m = ctx.mouse.getLocation();
+		trail.add(m);
+		trail.draw(g);
+	}
+
+	private final class mouseTrail {
+		private final int SIZE = 50;
+		private final double ALPHA_STEP = (255.0 / SIZE);
+		private final Point[] points;
+		private int index;
+
+		public mouseTrail() {
+			points = new Point[SIZE];
+			index = 0;
+		}
+
+		public void add(final Point p) {
+			points[index++] = p;
+			index %= SIZE;
+		}
+
+		public void draw(final Graphics g) {
+			double alpha = 0;
+			for (int i = index; i != (index == 0 ? SIZE - 1 : index - 1); i = (i + 1)
+					% SIZE) {
+				if (points[i] != null && points[(i + 1) % SIZE] != null) {
+					Color rainbow = Color.getHSBColor((float) (alpha / 255), 1,
+							1);
+					g.setColor(new Color(rainbow.getRed(), rainbow.getGreen(),
+							rainbow.getBlue(), (int) alpha));
+					g.drawLine(points[i].x, points[i].y,
+							points[(i + 1) % SIZE].x, points[(i + 1) % SIZE].y);
+					alpha += ALPHA_STEP;
+				}
+			}
+		}
 	}
 
 	private static int profit() {
