@@ -327,7 +327,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 				}
 			} else {
 			status = "Walk to Bank";
-			if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation() .distanceTo(ctx.movement.getDestination()) < Random.nextInt(5, 6)) 
+			if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation() .distanceTo(ctx.movement.getDestination()) < Random.nextInt(6, 8)) 
 				ctx.movement.newTilePath(pathToNpc).reverse().traverse();
 			}
 		}
