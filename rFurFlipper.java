@@ -27,6 +27,7 @@ import org.powerbot.script.util.Condition;
 import org.powerbot.script.util.GeItem;
 import org.powerbot.script.util.Random;
 import org.powerbot.script.wrappers.Component;
+import org.powerbot.script.wrappers.Interactive;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
@@ -38,6 +39,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 	private static long scriptTimer = 0;
 	private static int furPrice, furBought, furStored;
 	private static int baraekID = 547, furID = 948;
+	private final int[] baraekBounds = {-128, 128, -670, 0, -128, 128};
 	private final Component pressOne = ctx.widgets.get(1188, 2);
 	private final Component achievements = ctx.widgets.get(1477).getComponent(74);
 	private final Component collectionBox = ctx.widgets.get(109).getComponent(61);
@@ -66,7 +68,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 	public void stop() {
 		log.info("[rFurFlipper]: -Total Fur Purchased: " + furBought);
 		log.info("[rFurFlipper]: -Total Profit Gained: " + profit());
-		System.out.println("Script stopped");
+		log.info("Script stopped");
 	}
 
 	public abstract class Job extends MethodProvider {
@@ -163,7 +165,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 		@Override
 		public boolean activate() {
-			return achievements.isVisible() || collectionBox.isVisible();
+			return achievements.isVisible() || collectionBox.isVisible() || ctx.widgets.get(1191, 10).getText().contains("Can I have a newspaper, please?") ;
 		}
 
 		@Override
@@ -265,7 +267,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 		@Override
 		public void execute() {
-			final Npc baraek = ctx.npcs.select().id(baraekID).nearest().poll();
+			final Npc baraek = ctx.npcs.select().id(baraekID).each(Interactive.doSetBounds(baraekBounds)).nearest().poll();
 			if (ctx.players.local().getLocation().distanceTo(baraek.getLocation()) < 8) {
 				if (ctx.backpack.getMoneyPouch() < 20) {
 					logOut();
@@ -290,7 +292,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 				}
 			} else {
 				status = "Walk to Npc";
-				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(7, 9)) 
+				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(6, 8)) 
 					ctx.movement.newTilePath(pathToNpc).traverse();
 			}
 		}
@@ -308,7 +310,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 		@Override
 		public void execute() {
-			if (ctx.bank.isInViewport() && ctx.players.local().getLocation().distanceTo(ctx.bank.getNearest()) < 6) {
+			if (ctx.bank.isInViewport() && ctx.players.local().getLocation().distanceTo(ctx.bank.getNearest().getLocation()) < 6) {
 				if (ctx.bank.isOpen()) {
 					status = "Deposit";
 					ctx.bank.depositInventory();
@@ -325,7 +327,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 				}
 			} else {
 			status = "Walk to Bank";
-			if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation() .distanceTo(ctx.movement.getDestination()) < Random.nextInt(7, 9)) 
+			if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation() .distanceTo(ctx.movement.getDestination()) < Random.nextInt(5, 6)) 
 				ctx.movement.newTilePath(pathToNpc).reverse().traverse();
 			}
 		}
@@ -411,7 +413,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		g.drawString("Profit: " + nf.format(profit()) + "(" + PerHour(profit()) + "/h)", 13, 120);
 		g.drawString("Status: " + (status), 10, 140);
 		g.setColor(Color.RED);
-		g.drawString("v0.7", 165, 140);
+		g.drawString("v0.8", 165, 140);
 		drawMouse(g);
 		drawTrail(g);
 		drawBaraekTile(g);
