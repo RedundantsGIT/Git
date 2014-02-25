@@ -26,6 +26,7 @@ import org.powerbot.script.util.Random;
 import org.powerbot.script.wrappers.Area;
 import org.powerbot.script.wrappers.GameObject;
 import org.powerbot.script.wrappers.GroundItem;
+import org.powerbot.script.wrappers.Interactive;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
@@ -197,12 +198,7 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 			} else if (atLevelOne() || atLevelTwo()) {
 				status = "Go up";
 				goUp();
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return atLevelTwo() || atLevelThree();
-					}
-				}, 250, 20);
+				sleep(1500, 2000);
 			} else if (atLevelThree()) {
 				if (ctx.players.local().getLocation().distanceTo(TILE_LOOT) > 2) {
 					status = "Walk to grapes";
@@ -251,12 +247,7 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 			if (atLevelThree() || atLevelTwo()) {
 				status = "Go down";
 				goDown();
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return atLevelTwo() || atLevelOne();
-					}
-				}, 250, 20);
+				sleep(1500, 2000);
 			} else if (atLevelOne()) {
 				status = "Open door";
 				openDoor();
@@ -326,15 +317,14 @@ public class rGrapeGrabber extends PollingScript implements PaintListener {
 	}
 
 	private void openDoor() {
-		final GameObject Door = ctx.objects.select().id(ID_DOOR).nearest().poll();
+		final int[] doorBounds = {-200, 150, -800, -300, 0, 0};
+		final GameObject Door = ctx.objects.select().id(ID_DOOR).each(Interactive.doSetBounds(doorBounds)).nearest().poll();
 		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS1).nearest().poll();
 			if (ctx.players.local().getLocation().distanceTo(Door.getLocation()) < 5) {
-				if(!ctx.players.local().isInMotion()){
 				if (Door.isInViewport()) {
 					ctx.camera.turnTo(Stairs.getLocation());
-					ctx.mouse.click(Door.getInteractPoint().x, Door.getInteractPoint().y - Random.nextInt(25, 50), true);
+					Door.interact("Open", "Door");
 					while (ctx.players.local().isInMotion());
-				}
 			}
 		} else {
 			ctx.movement.stepTowards(ctx.movement.getClosestOnMap(Door.getLocation()));
