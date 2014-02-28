@@ -1,11 +1,14 @@
 package rTanner;
 
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
 import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -13,6 +16,13 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Callable;
+
+import javax.swing.GroupLayout;
+import javax.swing.JButton;
+import javax.swing.JCheckBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.LayoutStyle;
 
 import org.powerbot.event.MessageEvent;
 import org.powerbot.event.MessageListener;
@@ -30,6 +40,7 @@ import org.powerbot.script.util.Random;
 import org.powerbot.script.wrappers.Area;
 import org.powerbot.script.wrappers.Component;
 import org.powerbot.script.wrappers.GameObject;
+import org.powerbot.script.wrappers.Interactive;
 import org.powerbot.script.wrappers.Item;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
@@ -43,6 +54,10 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 
 	private static String location;
 	private static String status = "Starting...";
+	
+	private rTannerGUI g = new rTannerGUI();
+	private boolean guiWait = true;
+	private boolean usePotions = false;
 
 	private static boolean atAlKharid = false;
 	private static boolean atBurthorpe = false;
@@ -51,7 +66,10 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 	private static int hideCount, hidesLeft, potionsLeft;
 
 	private static final int doorID = 24376, mangleID = 24920;
-	final Component Make = ctx.widgets.get(1370, 20);
+	
+	private final Component make = ctx.widgets.get(1370).getComponent(20);
+	private final Component achievements = ctx.widgets.get(1477).getComponent(74);
+	private final Component collectionBox = ctx.widgets.get(109).getComponent(61);
 
 	private static final int[] tannerID = { 14877, 2824, 2320 };
 	private static final int[] hideID = { 1739, 1753, 1751, 24372, 6287, 7801, 1749, 1747 };
@@ -75,6 +93,12 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 	@Override
 	public void start() {
 		elapsedTime = System.currentTimeMillis();
+		g.setVisible(true);
+		while (guiWait) {
+			status = "GUI";
+			final Timer guiTimer = new Timer(Random.nextInt(100, 300));
+			while (guiTimer.isRunning());
+		}
 		ctx.properties.setProperty("bank.antipattern", "disable");
 		rTanner.container = new JobContainer(new Job[] { new GetPlayerArea(ctx), new Pitch(ctx), new CloseInterfaces(ctx), new Door(ctx), 
 				new UseEnergyPotion(ctx), new Tan(ctx), new Banking(ctx) });
@@ -153,9 +177,8 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 
 	@Override
 	public int poll() {
-		if (!ctx.game.isLoggedIn() || ctx.game.getClientState() != org.powerbot.script.methods.Game.INDEX_MAP_LOADED) {
+		if (!ctx.game.isLoggedIn() || ctx.game.getClientState() != org.powerbot.script.methods.Game.INDEX_MAP_LOADED) 
 			return 1000;
-		}
 
 		final Job job = container.get();
 		if (job != null) {
@@ -201,14 +224,13 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 
 		@Override
 		public boolean activate() {
-			return ctx.camera.getPitch() < 33 && !ctx.bank.isOpen();
+			return ctx.camera.getPitch() < 33;
 		}
 
 		@Override
 		public void execute() {
 			status = "Set Pitch";
 			ctx.camera.setPitch(Random.nextInt(35, 40));
-			sleep(100, 200);
 		}
 	}
 
@@ -219,55 +241,14 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 
 		@Override
 		public boolean activate() {
-			return canClose();
+			return achievements.isVisible() || collectionBox.isVisible();
 		}
 
 		@Override
 		public void execute() {
-			final Component Achievements = ctx.widgets.get(1477).getComponent(74);
-			final Component CollectionBox = ctx.widgets.get(109).getComponent(61);
 			status = "Close";
-			if (Achievements.isVisible()) {
-				Achievements.getChild(1).click(true);
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return !Achievements.isVisible();
-					}
-				}, 250, 20);
-			} else if (CollectionBox.isVisible()) {
-				CollectionBox.getChild(1).interact("Close");
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return !CollectionBox.isVisible();
-					}
-				}, 250, 20);
-			} else {
-				getClose().click(true);
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return !getClose().isVisible();
-					}
-				}, 250, 20);
-			}
+			close();
 		}
-	}
-	
-	private static final int[][] CLOSE = { { 1477, 74 }, { 109, 61 }, {1401, 35} };
-
-	private Component getClose() {
-		for (int[] i : CLOSE) {
-			Component c = ctx.widgets.get(i[0], i[1]);
-			if (c != null && c.isVisible())
-				return c;
-		}
-		return null;
-	}
-
-	private boolean canClose() {
-		return getClose() != null;
 	}
 
 	private class UseEnergyPotion extends Job {
@@ -277,7 +258,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 
 		@Override
 		public boolean activate() {
-			return ctx.players.local().isInMotion() && ctx.movement.getEnergyLevel() < 50 && hasPotion() && !ctx.bank.isOpen() && !Make.isVisible();
+			return ctx.players.local().isInMotion() && ctx.movement.getEnergyLevel() < 50 && hasPotion() && !ctx.bank.isOpen() && !make.isVisible();
 		}
 
 		@Override
@@ -308,27 +289,25 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 
 		@Override
 		public boolean activate() {
-			return tileContainsDoor() && atTanner() && !Make.isVisible();
+			return tileContainsDoor() && atTanner() && !make.isVisible();
 		}
 
 		@Override
 		public void execute() {
-			final GameObject Door = ctx.objects.select().id(doorID).at(doorTile).poll();
+			final int[] doorBounds = {-200, 150, -1000, 0, 0, 0};
+			final GameObject Door = ctx.objects.select().id(doorID).each(Interactive.doSetBounds(doorBounds)).at(doorTile).poll();
 			final GameObject Mangle = ctx.objects.select().id(mangleID).nearest().poll();
-				status = "Door";
 				if (Door.isInViewport()) {
-					int x = Door.getLocation().getMatrix(ctx).getInteractPoint().x;
-					int y = Door.getLocation().getMatrix(ctx).getInteractPoint().y - Random.nextInt(15, 30);
-					if(!ctx.players.local().isInMotion()) {
+					status = "Door";
 					ctx.camera.turnTo(Mangle.getLocation());
-					ctx.mouse.click(x, y, true);
-					}
+					if(Door.interact("Open", "Door")){
 					Condition.wait(new Callable<Boolean>() {
 						@Override
 						public Boolean call() throws Exception {
 							return !tileContainsDoor();
 						}
 					}, 250, 20);
+				}
 			} else {
 				ctx.movement.stepTowards(ctx.movement.getClosestOnMap(doorTile));
 			}
@@ -347,16 +326,56 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 
 		@Override
 		public void execute() {
+			final Component CloseButton = ctx.widgets.get(1370, 30);
+			final Npc Tanner = ctx.npcs.select().id(tannerID).nearest().poll();
 			if (ctx.backpack.getMoneyPouch() < 600) {
 				log.info("[rTanner]: -Gold dropped below 600, logging out...");
 				logOut();
 			} else {
 				if (atTanner()) {
-					TanHides();
+					if (make.isValid()) {
+						if (make.interact("Make")) {
+							Condition.wait(new Callable<Boolean>() {
+								@Override
+								public Boolean call() throws Exception {
+									return !make.isVisible();
+								}
+							}, 100, 20);
+						}
+						if (CloseButton.isVisible()) 
+							CloseButton.interact("Close");
+					} else {
+						if (Tanner.isInViewport()) {
+							status = "Talk to Tanner";
+							if (atAlKharid) {
+								Tanner.interact("Tan hides", "Ellis");
+							} else if (atBurthorpe) {
+								Tanner.interact("Tan hide", "Jack Oval");
+							} else {
+								Tanner.interact("Trade", "Tanner");
+							}
+							if(didInteract()){
+							Condition.wait(new Callable<Boolean>() {
+									@Override
+									public Boolean call() throws Exception {
+										return make.isVisible() || hasLeather();
+									}
+								}, 250, 20);
+								while (ctx.players.local().isInMotion() && !make.isVisible());
+							}
+						} else {
+							if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(2, 3))
+								ctx.movement.stepTowards(ctx.movement.getClosestOnMap(Tanner.getLocation()));
+							    ctx.camera.turnTo(Tanner.getLocation());
+						}
+					}
 				} else {
 					if (ctx.bank.isOpen()) {
 						status = "Close Bank";
+						if(Random.nextInt(1, 15) == 10)
 						ctx.bank.close();
+						else
+							close();
 					} else {
 						status = "Walking to Tanner";
 						if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(8, 10)) {
@@ -384,7 +403,39 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		@Override
 		public void execute() {
 			if (atBank()) {
-				doBanking();
+				if (ctx.bank.isOpen()) {
+					if (ctx.backpack.select().count() == 28) {
+						if (hasLeather() && hasPotion()) {
+							deposit(0, leatherID);
+						} else {
+							depositInventory();
+						}
+					} else {
+						if (bankHasHide()) {
+							if (hasPotion() && !hasHide() && ctx.backpack.select().count() > 1 || hasLeather() && !hasPotion() 
+							|| hasLeather() && !hasPotion() || ctx.backpack.select().count() > 0 && !hasHide() && !hasPotion()) {
+								depositInventory();
+							} else if (hasLeather() && hasPotion()) {
+								status = "Depositing Leather";
+								deposit(0, leatherID);
+							} else if (usePotions && bankHasPotion() && !hasPotion() && !hasHide()) {
+								status = "Withdraw Potion";
+								withdraw(1, energyPotionID);
+							} else {
+								status = "Withdraw Hides";
+								withdraw(0, hideID);
+								hidesLeft = ctx.bank.select().id(hideID).count(true);
+								potionsLeft = ctx.bank.select().id(energyPotionID).count(true);
+							}
+						} else {
+							logOut();
+						}
+					}
+				} else {
+					status = "Opening Bank";
+					ctx.camera.turnTo(ctx.bank.getNearest());
+					ctx.bank.open();
+				}
 			} else {
 				status = "Walking to Bank";
 				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(8, 10)) {
@@ -394,120 +445,11 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 			}
 		}
 	}
-
-	private void doBanking() {
-		if (ctx.bank.isOpen()) {
-			if (ctx.backpack.select().count() == 28) {
-				if (hasLeather() && hasPotion()) {
-					deposit(0, leatherID);
-				} else {
-					depositInventory();
-				}
-			} else {
-				if (bankHasHide()) {
-					if (hasPotion() && !hasHide() && ctx.backpack.select().count() > 1 || hasLeather() && !hasPotion() 
-					|| hasLeather() && !hasPotion() || ctx.backpack.select().count() > 0 && !hasHide() && !hasPotion()) {
-						depositInventory();
-					} else if (hasLeather() && hasPotion()) {
-						status = "Depositing Leather";
-						deposit(0, leatherID);
-					} else if (bankHasPotion() && !hasPotion() && !hasHide()) {
-						status = "Withdraw Potion";
-						withdraw(1, energyPotionID);
-					} else {
-						status = "Withdraw Hides";
-						withdraw(0, hideID);
-						hidesLeft = ctx.bank.select().id(hideID).count(true);
-						potionsLeft = ctx.bank.select().id(energyPotionID).count(true);
-					}
-				} else {
-					logOut();
-				}
-			}
-		} else {
-			status = "Opening Bank";
-			ctx.camera.turnTo(ctx.bank.getNearest());
-			ctx.bank.open();
-		}
-	}
-
-	private void TanHides() {
-		final Component CloseButton = ctx.widgets.get(1370, 30);
-		final Npc Tanner = ctx.npcs.select().id(tannerID).nearest().poll();
-		if (Make.isValid()) {
-			if (Make.interact("Make")) {
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return !Make.isVisible();
-					}
-				}, 100, 20);
-			}
-			if (CloseButton.isVisible()) {
-				CloseButton.interact("Close");
-			}
-		} else {
-			if (Tanner.isInViewport()) {
-				status = "Talk to Tanner";
-				if (atAlKharid) {
-					Tanner.interact("Tan hides", "Ellis");
-				} else if (atBurthorpe) {
-					Tanner.interact("Tan hide", "Jack Oval");
-				} else {
-					Tanner.interact("Trade", "Tanner");
-				}
-				if (didInteract()) {
-					Condition.wait(new Callable<Boolean>() {
-						@Override
-						public Boolean call() throws Exception {
-							return Make.isVisible() || hasLeather();
-						}
-					}, 250, 20);
-					while (ctx.players.local().isInMotion() && !Make.isVisible());
-				}
-			} else {
-				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(2, 3))
-					ctx.movement.stepTowards(ctx.movement.getClosestOnMap(Tanner.getLocation()));
-				ctx.camera.turnTo(Tanner.getLocation());
-			}
-		}
-	}
-	
-
-	private boolean depositInventory() {
-		final Component DepositBackpackButton = ctx.widgets.get(762, 11);
-		status = "Depositing Backpack";
-		if (DepositBackpackButton.isVisible()) {
-			if (DepositBackpackButton.interact("Deposit carried items")) {
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return ctx.backpack.select().isEmpty();
-					}
-				}, 250, 20);
-			}
-			return true;
-		}
-		return false;
-	}
-
-	private boolean logOut() {
-		status = "Logout";
-		if (ctx.bank.isOpen() && !ctx.backpack.select().isEmpty()) {
-			depositInventory();
-			ctx.bank.close();
-		}
-		if (ctx.game.logout(true)) {
-			getController().stop();
-			return true;
-		}
-		return false;
-	}
 	
 	private boolean didInteract() {
 		return ctx.game.getCrosshair() == Crosshair.ACTION;
 	}
-
+	
 	private boolean hasPotion() {
 		return !ctx.backpack.select().id(energyPotionID).isEmpty();
 	}
@@ -539,8 +481,38 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 	
 	private boolean atTanner() {
 		final Npc Tanner = ctx.npcs.select().id(tannerID).nearest().poll();
-			if (ctx.players.local().getLocation().distanceTo(Tanner.getLocation()) < 9) 
-				return true;
+		return ctx.players.local().getLocation().distanceTo(Tanner.getLocation()) < 9;
+	}
+	
+	private void close() {
+		ctx.keyboard.send("{VK_ESCAPE down}");
+		final Timer DelayTimer = new Timer(Random.nextInt(50, 200));
+		while (DelayTimer.isRunning());
+		ctx.keyboard.send("{VK_ESCAPE up}");
+	}
+	
+	public class Timer {
+		private long end;
+		private final long start;
+		public Timer(final long period) {
+			start = System.currentTimeMillis();
+			end = start + period;
+		}
+		public boolean isRunning() {
+			return System.currentTimeMillis() < end;
+		}
+	}
+	
+	private boolean logOut() {
+		status = "Logout";
+		if (ctx.bank.isOpen() && !ctx.backpack.select().isEmpty()) {
+			depositInventory();
+			ctx.bank.close();
+		}
+		if (ctx.game.logout(true)) {
+			getController().stop();
+			return true;
+		}
 		return false;
 	}
 	
@@ -549,6 +521,23 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		ctx.camera.turnTo(Tanner.getLocation());
 		if (Tanner.isInViewport())
 			return true;
+		return false;
+	}
+	
+	private boolean depositInventory() {
+		final Component DepositBackpackButton = ctx.widgets.get(762, 12);
+		status = "Depositing Backpack";
+		if (DepositBackpackButton.isVisible()) {
+			if (DepositBackpackButton.interact("Deposit carried items")) {
+				Condition.wait(new Callable<Boolean>() {
+					@Override
+					public Boolean call() throws Exception {
+						return ctx.backpack.select().isEmpty();
+					}
+				}, 250, 20);
+			}
+			return true;
+		}
 		return false;
 	}
 
@@ -567,7 +556,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		}
 		return true;
 	}
-
+	
 	final Color black = new Color(0, 0, 0, 200);
 	final Font font = new Font("Comic Sans MS", 0, 13);
 	final Font fontTwo = new Font("Comic Sans MS", 1, 13);
@@ -606,7 +595,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		g.drawString("*" + (status) + "*", 150, 370);
 		g.setFont(fontThree);
 		g.setColor(Color.RED);
-		g.drawString("v4.8", 382, 370);
+		g.drawString("v4.9", 382, 370);
 		drawMouse(g);
 		drawTannerTile(g);
 	}
@@ -648,4 +637,79 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 			hideCount += count;
 		}
 	}
+	
+	public class rTannerGUI extends JFrame {
+		private static final long serialVersionUID = 1L;
+		public rTannerGUI() {
+			initComponents();
+		}
+
+		private void button1ActionPerformed(ActionEvent e) {
+			if (checkBox1.isSelected()) 
+				usePotions = true;
+			guiWait = false;
+			g.dispose();
+		}
+
+		private void initComponents() {
+			checkBox1 = new JCheckBox();
+			label1 = new JLabel();
+			button1 = new JButton();
+
+			setTitle("rTannerGUI");
+			Container contentPane = getContentPane();
+
+			checkBox1.setText("Use Potions?");
+			checkBox1.setFont(new Font("Comic Sans MS", Font.PLAIN, 11));
+
+			label1.setText("rTanner Setup");
+			label1.setFont(new Font("Comic Sans MS", Font.BOLD, 11));
+
+			button1.setText("Start");
+			button1.setFont(new Font("Comic Sans MS", Font.PLAIN, 11));
+			button1.addActionListener(new ActionListener() {
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					button1ActionPerformed(e);
+				}
+			});
+
+			GroupLayout contentPaneLayout = new GroupLayout(contentPane);
+			contentPane.setLayout(contentPaneLayout);
+			contentPaneLayout.setHorizontalGroup(
+				contentPaneLayout.createParallelGroup()
+					.addGroup(GroupLayout.Alignment.TRAILING, contentPaneLayout.createSequentialGroup()
+						.addGap(0, 0, Short.MAX_VALUE)
+						.addComponent(label1)
+						.addGap(18, 18, 18))
+					.addGroup(contentPaneLayout.createSequentialGroup()
+						.addGroup(contentPaneLayout.createParallelGroup()
+							.addGroup(contentPaneLayout.createSequentialGroup()
+								.addContainerGap()
+								.addComponent(checkBox1))
+							.addGroup(contentPaneLayout.createSequentialGroup()
+								.addGap(18, 18, 18)
+								.addComponent(button1)))
+						.addContainerGap())
+			);
+			contentPaneLayout.setVerticalGroup(
+				contentPaneLayout.createParallelGroup()
+					.addGroup(GroupLayout.Alignment.TRAILING, contentPaneLayout.createSequentialGroup()
+						.addContainerGap()
+						.addComponent(label1)
+						.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+						.addComponent(checkBox1)
+						.addGap(7, 7, 7)
+						.addComponent(button1))
+			);
+			pack();
+			setLocationRelativeTo(getOwner());
+		}
+		private JCheckBox checkBox1;
+		private JLabel label1;
+		private JButton button1;
+	}
+
+
+
 }
