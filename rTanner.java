@@ -1,11 +1,13 @@
 package rTanner;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -56,8 +58,8 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 	private static String status = "Starting...";
 	
 	private rTannerGUI g = new rTannerGUI();
-	private boolean guiWait = true;
-	private boolean usePotions = false;
+	private static boolean guiWait = true;
+	private static boolean usePotions = false;
 
 	private static boolean atAlKharid = false;
 	private static boolean atBurthorpe = false;
@@ -80,9 +82,9 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 	
 	private static final Tile doorTile = new Tile(3187, 3403, 0);
 	private static Tile[] tilePath;
-	private static final Tile[] pathToJack = { new Tile(2893, 3529), new Tile(2891, 3514, 0), new Tile(2889, 3510, 0), new Tile(2887, 3502) };
 	private static final Tile[] pathToEllis = { new Tile(3271, 3168), new Tile(3276, 3180, 0), new Tile(3280, 3187, 0), new Tile(3275, 3195, 0) };
 	private static final Tile[] pathToTanner = { new Tile(3183, 3434, 0), new Tile(3182, 3426, 0), new Tile(3183, 3416, 0), new Tile(3187, 3403, 0) };
+	private static final Tile[] pathToJack = { new Tile(2884, 3535), new Tile(2881, 3530, 0), new Tile(2882, 3523, 0), new Tile(2885, 3514, 0), new Tile(2889, 3510, 0), new Tile(2887, 3502, 0) };
 	
 	private static final Area areaBurthorpe = new Area(new Tile[] { new Tile(2877, 3540, 0), new Tile(2900, 3540, 0), new Tile(2899, 3479, 0), new Tile(2875, 3479, 0) });
 	private static final Area areaAlKharid = new Area(new Tile[] { new Tile(3239, 3154, 0), new Tile(3315, 3151, 0), new Tile(3319, 3224, 0), new Tile(3250, 3223, 0) });
@@ -96,7 +98,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		g.setVisible(true);
 		while (guiWait) {
 			status = "GUI";
-			final Timer guiTimer = new Timer(Random.nextInt(100, 300));
+			final Timer guiTimer = new Timer(Random.nextInt(500, 800));
 			while (guiTimer.isRunning());
 		}
 		ctx.properties.setProperty("bank.antipattern", "disable");
@@ -327,7 +329,8 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		@Override
 		public void execute() {
 			final Component CloseButton = ctx.widgets.get(1370, 30);
-			final Npc Tanner = ctx.npcs.select().id(tannerID).nearest().poll();
+			final int[] bounds = {-80, 80, -575, -150, -128, 128};
+			final Npc Tanner = ctx.npcs.select().id(tannerID).each(Interactive.doSetBounds(bounds)).nearest().poll();
 			if (ctx.backpack.getMoneyPouch() < 600) {
 				log.info("[rTanner]: -Gold dropped below 600, logging out...");
 				logOut();
@@ -433,6 +436,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 					}
 				} else {
 					status = "Opening Bank";
+					if(!ctx.players.local().isInMotion())
 					ctx.camera.turnTo(ctx.bank.getNearest());
 					ctx.bank.open();
 				}
@@ -560,8 +564,8 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 	final Color black = new Color(0, 0, 0, 200);
 	final Font font = new Font("Comic Sans MS", 0, 13);
 	final Font fontTwo = new Font("Comic Sans MS", 1, 13);
-	final Font fontThree = new Font("Comic Sans MS", 3, 9);
-	final Font fontFour = new Font("Comic Sans MS", 0, 11);
+	final Font fontThree = new Font("Comic Sans MS", 1, 9);
+	final Font fontFour = new Font("Comic Sans MS", 4, 11);
 	final NumberFormat nf = new DecimalFormat("###,###,###,###");
 
 	@Override
@@ -576,35 +580,35 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		final Graphics2D g = (Graphics2D) g1;
 
 		g.setRenderingHints(antialiasing);
-		g.setColor(Color.RED);
-		g.drawRect(3, 285, 400, 90);
 		g.setColor(black);
-		g.fillRect(3, 285, 400, 90);
-		g.setFont(fontTwo);
+		g.fillRect(5, 5, 190, 145);
 		g.setColor(Color.RED);
-		g.drawString("rTanner", 190, 300);
+		g.drawRect(5, 5, 190, 145);
+		g.setFont(fontTwo);
+		g.drawString("rTanner", 76, 20);
 		g.setFont(font);
-		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 25, 320);
-		g.drawString("Tanned: " + nf.format(hideCount) + "(" + perHour(hideCount) + ")", 25, 345);
-		g.drawString("Hides Left: " + nf.format(hidesLeft), 150, 345);
-		g.drawString("Potions Left: " + nf.format(potionsLeft), 150, 320);
-		g.drawString("User: " + Environment.getDisplayName(), 275, 320);
-		g.drawString("Location: " + (location), 275, 345);
+		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 10, 40);
+		g.drawString("Tanned: " + nf.format(hideCount) + "(" + perHour(hideCount) + ")", 10, 60);
+		g.drawString("Hides Left: " + nf.format(hidesLeft), 10, 80);
+		g.drawString("Potions Left: " + nf.format(potionsLeft), 10, 100);
+		g.drawString("User: " + Environment.getDisplayName(), 10, 120);
+		g.drawString("Location: " + (location), 10, 140);
 		g.setFont(fontFour);
 		g.setColor(Color.GREEN);
-		g.drawString("*" + (status) + "*", 150, 370);
+		g.drawString("*" + (status) + "*", 10, 160);
 		g.setFont(fontThree);
 		g.setColor(Color.RED);
-		g.drawString("v4.9", 382, 370);
+		g.drawString("v5.0", 165, 140);
 		drawMouse(g);
 		drawTannerTile(g);
 	}
 	
-	private void drawMouse(final Graphics g) {
-		final Point m = ctx.mouse.getLocation();
-		g.setColor(ctx.mouse.isPressed() ? Color.GREEN : Color.RED);
-		g.drawLine(m.x - 5, m.y + 5, m.x + 5, m.y - 5);
-		g.drawLine(m.x - 5, m.y - 5, m.x + 5, m.y + 5);
+	public void drawMouse(Graphics2D g) {
+		Point p = ctx.mouse.getLocation();
+		g.setColor(Color.RED);
+		g.setStroke(new BasicStroke(2));
+		g.fill(new Rectangle(p.x + 1, p.y - 4, 2, 15));
+		g.fill(new Rectangle(p.x - 6, p.y + 2, 16, 2));
 	}
 
 	private void drawTannerTile(final Graphics g) {
@@ -659,8 +663,8 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 			setTitle("rTannerGUI");
 			Container contentPane = getContentPane();
 
-			checkBox1.setText("Use Potions?");
-			checkBox1.setFont(new Font("Comic Sans MS", Font.PLAIN, 11));
+			checkBox1.setText("Use Potions");
+			checkBox1.setFont(new Font("Comic Sans MS", Font.PLAIN, 12));
 
 			label1.setText("rTanner Setup");
 			label1.setFont(new Font("Comic Sans MS", Font.BOLD, 11));
