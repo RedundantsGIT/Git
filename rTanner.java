@@ -31,12 +31,11 @@ import org.powerbot.event.MessageListener;
 import org.powerbot.event.PaintListener;
 import org.powerbot.script.Manifest;
 import org.powerbot.script.PollingScript;
-import org.powerbot.script.methods.Environment;
 import org.powerbot.script.methods.Hud;
 import org.powerbot.script.methods.MethodContext;
-import org.powerbot.script.methods.MethodProvider;
 import org.powerbot.script.methods.Game.Crosshair;
 import org.powerbot.script.methods.Hud.Window;
+import org.powerbot.script.methods.MethodProvider;
 import org.powerbot.script.util.Condition;
 import org.powerbot.script.util.Random;
 import org.powerbot.script.wrappers.Area;
@@ -83,7 +82,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 	private static final Tile doorTile = new Tile(3187, 3403, 0);
 	private static Tile[] tilePath;
 	private static final Tile[] pathToEllis = { new Tile(3271, 3168), new Tile(3276, 3180, 0), new Tile(3280, 3187, 0), new Tile(3275, 3195, 0) };
-	private static final Tile[] pathToTanner = { new Tile(3183, 3434, 0), new Tile(3182, 3426, 0), new Tile(3183, 3416, 0), new Tile(3187, 3403, 0) };
+	private static final Tile[] pathToTanner = { new Tile(3182, 3435, 0), new Tile(3182, 3425, 0), new Tile(3182, 3415, 0), new Tile(3187, 3403, 0) };
 	private static final Tile[] pathToJack = { new Tile(2884, 3535), new Tile(2881, 3530, 0), new Tile(2882, 3523, 0), new Tile(2885, 3514, 0), new Tile(2889, 3510, 0), new Tile(2887, 3502, 0) };
 	
 	private static final Area areaBurthorpe = new Area(new Tile[] { new Tile(2877, 3540, 0), new Tile(2900, 3540, 0), new Tile(2899, 3479, 0), new Tile(2875, 3479, 0) });
@@ -95,6 +94,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 	@Override
 	public void start() {
 		elapsedTime = System.currentTimeMillis();
+		ctx.camera.setPitch(false);
 		g.setVisible(true);
 		while (guiWait) {
 			status = "GUI";
@@ -291,7 +291,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 
 		@Override
 		public boolean activate() {
-			return tileContainsDoor() && atTanner() && !make.isVisible();
+			return tileContainsDoor() && !make.isVisible();
 		}
 
 		@Override
@@ -329,8 +329,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		@Override
 		public void execute() {
 			final Component CloseButton = ctx.widgets.get(1370, 30);
-			final int[] bounds = {-80, 80, -575, -150, -128, 128};
-			final Npc Tanner = ctx.npcs.select().id(tannerID).each(Interactive.doSetBounds(bounds)).nearest().poll();
+			final Npc Tanner = ctx.npcs.select().id(tannerID).nearest().poll();
 			if (ctx.backpack.getMoneyPouch() < 600) {
 				log.info("[rTanner]: -Gold dropped below 600, logging out...");
 				logOut();
@@ -368,7 +367,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 							}
 						} else {
 							if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(2, 3))
-								ctx.movement.stepTowards(ctx.movement.getClosestOnMap(Tanner.getLocation()));
+								ctx.movement.stepTowards(ctx.movement.getClosestOnMap(Tanner.getLocation()).randomize(2, 2));
 							    ctx.camera.turnTo(Tanner.getLocation());
 						}
 					}
@@ -381,9 +380,10 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 							close();
 					} else {
 						status = "Walking to Tanner";
-						if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(8, 10)) {
+						if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(7, 8)) {
 							ctx.movement.newTilePath(tilePath).traverse();
-							cameraTurnToTanner();
+							if(Random.nextInt(1, 5) == 3)
+								cameraTurnToTanner();
 						}
 					}
 				}
@@ -416,7 +416,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 					} else {
 						if (bankHasHide()) {
 							if (hasPotion() && !hasHide() && ctx.backpack.select().count() > 1 || hasLeather() && !hasPotion() 
-							|| hasLeather() && !hasPotion() || ctx.backpack.select().count() > 0 && !hasHide() && !hasPotion()) {
+							|| !ctx.backpack.select().isEmpty() && !hasHide() && !hasPotion()) {
 								depositInventory();
 							} else if (hasLeather() && hasPotion()) {
 								status = "Depositing Leather";
@@ -442,8 +442,9 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 				}
 			} else {
 				status = "Walking to Bank";
-				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(8, 10)) {
+				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(7, 8)) {
 					ctx.movement.newTilePath(tilePath).reverse().traverse();
+					if(Random.nextInt(1, 3) == 2)
 					ctx.camera.turnTo(ctx.bank.getNearest());
 				}
 			}
@@ -475,22 +476,22 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 	}
 	
 	private boolean atBank() {
-		return ctx.bank.isInViewport() && ctx.players.local().getLocation().distanceTo(ctx.bank.getNearest()) < 9;
+		return ctx.bank.isInViewport() && ctx.players.local().getLocation().distanceTo(ctx.bank.getNearest()) < 10;
 	}
 	
 	private boolean tileContainsDoor() {
 		final GameObject Door = ctx.objects.select().select().id(doorID).at(doorTile).poll();
-			return Door.isValid() && ctx.players.local().getLocation().distanceTo(Door.getLocation()) < 13;
+			return Door.isValid() && ctx.players.local().getLocation().distanceTo(Door.getLocation()) < 14;
 	}
 	
 	private boolean atTanner() {
 		final Npc Tanner = ctx.npcs.select().id(tannerID).nearest().poll();
-		return ctx.players.local().getLocation().distanceTo(Tanner.getLocation()) < 9;
+		return ctx.players.local().getLocation().distanceTo(Tanner.getLocation()) < 10;
 	}
 	
 	private void close() {
 		ctx.keyboard.send("{VK_ESCAPE down}");
-		final Timer DelayTimer = new Timer(Random.nextInt(50, 200));
+		final Timer DelayTimer = new Timer(Random.nextInt(50, 600));
 		while (DelayTimer.isRunning());
 		ctx.keyboard.send("{VK_ESCAPE up}");
 	}
@@ -520,14 +521,6 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		return false;
 	}
 	
-	private boolean cameraTurnToTanner() {
-		final Npc Tanner = ctx.npcs.select().id(tannerID).nearest().poll();
-		ctx.camera.turnTo(Tanner.getLocation());
-		if (Tanner.isInViewport())
-			return true;
-		return false;
-	}
-	
 	private boolean depositInventory() {
 		final Component DepositBackpackButton = ctx.widgets.get(762, 12);
 		status = "Depositing Backpack";
@@ -542,6 +535,14 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 			}
 			return true;
 		}
+		return false;
+	}
+	
+	private boolean cameraTurnToTanner() {
+		final Npc Tanner = ctx.npcs.select().id(tannerID).nearest().poll();
+		ctx.camera.turnTo(Tanner.getLocation());
+		if (Tanner.isInViewport())
+			return true;
 		return false;
 	}
 
@@ -581,9 +582,9 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 
 		g.setRenderingHints(antialiasing);
 		g.setColor(black);
-		g.fillRect(5, 5, 190, 145);
+		g.fillRect(5, 5, 190, 125);
 		g.setColor(Color.RED);
-		g.drawRect(5, 5, 190, 145);
+		g.drawRect(5, 5, 190, 125);
 		g.setFont(fontTwo);
 		g.drawString("rTanner", 76, 20);
 		g.setFont(font);
@@ -591,20 +592,19 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		g.drawString("Tanned: " + nf.format(hideCount) + "(" + perHour(hideCount) + ")", 10, 60);
 		g.drawString("Hides Left: " + nf.format(hidesLeft), 10, 80);
 		g.drawString("Potions Left: " + nf.format(potionsLeft), 10, 100);
-		g.drawString("User: " + Environment.getDisplayName(), 10, 120);
-		g.drawString("Location: " + (location), 10, 140);
+		g.drawString("Location: " + (location), 10, 120);
 		g.setFont(fontFour);
 		g.setColor(Color.GREEN);
-		g.drawString("*" + (status) + "*", 10, 160);
+		g.drawString("*" + (status) + "*", 10, 140);
 		g.setFont(fontThree);
 		g.setColor(Color.RED);
-		g.drawString("v5.0", 165, 140);
+		g.drawString("v5.1", 165, 120);
 		drawMouse(g);
 		drawTannerTile(g);
 	}
 	
 	public void drawMouse(Graphics2D g) {
-		Point p = ctx.mouse.getLocation();
+		final Point p = ctx.mouse.getLocation();
 		g.setColor(Color.RED);
 		g.setStroke(new BasicStroke(2));
 		g.fill(new Rectangle(p.x + 1, p.y - 4, 2, 15));

@@ -1,11 +1,13 @@
 
 package rFurFlipper;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -27,7 +29,6 @@ import org.powerbot.script.util.Condition;
 import org.powerbot.script.util.GeItem;
 import org.powerbot.script.util.Random;
 import org.powerbot.script.wrappers.Component;
-import org.powerbot.script.wrappers.Interactive;
 import org.powerbot.script.wrappers.Npc;
 import org.powerbot.script.wrappers.Tile;
 
@@ -39,11 +40,11 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 	private static long scriptTimer = 0;
 	private static int furPrice, furBought, furStored;
 	private static int baraekID = 547, furID = 948;
-	private final int[] baraekBounds = {-128, 128, -670, 0, -128, 128};
-	private final Component pressOne = ctx.widgets.get(1188, 2);
+	private final Component pressOne = ctx.widgets.get(1188, 3);
 	private final Component achievements = ctx.widgets.get(1477).getComponent(74);
 	private final Component collectionBox = ctx.widgets.get(109).getComponent(61);
-	private static final Tile[] pathToNpc = { new Tile(3189, 3435, 0), new Tile(3197, 3430, 0), new Tile(3206, 3430, 0), new Tile(3216, 3433, 0) };
+	private static final Tile[] pathToNpc = { new Tile(3189, 3435, 0), new Tile(3200, 3429, 0), new Tile(3208, 3431, 0), new Tile(3215, 3433, 0) };
+	private static final Tile[] pathToBank = { new Tile(3215, 3433, 0), new Tile(3208, 3431, 0), new Tile(3200, 3429, 0), new Tile(3189, 3435, 0) };
 
 	@Override
 	public void start() {
@@ -137,7 +138,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 			return job.delay();
 		}
 
-		return 50;
+		return Random.nextInt(50, 150);
 	}
 
 	private class Camera extends Job {
@@ -153,7 +154,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		@Override
 		public void execute() {
 			status = "Set Pitch";
-			ctx.camera.setPitch(50);
+			ctx.camera.setPitch(Random.nextInt(50, 55));
 		}
 	}
 
@@ -165,7 +166,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 		@Override
 		public boolean activate() {
-			return achievements.isVisible() || collectionBox.isVisible() || ctx.widgets.get(1191, 10).getText().contains("Can I have a newspaper, please?") ;
+			return achievements.isVisible() || collectionBox.isVisible() || ctx.widgets.get(1191, 10).getText().contains("Can I have a newspaper, please?") || ctx.widgets.get(1184, 9).getText().contains("Hiya. I'm giving out free books");
 		}
 
 		@Override
@@ -209,6 +210,9 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		@Override
 		public void execute() {
 			status = "Select Option";
+			if(Random.nextInt(1, 120) == 100)
+				pressOne.click(true);
+			else
 			ctx.keyboard.send("1");
 			Condition.wait(new Callable<Boolean>() {
 				@Override
@@ -231,8 +235,11 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 		@Override
 		public void execute() {
-			status = "Continue";
+			status = "Select Continue";
 			if (ctx.widgets.get(1191, 10).getText().contains("Can you sell me some furs?") || ctx.widgets.get(1191, 10).getText().contains("Yeah, OK, here you go.")) {
+				if(Random.nextInt(1, 100) == 50)
+					ctx.chat.clickContinue();
+				else
 				ctx.keyboard.send(" ");
 				Condition.wait(new Callable<Boolean>() {
 					@Override
@@ -242,6 +249,9 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 				}, 250, 20);
 			} else {
 				if (ctx.widgets.get(1184, 9).getText().contains("Yeah, sure. They're 20 gold coins each.")) {
+					if(Random.nextInt(1, 80) == 63)
+						ctx.chat.clickContinue();
+					else
 					ctx.keyboard.send(" ");
 					Condition.wait(new Callable<Boolean>() {
 						@Override
@@ -252,8 +262,9 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 				}
 			}
 		}
-
 	}
+
+
 
 	private class Talking extends Job {
 		public Talking(MethodContext ctx) {
@@ -267,14 +278,18 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 		@Override
 		public void execute() {
-			final Npc baraek = ctx.npcs.select().id(baraekID).each(Interactive.doSetBounds(baraekBounds)).nearest().poll();
+			final Npc baraek = ctx.npcs.select().id(baraekID).nearest().poll();
 			if (ctx.players.local().getLocation().distanceTo(baraek.getLocation()) < 8) {
 				if (ctx.backpack.getMoneyPouch() < 20) {
 					logOut();
 				} else {
 					if (baraek.isInViewport()) {
+						if(Random.nextInt(1, 20) == 10)
+							mouseMoveSlightly();
 						status = "Talk to Baraek";
 						if (baraek.interact("Talk-to", "Baraek")) {
+							if(Random.nextInt(1, 15) == 10)
+							mouseMoveSlightly();
 							if (didInteract()) {
 								Condition.wait(new Callable<Boolean>() {
 									@Override
@@ -285,15 +300,17 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 							}
 						}
 					} else {
+						status = "Walk to Npc";
+						ctx.movement.stepTowards(ctx.movement.getClosestOnMap(baraek.getLocation()).randomize(2, 2));
 						ctx.camera.turnTo(baraek.getLocation());
-						ctx.movement.stepTowards(ctx.movement.getClosestOnMap(baraek.getLocation()));
 						while (ctx.players.local().isInMotion() && !baraek.isInViewport());
 					}
 				}
 			} else {
 				status = "Walk to Npc";
-				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(6, 8)) 
-					ctx.movement.newTilePath(pathToNpc).traverse();
+				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(6, 8)){
+					ctx.movement.stepTowards(getNextTile(randomizePath(pathToNpc , 3, 2)));
+				}
 			}
 		}
 	}
@@ -327,12 +344,15 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 				}
 			} else {
 			status = "Walk to Bank";
-			if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation() .distanceTo(ctx.movement.getDestination()) < Random.nextInt(6, 8)) 
-				ctx.movement.newTilePath(pathToNpc).reverse().traverse();
+			if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(6, 8)){
+					ctx.movement.stepTowards(getNextTile(randomizePath(pathToBank, 3, 2)));
+					if (Random.nextInt(1, 10) == 5)
+						ctx.camera.turnTo(ctx.bank.getNearest());
+				}
 			}
 		}
 	}
-	
+
 	private boolean logOut() {
 		status = "Logout";
 		if (ctx.bank.isOpen() && !ctx.backpack.select().isEmpty()) {
@@ -358,9 +378,75 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 	
 	private void close() {
 		ctx.keyboard.send("{VK_ESCAPE down}");
-		final Timer DelayTimer = new Timer(Random.nextInt(50, 750));
+		final Timer DelayTimer = new Timer(Random.nextInt(50, 1000));
 		while (DelayTimer.isRunning());
 		ctx.keyboard.send("{VK_ESCAPE up}");
+	}
+	
+	public Tile[] randomizePath(Tile[] path, int maxXDeviation, int maxYDeviation) {
+		Tile[] rez = new Tile[path.length];
+
+		for (int i = 0; i < path.length; i++) {
+			int x = path[i].getX();
+			int y = path[i].getY();
+			if (maxXDeviation > 0) {
+				double d = Math.random() * 2 - 1.0;
+				d *= maxXDeviation;
+				x += (int) d;
+			}
+			if (maxYDeviation > 0) {
+				double d = Math.random() * 2 - 1.0;
+				d *= maxYDeviation;
+				y += (int) d;
+			}
+			rez[i] = new Tile(x, y, path[i].getPlane());
+		}
+
+		return rez;
+	}
+
+	public Tile getNextTile(Tile[] path) {
+		int dist = 99;
+		int closest = -1;
+		for (int i = path.length - 1; i >= 0; i--) {
+			Tile tile = path[i];
+			int d = distanceTo(tile);
+			if (d < dist) {
+				dist = d;
+				closest = i;
+			}
+		}
+
+		int feasibleTileIndex = -1;
+
+		for (int i = closest; i < path.length; i++) {
+
+			if (distanceTo(path[i]) <= 16) {
+				feasibleTileIndex = i;
+			} else {
+				break;
+			}
+		}
+
+		if (feasibleTileIndex == -1) {
+			return null;
+		} else {
+			return path[feasibleTileIndex];
+		}
+	}
+	
+    public int distanceTo(Tile tile) {
+        return (int) ctx.players.local().getLocation().distanceTo(tile);
+    }
+	
+	public void mouseMoveSlightly() {
+		Point p = new Point((int) (ctx.mouse.getLocation().getX() + (Math.random() * 50 > 25 ? 1 : -1) * (20 + Math.random() * 70)), 
+				(int) (ctx.mouse.getLocation().getY() + (Math.random() * 50 > 25 ? 1: -1) * (20 + Math.random() * 85)));
+		if (p.getX() < 1 || p.getY() < 1 || p.getX() > 761 || p.getY() > 499) {
+			mouseMoveSlightly();
+			return;
+		}
+		ctx.mouse.move(p);
 	}
 	
 	public class Timer {
@@ -413,7 +499,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		g.drawString("Profit: " + nf.format(profit()) + "(" + PerHour(profit()) + "/h)", 13, 120);
 		g.drawString("Status: " + (status), 10, 140);
 		g.setColor(Color.RED);
-		g.drawString("v0.8", 165, 140);
+		g.drawString("v0.9", 165, 140);
 		drawMouse(g);
 		drawTrail(g);
 		drawBaraekTile(g);
@@ -421,7 +507,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 	private void drawBaraekTile(final Graphics g) {
 		final Npc baraek = ctx.npcs.select().id(baraekID).nearest().poll();
-		if (ctx.backpack.select().count() != 28) 
+		if(ctx.backpack.select().count() != 28)
 			if (baraek.isInViewport())
 				baraek.getLocation().getMatrix(ctx).draw(g);
 		}
@@ -486,11 +572,12 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		return furBought * furPrice;
 	}
 
-	private void drawMouse(final Graphics g) {
-		final Point m = ctx.mouse.getLocation();
-		g.setColor(ctx.mouse.isPressed() ? Color.GREEN : Color.RED);
-		g.drawLine(m.x - 5, m.y + 5, m.x + 5, m.y - 5);
-		g.drawLine(m.x - 5, m.y - 5, m.x + 5, m.y + 5);
+	public void drawMouse(Graphics2D g) {
+		Point p = ctx.mouse.getLocation();
+		g.setColor(Color.RED);
+		g.setStroke(new BasicStroke(2));
+		g.fill(new Rectangle(p.x + 1, p.y - 4, 2, 15));
+		g.fill(new Rectangle(p.x - 6, p.y + 2, 16, 2));
 	}
 
 	private static int getGuidePrice(final int id) {
