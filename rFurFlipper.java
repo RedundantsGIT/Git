@@ -138,7 +138,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 			return job.delay();
 		}
 
-		return Random.nextInt(50, 150);
+		return Random.nextInt(50, 100);
 	}
 
 	private class Camera extends Job {
@@ -148,13 +148,13 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 		@Override
 		public boolean activate() {
-			return ctx.camera.getPitch() < 45;
+			return ctx.camera.getPitch() < 50;
 		}
 
 		@Override
 		public void execute() {
 			status = "Set Pitch";
-			ctx.camera.setPitch(Random.nextInt(50, 55));
+			ctx.camera.setPitch(Random.nextInt(52, 55));
 		}
 	}
 
@@ -173,6 +173,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		public void execute() {
 			status = "Close";
 			close();
+			
 		}
 	}
 	
@@ -248,7 +249,6 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 					}
 				}, 250, 20);
 			} else {
-				if (ctx.widgets.get(1184, 9).getText().contains("Yeah, sure. They're 20 gold coins each.")) {
 					if(Random.nextInt(1, 80) == 63)
 						ctx.chat.clickContinue();
 					else
@@ -258,8 +258,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 						public Boolean call() throws Exception {
 							return pressOne.isVisible();
 						}
-					}, 250, 20);
-				}
+				}, 250, 20);
 			}
 		}
 	}
@@ -499,7 +498,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		g.drawString("Profit: " + nf.format(profit()) + "(" + PerHour(profit()) + "/h)", 13, 120);
 		g.drawString("Status: " + (status), 10, 140);
 		g.setColor(Color.RED);
-		g.drawString("v0.9", 165, 140);
+		g.drawString("v1.0", 165, 140);
 		drawMouse(g);
 		drawTrail(g);
 		drawBaraekTile(g);
