@@ -26,28 +26,29 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.LayoutStyle;
 
-import org.powerbot.event.MessageEvent;
-import org.powerbot.event.MessageListener;
-import org.powerbot.event.PaintListener;
-import org.powerbot.script.Manifest;
+import org.powerbot.script.Area;
+import org.powerbot.script.Condition;
+import org.powerbot.script.MessageEvent;
+import org.powerbot.script.MessageListener;
+import org.powerbot.script.PaintListener;
 import org.powerbot.script.PollingScript;
-import org.powerbot.script.methods.Hud;
-import org.powerbot.script.methods.MethodContext;
-import org.powerbot.script.methods.Game.Crosshair;
-import org.powerbot.script.methods.Hud.Window;
-import org.powerbot.script.methods.MethodProvider;
-import org.powerbot.script.util.Condition;
-import org.powerbot.script.util.Random;
-import org.powerbot.script.wrappers.Area;
-import org.powerbot.script.wrappers.Component;
-import org.powerbot.script.wrappers.GameObject;
-import org.powerbot.script.wrappers.Interactive;
-import org.powerbot.script.wrappers.Item;
-import org.powerbot.script.wrappers.Npc;
-import org.powerbot.script.wrappers.Tile;
+import org.powerbot.script.Random;
+import org.powerbot.script.Script.Manifest;
+import org.powerbot.script.Tile;
+import org.powerbot.script.rt6.ClientAccessor;
+import org.powerbot.script.rt6.ClientContext;
+import org.powerbot.script.rt6.Component;
+import org.powerbot.script.rt6.Game.Crosshair;
+import org.powerbot.script.rt6.GameObject;
+import org.powerbot.script.rt6.Hud.Window;
+import org.powerbot.script.rt6.Interactive;
+import org.powerbot.script.rt6.Item;
+import org.powerbot.script.rt6.Npc;
 
-@Manifest(name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", topic = 876982)
-public class rTanner extends PollingScript implements PaintListener, MessageListener {
+
+
+@Manifest(name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", properties = "topic=876982")
+public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
 
 	private static long elapsedTime = 0;
 
@@ -68,9 +69,9 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 
 	private static final int doorID = 24376, mangleID = 24920;
 	
-	private final Component make = ctx.widgets.get(1370).getComponent(20);
-	private final Component achievements = ctx.widgets.get(1477).getComponent(74);
-	private final Component collectionBox = ctx.widgets.get(109).getComponent(61);
+	private final Component make = ctx.widgets.widget(1370).component(20);
+	private final Component achievements = ctx.widgets.widget(1477).component(74);
+	private final Component collectionBox = ctx.widgets.widget(109).component(61);
 
 	private static final int[] tannerID = { 14877, 2824, 2320 };
 	private static final int[] hideID = { 1739, 1753, 1751, 24372, 6287, 7801, 1749, 1747 };
@@ -94,14 +95,15 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 	@Override
 	public void start() {
 		elapsedTime = System.currentTimeMillis();
-		ctx.camera.setPitch(false);
+		log.info("start()");
+		//ctx.property("bank.antipattern", "disable");
 		g.setVisible(true);
 		while (guiWait) {
 			status = "GUI";
-			final Timer guiTimer = new Timer(Random.nextInt(500, 800));
+			final Timer guiTimer = new Timer(Random.nextInt(500, 1000));
 			while (guiTimer.isRunning());
 		}
-		ctx.properties.setProperty("bank.antipattern", "disable");
+		ctx.camera.pitch(false);
 		rTanner.container = new JobContainer(new Job[] { new GetPlayerArea(ctx), new Pitch(ctx), new CloseInterfaces(ctx), new Door(ctx), 
 				new UseEnergyPotion(ctx), new Tan(ctx), new Banking(ctx) });
 	}
@@ -121,13 +123,9 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		log.info("[rTanner]: -Total Hides Tanned: " + hideCount);
 	}
 
-	public abstract class Job extends MethodProvider {
-		public Job(MethodContext ctx) {
+	public abstract class Job extends ClientAccessor {
+		public Job(ClientContext ctx) {
 			super(ctx);
-		}
-
-		public int delay() {
-			return 50;
 		}
 
 		public int priority() {
@@ -176,23 +174,18 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 			return null;
 		}
 	}
-
+	
 	@Override
-	public int poll() {
-		if (!ctx.game.isLoggedIn() || ctx.game.getClientState() != org.powerbot.script.methods.Game.INDEX_MAP_LOADED) 
-			return 1000;
-
+	public void poll() {
 		final Job job = container.get();
 		if (job != null) {
 			job.execute();
-			return job.delay();
 		}
-
-		return 50;
 	}
 
+
 	private class GetPlayerArea extends Job {
-		public GetPlayerArea(MethodContext ctx) {
+		public GetPlayerArea(ClientContext ctx) {
 			super(ctx);
 		}
 
@@ -203,15 +196,15 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 
 		@Override
 		public void execute() {
-			if (areaBurthorpe.contains(ctx.players.local().getLocation())) {
+			if (areaBurthorpe.contains(ctx.players.local().tile())) {
 				location = "Burthorpe";
 				tilePath = pathToJack;
 				atBurthorpe = true;
-			} else if (areaAlKharid.contains(ctx.players.local().getLocation())) {
+			} else if (areaAlKharid.contains(ctx.players.local().tile())) {
 				location = "Al Kharid";
 				tilePath = pathToEllis;
 				atAlKharid = true;
-			} else if (areaVarrock.contains(ctx.players.local().getLocation())) {
+			} else if (areaVarrock.contains(ctx.players.local().tile())) {
 				location = "Varrock";
 				tilePath = pathToTanner;
 				atVarrock = true;
@@ -220,30 +213,30 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 	}
 
 	private class Pitch extends Job {
-		public Pitch(MethodContext ctx) {
+		public Pitch(ClientContext ctx) {
 			super(ctx);
 		}
 
 		@Override
 		public boolean activate() {
-			return ctx.camera.getPitch() < 33;
+			return ctx.camera.pitch() < 33;
 		}
 
 		@Override
 		public void execute() {
 			status = "Set Pitch";
-			ctx.camera.setPitch(Random.nextInt(35, 40));
+			ctx.camera.pitch(Random.nextInt(35, 40));
 		}
 	}
 
 	private class CloseInterfaces extends Job {
-		public CloseInterfaces(MethodContext ctx) {
+		public CloseInterfaces(ClientContext ctx) {
 			super(ctx);
 		}
 
 		@Override
 		public boolean activate() {
-			return achievements.isVisible() || collectionBox.isVisible();
+			return achievements.visible() || collectionBox.visible();
 		}
 
 		@Override
@@ -254,28 +247,28 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 	}
 
 	private class UseEnergyPotion extends Job {
-		public UseEnergyPotion(MethodContext ctx) {
+		public UseEnergyPotion(ClientContext ctx) {
 			super(ctx);
 		}
 
 		@Override
 		public boolean activate() {
-			return ctx.players.local().isInMotion() && ctx.movement.getEnergyLevel() < 50 && hasPotion() && !ctx.bank.isOpen() && !make.isVisible();
+			return ctx.players.local().inMotion() && ctx.movement.energyLevel() < 50 && hasPotion() && !ctx.bank.opened() && !make.visible();
 		}
 
 		@Override
 		public void execute() {
 			final Item EnergyPotion = ctx.backpack.select().id(energyPotionID).poll();
-			if (!ctx.hud.isVisible(Window.BACKPACK)) {
+			if (!ctx.hud.opened(Window.BACKPACK)) {
 				status = "Open Backpack";
-				ctx.hud.view(Hud.Window.BACKPACK);
+				ctx.hud.open(Window.BACKPACK);
 			} else {
 				status = "Use Potion";
 				if (EnergyPotion.interact("Drink")) {
 					Condition.wait(new Callable<Boolean>() {
 						@Override
 						public Boolean call() throws Exception {
-							return ctx.movement.getEnergyLevel() > 50;
+							return ctx.movement.energyLevel() > 50;
 							}
 						}, 250, 20);
 					}
@@ -285,13 +278,13 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		}
 
 	private class Door extends Job {
-		public Door(MethodContext ctx) {
+		public Door(ClientContext ctx) {
 			super(ctx);
 		}
 
 		@Override
 		public boolean activate() {
-			return tileContainsDoor() && !make.isVisible();
+			return tileContainsDoor() && !make.visible();
 		}
 
 		@Override
@@ -299,9 +292,9 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 			final int[] doorBounds = {-200, 150, -1000, 0, 0, 0};
 			final GameObject Door = ctx.objects.select().id(doorID).each(Interactive.doSetBounds(doorBounds)).at(doorTile).poll();
 			final GameObject Mangle = ctx.objects.select().id(mangleID).nearest().poll();
-				if (Door.isInViewport()) {
+				if (Door.inViewport()) {
 					status = "Door";
-					ctx.camera.turnTo(Mangle.getLocation());
+					ctx.camera.turnTo(Mangle.tile());
 					if(Door.interact("Open", "Door")){
 					Condition.wait(new Callable<Boolean>() {
 						@Override
@@ -311,13 +304,13 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 					}, 250, 20);
 				}
 			} else {
-				ctx.movement.stepTowards(ctx.movement.getClosestOnMap(doorTile));
+				ctx.movement.step(ctx.movement.closestOnMap(doorTile));
 			}
 		}
 	}
 
 	private class Tan extends Job {
-		public Tan(MethodContext ctx) {
+		public Tan(ClientContext ctx) {
 			super(ctx);
 		}
 
@@ -328,26 +321,26 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 
 		@Override
 		public void execute() {
-			final Component CloseButton = ctx.widgets.get(1370, 30);
+			final Component CloseButton = ctx.widgets.widget(1370).component(30); 
 			final Npc Tanner = ctx.npcs.select().id(tannerID).nearest().poll();
-			if (ctx.backpack.getMoneyPouch() < 600) {
+			if (ctx.backpack.moneyPouchCount() < 600) {
 				log.info("[rTanner]: -Gold dropped below 600, logging out...");
 				logOut();
 			} else {
 				if (atTanner()) {
-					if (make.isValid()) {
+					if (make.valid()) {
 						if (make.interact("Make")) {
 							Condition.wait(new Callable<Boolean>() {
 								@Override
 								public Boolean call() throws Exception {
-									return !make.isVisible();
+									return !make.visible();
 								}
 							}, 100, 20);
 						}
-						if (CloseButton.isVisible()) 
+						if (CloseButton.visible()) 
 							CloseButton.interact("Close");
 					} else {
-						if (Tanner.isInViewport()) {
+						if (Tanner.inViewport()) {
 							status = "Talk to Tanner";
 							if (atAlKharid) {
 								Tanner.interact("Tan hides", "Ellis");
@@ -360,19 +353,19 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 							Condition.wait(new Callable<Boolean>() {
 									@Override
 									public Boolean call() throws Exception {
-										return make.isVisible() || hasLeather();
+										return make.visible() || hasLeather();
 									}
 								}, 250, 20);
-								while (ctx.players.local().isInMotion() && !make.isVisible());
+								while (ctx.players.local().inMotion() && !make.visible());
 							}
 						} else {
-							if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(2, 3))
-								ctx.movement.stepTowards(ctx.movement.getClosestOnMap(Tanner.getLocation()).randomize(2, 2));
-							    ctx.camera.turnTo(Tanner.getLocation());
+							if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(2, 3))
+								ctx.movement.step(ctx.movement.closestOnMap(Tanner.tile()));
+							    ctx.camera.turnTo(Tanner.tile());
 						}
 					}
 				} else {
-					if (ctx.bank.isOpen()) {
+					if (ctx.bank.opened()) {
 						status = "Close Bank";
 						if(Random.nextInt(1, 15) == 10)
 						ctx.bank.close();
@@ -380,7 +373,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 							close();
 					} else {
 						status = "Walking to Tanner";
-						if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(7, 8)) {
+						if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(7, 8)) {
 							ctx.movement.newTilePath(tilePath).traverse();
 							if(Random.nextInt(1, 5) == 3)
 								cameraTurnToTanner();
@@ -394,7 +387,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 	
 
 	private class Banking extends Job {
-		public Banking(MethodContext ctx) {
+		public Banking(ClientContext ctx) {
 			super(ctx);
 		}
 
@@ -406,7 +399,7 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		@Override
 		public void execute() {
 			if (atBank()) {
-				if (ctx.bank.isOpen()) {
+				if (ctx.bank.opened()) {
 					if (ctx.backpack.select().count() == 28) {
 						if (hasLeather() && hasPotion()) {
 							deposit(0, leatherID);
@@ -415,8 +408,8 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 						}
 					} else {
 						if (bankHasHide()) {
-							if (hasPotion() && !hasHide() && ctx.backpack.select().count() > 1 || hasLeather() && !hasPotion() 
-							|| !ctx.backpack.select().isEmpty() && !hasHide() && !hasPotion()) {
+							if (hasPotion() && !hasHide() && ctx.backpack.select().count() > 1  || hasLeather() && !hasPotion() 
+									|| !ctx.backpack.select().isEmpty() && !hasHide() && !hasPotion()) {
 								depositInventory();
 							} else if (hasLeather() && hasPotion()) {
 								status = "Depositing Leather";
@@ -436,23 +429,23 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 					}
 				} else {
 					status = "Opening Bank";
-					if(!ctx.players.local().isInMotion())
-					ctx.camera.turnTo(ctx.bank.getNearest());
+					if(!ctx.players.local().inMotion())
+					ctx.camera.turnTo(ctx.bank.nearest());
 					ctx.bank.open();
 				}
 			} else {
 				status = "Walking to Bank";
-				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(7, 8)) {
+				if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(7, 8)) {
 					ctx.movement.newTilePath(tilePath).reverse().traverse();
 					if(Random.nextInt(1, 3) == 2)
-					ctx.camera.turnTo(ctx.bank.getNearest());
+					ctx.camera.turnTo(ctx.bank.nearest());
 				}
 			}
 		}
 	}
 	
 	private boolean didInteract() {
-		return ctx.game.getCrosshair() == Crosshair.ACTION;
+		return ctx.game.crosshair() == Crosshair.ACTION;
 	}
 	
 	private boolean hasPotion() {
@@ -476,17 +469,17 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 	}
 	
 	private boolean atBank() {
-		return ctx.bank.isInViewport() && ctx.players.local().getLocation().distanceTo(ctx.bank.getNearest()) < 10;
+		return ctx.bank.inViewport() && ctx.players.local().tile().distanceTo(ctx.bank.nearest()) < 10;
 	}
 	
 	private boolean tileContainsDoor() {
 		final GameObject Door = ctx.objects.select().select().id(doorID).at(doorTile).poll();
-			return Door.isValid() && ctx.players.local().getLocation().distanceTo(Door.getLocation()) < 14;
+			return Door.valid() && ctx.players.local().tile().distanceTo(Door.tile()) < 14;
 	}
 	
 	private boolean atTanner() {
 		final Npc Tanner = ctx.npcs.select().id(tannerID).nearest().poll();
-		return ctx.players.local().getLocation().distanceTo(Tanner.getLocation()) < 10;
+		return ctx.players.local().tile().distanceTo(Tanner.tile()) < 10;
 	}
 	
 	private void close() {
@@ -510,21 +503,21 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 	
 	private boolean logOut() {
 		status = "Logout";
-		if (ctx.bank.isOpen() && !ctx.backpack.select().isEmpty()) {
+		if (ctx.bank.opened() && !ctx.backpack.select().isEmpty()) {
 			depositInventory();
 			ctx.bank.close();
 		}
 		if (ctx.game.logout(true)) {
-			getController().stop();
+		ctx.controller().stop();
 			return true;
 		}
 		return false;
 	}
 	
 	private boolean depositInventory() {
-		final Component DepositBackpackButton = ctx.widgets.get(762, 12);
+		final Component DepositBackpackButton =  ctx.widgets.widget(762).component(12);
 		status = "Depositing Backpack";
-		if (DepositBackpackButton.isVisible()) {
+		if (DepositBackpackButton.visible()) {
 			if (DepositBackpackButton.interact("Deposit carried items")) {
 				Condition.wait(new Callable<Boolean>() {
 					@Override
@@ -540,8 +533,8 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 	
 	private boolean cameraTurnToTanner() {
 		final Npc Tanner = ctx.npcs.select().id(tannerID).nearest().poll();
-		ctx.camera.turnTo(Tanner.getLocation());
-		if (Tanner.isInViewport())
+		ctx.camera.turnTo(Tanner.tile());
+		if (Tanner.inViewport())
 			return true;
 		return false;
 	}
@@ -598,23 +591,16 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 		g.drawString("*" + (status) + "*", 10, 140);
 		g.setFont(fontThree);
 		g.setColor(Color.RED);
-		g.drawString("v5.1", 165, 120);
+		g.drawString("v5.2", 165, 120);
 		drawMouse(g);
-		drawTannerTile(g);
 	}
 	
 	public void drawMouse(Graphics2D g) {
-		final Point p = ctx.mouse.getLocation();
+		Point p = ctx.mouse.getLocation();
 		g.setColor(Color.RED);
 		g.setStroke(new BasicStroke(2));
 		g.fill(new Rectangle(p.x + 1, p.y - 4, 2, 15));
 		g.fill(new Rectangle(p.x - 6, p.y + 2, 16, 2));
-	}
-
-	private void drawTannerTile(final Graphics g) {
-		final Npc Tanner = ctx.npcs.select().id(tannerID).nearest().poll();
-			if (Tanner.isInViewport() && hasHide())
-				Tanner.getLocation().getMatrix(ctx).draw(g);
 	}
 
 	private String perHour(int gained) {
@@ -643,77 +629,56 @@ public class rTanner extends PollingScript implements PaintListener, MessageList
 	}
 	
 	public class rTannerGUI extends JFrame {
+		
 		private static final long serialVersionUID = 1L;
+		
 		public rTannerGUI() {
 			initComponents();
 		}
-
+		
 		private void button1ActionPerformed(ActionEvent e) {
 			if (checkBox1.isSelected()) 
 				usePotions = true;
 			guiWait = false;
 			g.dispose();
 		}
-
+		
 		private void initComponents() {
-			checkBox1 = new JCheckBox();
 			label1 = new JLabel();
 			button1 = new JButton();
-
+			checkBox1 = new JCheckBox();
 			setTitle("rTannerGUI");
 			Container contentPane = getContentPane();
-
-			checkBox1.setText("Use Potions");
-			checkBox1.setFont(new Font("Comic Sans MS", Font.PLAIN, 12));
-
-			label1.setText("rTanner Setup");
-			label1.setFont(new Font("Comic Sans MS", Font.BOLD, 11));
-
+			label1.setText("rTanner");
+			label1.setFont(new Font("Gabriola", Font.BOLD, 20));
 			button1.setText("Start");
-			button1.setFont(new Font("Comic Sans MS", Font.PLAIN, 11));
+			button1.setFont(new Font("Comic Sans MS", Font.PLAIN, 12));
 			button1.addActionListener(new ActionListener() {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					button1ActionPerformed(e);
 				}
 			});
-
+			checkBox1.setText("Potions");
 			GroupLayout contentPaneLayout = new GroupLayout(contentPane);
 			contentPane.setLayout(contentPaneLayout);
-			contentPaneLayout.setHorizontalGroup(
-				contentPaneLayout.createParallelGroup()
-					.addGroup(GroupLayout.Alignment.TRAILING, contentPaneLayout.createSequentialGroup()
-						.addGap(0, 0, Short.MAX_VALUE)
-						.addComponent(label1)
-						.addGap(18, 18, 18))
-					.addGroup(contentPaneLayout.createSequentialGroup()
-						.addGroup(contentPaneLayout.createParallelGroup()
-							.addGroup(contentPaneLayout.createSequentialGroup()
-								.addContainerGap()
-								.addComponent(checkBox1))
-							.addGroup(contentPaneLayout.createSequentialGroup()
-								.addGap(18, 18, 18)
-								.addComponent(button1)))
-						.addContainerGap())
+			contentPaneLayout.setHorizontalGroup(contentPaneLayout.createParallelGroup().addGroup(contentPaneLayout.createSequentialGroup().addGroup(contentPaneLayout.createParallelGroup()
+			.addGroup(contentPaneLayout.createSequentialGroup().addGap(24, 24, 24).addComponent(label1))
+			.addGroup(contentPaneLayout.createSequentialGroup().addGap(20, 20, 20)
+			.addGroup(contentPaneLayout.createParallelGroup().addComponent(checkBox1).addComponent(button1)))).addGap(20, 20, 20))
 			);
 			contentPaneLayout.setVerticalGroup(
-				contentPaneLayout.createParallelGroup()
-					.addGroup(GroupLayout.Alignment.TRAILING, contentPaneLayout.createSequentialGroup()
-						.addContainerGap()
-						.addComponent(label1)
-						.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED, GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-						.addComponent(checkBox1)
-						.addGap(7, 7, 7)
-						.addComponent(button1))
+				contentPaneLayout.createParallelGroup().addGroup(GroupLayout.Alignment.TRAILING, contentPaneLayout.createSequentialGroup().addComponent(label1)
+						.addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED).addComponent(checkBox1)
+						.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED, 11, Short.MAX_VALUE)
+						.addComponent(button1, GroupLayout.PREFERRED_SIZE, 27, GroupLayout.PREFERRED_SIZE))
 			);
 			pack();
 			setLocationRelativeTo(getOwner());
 		}
-		private JCheckBox checkBox1;
 		private JLabel label1;
 		private JButton button1;
+		private JCheckBox checkBox1;
 	}
-
-
-
 }
+

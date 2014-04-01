@@ -17,39 +17,41 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import org.powerbot.event.MessageEvent;
-import org.powerbot.event.MessageListener;
-import org.powerbot.event.PaintListener;
-import org.powerbot.script.Manifest;
+import org.powerbot.script.Condition;
+import org.powerbot.script.MessageEvent;
+import org.powerbot.script.MessageListener;
+import org.powerbot.script.PaintListener;
 import org.powerbot.script.PollingScript;
-import org.powerbot.script.methods.MethodContext;
-import org.powerbot.script.methods.MethodProvider;
-import org.powerbot.script.methods.Game.Crosshair;
-import org.powerbot.script.util.Condition;
-import org.powerbot.script.util.GeItem;
-import org.powerbot.script.util.Random;
-import org.powerbot.script.wrappers.Component;
-import org.powerbot.script.wrappers.Npc;
-import org.powerbot.script.wrappers.Tile;
+import org.powerbot.script.Random;
+import org.powerbot.script.Script.Manifest;
+import org.powerbot.script.Tile;
+import org.powerbot.script.rt6.ClientAccessor;
+import org.powerbot.script.rt6.ClientContext;
+import org.powerbot.script.rt6.Component;
+import org.powerbot.script.rt6.Game.Crosshair;
+import org.powerbot.script.rt6.GeItem;
+import org.powerbot.script.rt6.Npc;
 
-@Manifest(name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for money", topic = 1135335)
-public class rFurFlipper extends PollingScript implements PaintListener, MessageListener {
+
+@Manifest(name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for money")
+public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
 	private static JobContainer container;
 	private static RenderingHints antialiasing = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	private static String status = "Starting...";
 	private static long scriptTimer = 0;
 	private static int furPrice, furBought, furStored;
 	private static int baraekID = 547, furID = 948;
-	private final Component pressOne = ctx.widgets.get(1188, 3);
-	private final Component achievements = ctx.widgets.get(1477).getComponent(74);
-	private final Component collectionBox = ctx.widgets.get(109).getComponent(61);
+	private final Component pressOne = ctx.widgets.widget(1188).component(3);
+	private final Component achievements = ctx.widgets.widget(1477).component(74);
+	private final Component collectionBox = ctx.widgets.widget(109).component(61);
 	private static final Tile[] pathToNpc = { new Tile(3189, 3435, 0), new Tile(3200, 3429, 0), new Tile(3208, 3431, 0), new Tile(3215, 3433, 0) };
 	private static final Tile[] pathToBank = { new Tile(3215, 3433, 0), new Tile(3208, 3431, 0), new Tile(3200, 3429, 0), new Tile(3189, 3435, 0) };
+	
 
 	@Override
 	public void start() {
 		scriptTimer = System.currentTimeMillis();
-		ctx.properties.setProperty("bank.antipattern", "disable");
+		//ctx.properties.setProperty("bank.antipattern", "disable");
 		status = "Get prices..";
 		furPrice = getGuidePrice(furID) - 20;
 		container = new JobContainer(new Job[] { new Camera(ctx), new Fix(ctx), new CloseBank(ctx), new PressOne(ctx), new Continue(ctx), new Talking(ctx), new Banking(ctx) });
@@ -72,8 +74,8 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		log.info("Script stopped");
 	}
 
-	public abstract class Job extends MethodProvider {
-		public Job(MethodContext ctx) {
+	public abstract class Job extends ClientAccessor {
+		public Job(ClientContext ctx ) {
 			super(ctx);
 		}
 
@@ -128,63 +130,60 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 	}
 
 	@Override
-	public int poll() {
-		if (!ctx.game.isLoggedIn() || ctx.game.getClientState() != org.powerbot.script.methods.Game.INDEX_MAP_LOADED) 
-			return 1000;
-
+	public void poll() {
+		if (!ctx.game.loggedIn()) 
+			return;
+	
 		final Job job = container.get();
 		if (job != null) {
 			job.execute();
-			return job.delay();
+			return;
 		}
-
-		return Random.nextInt(50, 100);
 	}
 
 	private class Camera extends Job {
-		public Camera(MethodContext ctx) {
+		public Camera(ClientContext ctx) {
 			super(ctx);
 		}
 
 		@Override
 		public boolean activate() {
-			return ctx.camera.getPitch() < 50;
+			return ctx.camera.pitch() < 45;
 		}
 
 		@Override
 		public void execute() {
 			status = "Set Pitch";
-			ctx.camera.setPitch(Random.nextInt(52, 55));
+			ctx.camera.pitch(Random.nextInt(50, 55));
 		}
 	}
 
 
 	private class Fix extends Job {
-		public Fix(MethodContext ctx) {
+		public Fix(ClientContext ctx) {
 			super(ctx);
 		}
 
 		@Override
 		public boolean activate() {
-			return achievements.isVisible() || collectionBox.isVisible() || ctx.widgets.get(1191, 10).getText().contains("Can I have a newspaper, please?") || ctx.widgets.get(1184, 9).getText().contains("Hiya. I'm giving out free books");
+			return achievements.visible()|| collectionBox.visible() || ctx.widgets.widget(1191).component(10).text().contains("Can I have a newspaper, please?") || ctx.widgets.widget(1184).component(9).text().contains("Hiya. I'm giving out free books");
 		}
 
 		@Override
 		public void execute() {
 			status = "Close";
 			close();
-			
 		}
 	}
 	
 	private class CloseBank extends Job {
-		public CloseBank(MethodContext ctx) {
+		public CloseBank(ClientContext ctx) {
 			super(ctx);
 		}
 
 		@Override
 		public boolean activate() {
-			return ctx.bank.isOpen() && ctx.backpack.select().count() != 28;
+			return ctx.bank.opened() && ctx.backpack.select().count() != 28;
 		}
 
 		@Override
@@ -199,13 +198,13 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 	}
 
 	private class PressOne extends Job {
-		public PressOne(MethodContext ctx) {
+		public PressOne(ClientContext ctx) {
 			super(ctx);
 		}
 
 		@Override
 		public boolean activate() {
-			return pressOne.isValid();
+			return pressOne.valid();
 		}
 
 		@Override
@@ -218,26 +217,26 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 			Condition.wait(new Callable<Boolean>() {
 				@Override
 				public Boolean call() throws Exception {
-					return !pressOne.isVisible() && ctx.chat.isContinue();
+					return !pressOne.visible() && ctx.chat.queryContinue();
 				}
 			}, 250, 20);
 		}
 	}
 
 	private class Continue extends Job {
-		public Continue(MethodContext ctx) {
+		public Continue(ClientContext ctx) {
 			super(ctx);
 		}
 
 		@Override
 		public boolean activate() {
-			return ctx.widgets.get(1191, 10).isValid() || ctx.widgets.get(1184, 9).isValid();
+			return ctx.widgets.widget(1191).component(10).valid() || ctx.widgets.widget(1184).component(10).valid();
 		}
 
 		@Override
 		public void execute() {
 			status = "Select Continue";
-			if (ctx.widgets.get(1191, 10).getText().contains("Can you sell me some furs?") || ctx.widgets.get(1191, 10).getText().contains("Yeah, OK, here you go.")) {
+			if (ctx.widgets.widget(1191).component(10).text().contains("Can you sell me some furs?") || ctx.widgets.widget(1191).component(10).text().contains("Yeah, OK, here you go.")) {
 				if(Random.nextInt(1, 100) == 50)
 					ctx.chat.clickContinue();
 				else
@@ -245,7 +244,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 				Condition.wait(new Callable<Boolean>() {
 					@Override
 					public Boolean call() throws Exception {
-						return ctx.widgets.get(1184, 9).getText().contains("Yeah, sure. They're 20 gold coins each.") || ctx.widgets.get(1189, 2).getText().contains("Baraek sells you a fur.");
+						return ctx.widgets.widget(1184).component(9).text().contains("Yeah, sure. They're 20 gold coins each.") || ctx.widgets.widget(1189).component(2).text().contains("Baraek sells you a fur.");
 					}
 				}, 250, 20);
 			} else {
@@ -256,9 +255,9 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 					Condition.wait(new Callable<Boolean>() {
 						@Override
 						public Boolean call() throws Exception {
-							return pressOne.isVisible();
+							return pressOne.visible();
 						}
-				}, 250, 20);
+					}, 250, 20);
 			}
 		}
 	}
@@ -266,7 +265,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 
 	private class Talking extends Job {
-		public Talking(MethodContext ctx) {
+		public Talking(ClientContext ctx) {
 			super(ctx);
 		}
 
@@ -278,11 +277,11 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		@Override
 		public void execute() {
 			final Npc baraek = ctx.npcs.select().id(baraekID).nearest().poll();
-			if (ctx.players.local().getLocation().distanceTo(baraek.getLocation()) < 8) {
-				if (ctx.backpack.getMoneyPouch() < 20) {
+			if (ctx.players.local().tile().distanceTo(baraek.tile()) < 8) {
+				if (ctx.backpack.moneyPouchCount() < 20) {
 					logOut();
 				} else {
-					if (baraek.isInViewport()) {
+					if (baraek.inViewport()) {
 						if(Random.nextInt(1, 20) == 10)
 							mouseMoveSlightly();
 						status = "Talk to Baraek";
@@ -293,29 +292,29 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 								Condition.wait(new Callable<Boolean>() {
 									@Override
 									public Boolean call() throws Exception {
-										return pressOne.isValid();
+										return pressOne.valid();
 									}
 								}, 250, 20);
 							}
 						}
 					} else {
 						status = "Walk to Npc";
-						ctx.movement.stepTowards(ctx.movement.getClosestOnMap(baraek.getLocation()).randomize(2, 2));
-						ctx.camera.turnTo(baraek.getLocation());
-						while (ctx.players.local().isInMotion() && !baraek.isInViewport());
+						ctx.movement.step(ctx.movement.closestOnMap(baraek.tile()));
+						ctx.camera.turnTo(baraek.tile());
+						while (ctx.players.local().inMotion() && !baraek.inViewport());
 					}
 				}
 			} else {
 				status = "Walk to Npc";
-				if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(6, 8)){
-					ctx.movement.stepTowards(getNextTile(randomizePath(pathToNpc , 3, 2)));
+				if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(6, 8)){
+					ctx.movement.newTilePath(pathToNpc).traverse();
 				}
 			}
 		}
 	}
 
 	private class Banking extends Job {
-		public Banking(MethodContext ctx) {
+		public Banking(ClientContext ctx) {
 			super(ctx);
 		}
 
@@ -326,8 +325,8 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 		@Override
 		public void execute() {
-			if (ctx.bank.isInViewport() && ctx.players.local().getLocation().distanceTo(ctx.bank.getNearest().getLocation()) < 6) {
-				if (ctx.bank.isOpen()) {
+			if (ctx.bank.inViewport() && ctx.players.local().tile().distanceTo(ctx.bank.nearest().tile()) < 6) {
+				if (ctx.bank.opened()) {
 					status = "Deposit";
 					ctx.bank.depositInventory();
 					Condition.wait(new Callable<Boolean>() {
@@ -338,15 +337,15 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 					}, 250, 20);
 				} else {
 					status = "Bank Open";
-					ctx.camera.turnTo(ctx.bank.getNearest());
+					ctx.camera.turnTo(ctx.bank.nearest());
 					ctx.bank.open();
 				}
 			} else {
 			status = "Walk to Bank";
-			if (!ctx.players.local().isInMotion() || ctx.players.local().getLocation().distanceTo(ctx.movement.getDestination()) < Random.nextInt(6, 8)){
-					ctx.movement.stepTowards(getNextTile(randomizePath(pathToBank, 3, 2)));
+			if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(6, 8)){
+					ctx.movement.newTilePath(pathToBank).traverse();
 					if (Random.nextInt(1, 10) == 5)
-						ctx.camera.turnTo(ctx.bank.getNearest());
+						ctx.camera.turnTo(ctx.bank.nearest());
 				}
 			}
 		}
@@ -354,7 +353,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 
 	private boolean logOut() {
 		status = "Logout";
-		if (ctx.bank.isOpen() && !ctx.backpack.select().isEmpty()) {
+		if (ctx.bank.opened() && !ctx.backpack.select().isEmpty()) {
 			ctx.bank.depositInventory();
 			Condition.wait(new Callable<Boolean>() {
 				@Override
@@ -365,14 +364,14 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 			ctx.bank.close();
 		}
 		if (ctx.game.logout(true)) {
-			getController().stop();
+			ctx.controller().stop();
 			return true;
 		}
 		return false;
 	}
 	
 	private boolean didInteract() {
-		return ctx.game.getCrosshair() == Crosshair.ACTION;
+		return ctx.game.crosshair() == Crosshair.ACTION;
 	}
 	
 	private void close() {
@@ -381,62 +380,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		while (DelayTimer.isRunning());
 		ctx.keyboard.send("{VK_ESCAPE up}");
 	}
-	
-	public Tile[] randomizePath(Tile[] path, int maxXDeviation, int maxYDeviation) {
-		Tile[] rez = new Tile[path.length];
 
-		for (int i = 0; i < path.length; i++) {
-			int x = path[i].getX();
-			int y = path[i].getY();
-			if (maxXDeviation > 0) {
-				double d = Math.random() * 2 - 1.0;
-				d *= maxXDeviation;
-				x += (int) d;
-			}
-			if (maxYDeviation > 0) {
-				double d = Math.random() * 2 - 1.0;
-				d *= maxYDeviation;
-				y += (int) d;
-			}
-			rez[i] = new Tile(x, y, path[i].getPlane());
-		}
-
-		return rez;
-	}
-
-	public Tile getNextTile(Tile[] path) {
-		int dist = 99;
-		int closest = -1;
-		for (int i = path.length - 1; i >= 0; i--) {
-			Tile tile = path[i];
-			int d = distanceTo(tile);
-			if (d < dist) {
-				dist = d;
-				closest = i;
-			}
-		}
-
-		int feasibleTileIndex = -1;
-
-		for (int i = closest; i < path.length; i++) {
-
-			if (distanceTo(path[i]) <= 16) {
-				feasibleTileIndex = i;
-			} else {
-				break;
-			}
-		}
-
-		if (feasibleTileIndex == -1) {
-			return null;
-		} else {
-			return path[feasibleTileIndex];
-		}
-	}
-	
-    public int distanceTo(Tile tile) {
-        return (int) ctx.players.local().getLocation().distanceTo(tile);
-    }
 	
 	public void mouseMoveSlightly() {
 		Point p = new Point((int) (ctx.mouse.getLocation().getX() + (Math.random() * 50 > 25 ? 1 : -1) * (20 + Math.random() * 70)), 
@@ -498,18 +442,10 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 		g.drawString("Profit: " + nf.format(profit()) + "(" + PerHour(profit()) + "/h)", 13, 120);
 		g.drawString("Status: " + (status), 10, 140);
 		g.setColor(Color.RED);
-		g.drawString("v1.0", 165, 140);
+		g.drawString("v1.1", 165, 140);
 		drawMouse(g);
 		drawTrail(g);
-		drawBaraekTile(g);
 	}
-
-	private void drawBaraekTile(final Graphics g) {
-		final Npc baraek = ctx.npcs.select().id(baraekID).nearest().poll();
-		if(ctx.backpack.select().count() != 28)
-			if (baraek.isInViewport())
-				baraek.getLocation().getMatrix(ctx).draw(g);
-		}
 
 	public String PerHour(int gained) {
 		return formatNumber((int) ((gained) * 3600000D / (System.currentTimeMillis() - scriptTimer)));
@@ -580,7 +516,7 @@ public class rFurFlipper extends PollingScript implements PaintListener, Message
 	}
 
 	private static int getGuidePrice(final int id) {
-		return GeItem.getPrice(id);
+		return GeItem.price(id);
 	}
 
 }
