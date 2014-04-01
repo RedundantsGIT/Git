@@ -515,19 +515,16 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 	}
 	
 	private boolean depositInventory() {
-		final Component DepositBackpackButton =  ctx.widgets.widget(762).component(12);
 		status = "Depositing Backpack";
-		if (DepositBackpackButton.visible()) {
-			if (DepositBackpackButton.interact("Deposit carried items")) {
+			if (ctx.bank.depositInventory()) {
 				Condition.wait(new Callable<Boolean>() {
 					@Override
 					public Boolean call() throws Exception {
 						return ctx.backpack.select().isEmpty();
 					}
 				}, 250, 20);
+				return true;
 			}
-			return true;
-		}
 		return false;
 	}
 	
