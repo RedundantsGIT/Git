@@ -45,8 +45,6 @@ import org.powerbot.script.rt6.Interactive;
 import org.powerbot.script.rt6.Item;
 import org.powerbot.script.rt6.Npc;
 
-
-
 @Manifest(name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", properties = "topic=876982")
 public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
 
@@ -82,7 +80,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 	
 	private static final Tile doorTile = new Tile(3187, 3403, 0);
 	private static Tile[] tilePath;
-	private static final Tile[] pathToEllis = { new Tile(3271, 3168), new Tile(3276, 3180, 0), new Tile(3280, 3187, 0), new Tile(3275, 3195, 0) };
+	private static final Tile[] pathToEllis = { new Tile(3272, 3168), new Tile(3276, 3178, 0), new Tile(3280, 3187, 0), new Tile(3275, 3195, 0) };
 	private static final Tile[] pathToTanner = { new Tile(3182, 3435, 0), new Tile(3182, 3425, 0), new Tile(3182, 3415, 0), new Tile(3187, 3403, 0) };
 	private static final Tile[] pathToJack = { new Tile(2884, 3535), new Tile(2881, 3530, 0), new Tile(2882, 3523, 0), new Tile(2885, 3514, 0), new Tile(2889, 3510, 0), new Tile(2887, 3502, 0) };
 	
@@ -96,7 +94,6 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 	public void start() {
 		elapsedTime = System.currentTimeMillis();
 		log.info("start()");
-		//ctx.property("bank.antipattern", "disable");
 		g.setVisible(true);
 		while (guiWait) {
 			status = "GUI";
@@ -198,15 +195,15 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 		public void execute() {
 			if (areaBurthorpe.contains(ctx.players.local().tile())) {
 				location = "Burthorpe";
-				tilePath = pathToJack;
+				tilePath = randomizePath(pathToJack, 2, 2);
 				atBurthorpe = true;
 			} else if (areaAlKharid.contains(ctx.players.local().tile())) {
 				location = "Al Kharid";
-				tilePath = pathToEllis;
+				tilePath = randomizePath(pathToEllis, 2, 2);
 				atAlKharid = true;
 			} else if (areaVarrock.contains(ctx.players.local().tile())) {
 				location = "Varrock";
-				tilePath = pathToTanner;
+				tilePath = randomizePath(pathToTanner, 2, 2); 
 				atVarrock = true;
 			}
 		}
@@ -374,7 +371,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 					} else {
 						status = "Walking to Tanner";
 						if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(7, 8)) {
-							ctx.movement.newTilePath(tilePath).traverse();
+							ctx.movement.step(getNextTile(randomizePath(tilePath , 3, 3)));
 							if(Random.nextInt(1, 5) == 3)
 								cameraTurnToTanner();
 						}
@@ -436,7 +433,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 			} else {
 				status = "Walking to Bank";
 				if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(7, 8)) {
-					ctx.movement.newTilePath(tilePath).reverse().traverse();
+					ctx.movement.step(getNextTile(randomizePath(reversePath(tilePath), 3, 3)));
 					if(Random.nextInt(1, 3) == 2)
 					ctx.camera.turnTo(ctx.bank.nearest());
 				}
@@ -552,6 +549,71 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 		return true;
 	}
 	
+	public Tile[] randomizePath(Tile[] path, int maxXDeviation, int maxYDeviation) {
+		Tile[] rez = new Tile[path.length];
+
+		for (int i = 0; i < path.length; i++) {
+			int x = path[i].x();
+			int y = path[i].y();
+			if (maxXDeviation > 0) {
+				double d = Math.random() * 2 - 1.0;
+				d *= maxXDeviation;
+				x += (int) d;
+			}
+			if (maxYDeviation > 0) {
+				double d = Math.random() * 2 - 1.0;
+				d *= maxYDeviation;
+				y += (int) d;
+			}
+			rez[i] = new Tile(x, y, path[i].floor());
+		}
+
+		return rez;
+	}
+
+	public Tile getNextTile(Tile[] path) {
+		int dist = 99;
+		int closest = -1;
+		for (int i = path.length - 1; i >= 0; i--) {
+			Tile tile = path[i];
+			int d = distanceTo(tile);
+			if (d < dist) {
+				dist = d;
+				closest = i;
+			}
+		}
+
+		int feasibleTileIndex = -1;
+
+		for (int i = closest; i < path.length; i++) {
+
+			if (distanceTo(path[i]) <= 16) {
+				feasibleTileIndex = i;
+			} else {
+				break;
+			}
+		}
+
+		if (feasibleTileIndex == -1) {
+			return null;
+		} else {
+			return path[feasibleTileIndex];
+		}
+	}
+	
+    public int distanceTo(Tile tile) {
+        return (int) ctx.players.local().tile().distanceTo(tile);
+    }
+    
+    private Tile[] reversePath(Tile tiles[]) {
+        Tile r[] = new Tile[tiles.length];
+        int i;
+        for (i = 0; i < tiles.length; i++) {
+                r[i] = tiles[(tiles.length - 1) - i];
+        }
+        return r;
+}
+	
 	final Color black = new Color(0, 0, 0, 200);
 	final Font font = new Font("Comic Sans MS", 0, 13);
 	final Font fontTwo = new Font("Comic Sans MS", 1, 13);
@@ -588,7 +650,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 		g.drawString("*" + (status) + "*", 10, 140);
 		g.setFont(fontThree);
 		g.setColor(Color.RED);
-		g.drawString("v5.2", 165, 120);
+		g.drawString("v5.3", 165, 120);
 		drawMouse(g);
 	}
 	
@@ -618,7 +680,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 
 	@Override
 	public void messaged(MessageEvent msg) {
-		String m = msg.getMessage().toLowerCase();
+		String m = msg.text().toLowerCase();
 		if (m.contains("tanner")) {
 			int count = Integer.parseInt(m.replaceAll("\\D", ""));
 			hideCount += count;
