@@ -24,7 +24,6 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.LayoutStyle;
 
 import org.powerbot.script.Area;
 import org.powerbot.script.Condition;
@@ -62,6 +61,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 	private static boolean atAlKharid = false;
 	private static boolean atBurthorpe = false;
 	private static boolean atVarrock = false;
+	private static boolean usePresent = false;
 
 	private static int hideCount, hidesLeft, potionsLeft;
 
@@ -80,9 +80,14 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 	
 	private static final Tile doorTile = new Tile(3187, 3403, 0);
 	private static Tile[] tilePath;
-	private static final Tile[] pathToEllis = { new Tile(3272, 3168), new Tile(3276, 3178, 0), new Tile(3280, 3187, 0), new Tile(3275, 3195, 0) };
-	private static final Tile[] pathToTanner = { new Tile(3182, 3435, 0), new Tile(3182, 3425, 0), new Tile(3182, 3415, 0), new Tile(3187, 3403, 0) };
-	private static final Tile[] pathToJack = { new Tile(2884, 3535), new Tile(2881, 3530, 0), new Tile(2882, 3523, 0), new Tile(2885, 3514, 0), new Tile(2889, 3510, 0), new Tile(2887, 3502, 0) };
+	
+	private static final Tile[] pathToEllis = { new Tile(3272, 3168, 0), new Tile(3276, 3178, 0), new Tile(3280, 3187, 0), new Tile(3275, 3195, 0) };
+	private static final Tile[] pathToJack = { new Tile(2884, 3535, 0), new Tile(2881, 3530, 0), new Tile(2882, 3523, 0), new Tile(2885, 3514, 0), new Tile(2889, 3510, 0), new Tile(2887, 3502, 0) };
+	private static final Tile[] pathToTanner = new Tile[] { 
+	    new Tile(3182, 3435, 0), new Tile(3184, 3430, 0),
+		new Tile(3183, 3427, 0), new Tile(3182, 3423, 0),
+		new Tile(3182, 3418, 0), new Tile(3182, 3413, 0),
+		new Tile(3182, 3408, 0), new Tile(3187, 3403, 0) };
 	
 	private static final Area areaBurthorpe = new Area(new Tile[] { new Tile(2877, 3540, 0), new Tile(2900, 3540, 0), new Tile(2899, 3479, 0), new Tile(2875, 3479, 0) });
 	private static final Area areaAlKharid = new Area(new Tile[] { new Tile(3239, 3154, 0), new Tile(3315, 3151, 0), new Tile(3319, 3224, 0), new Tile(3250, 3223, 0) });
@@ -256,23 +261,23 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 		@Override
 		public void execute() {
 			final Item EnergyPotion = ctx.backpack.select().id(energyPotionID).poll();
-			if (!ctx.hud.opened(Window.BACKPACK)) {
-				status = "Open Backpack";
-				ctx.hud.open(Window.BACKPACK);
-			} else {
+			if (ctx.hud.opened(Window.BACKPACK)) {
 				status = "Use Potion";
-				if (EnergyPotion.interact("Drink")) {
+				if(EnergyPotion.interact("Drink")) {
 					Condition.wait(new Callable<Boolean>() {
 						@Override
 						public Boolean call() throws Exception {
 							return ctx.movement.energyLevel() > 50;
-							}
-						}, 250, 20);
-					}
+						}
+					}, 250, 20);
 				}
+			} else {
+				status = "Open Backpack";
+				ctx.hud.open(Window.BACKPACK);
 			}
-
 		}
+
+	}
 
 	private class Door extends Job {
 		public Door(ClientContext ctx) {
@@ -401,6 +406,9 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 						if (hasLeather() && hasPotion()) {
 							deposit(0, leatherID);
 						} else {
+							if(usePresent)
+								usePresent();
+							else
 							depositInventory();
 						}
 					} else {
@@ -525,6 +533,22 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 		return false;
 	}
 	
+	private boolean usePresent(){
+		final Component present = ctx.widgets.widget(762).component(169);
+		status = "Withdraw";
+		if(present.visible()){
+			present.interact("Withdraw");
+			Condition.wait(new Callable<Boolean>() {
+				@Override
+				public Boolean call() throws Exception {
+					return hasHide();
+				}
+			}, 250, 20);
+			return true;
+		}
+		return false;
+	}
+	
 	private boolean cameraTurnToTanner() {
 		final Npc Tanner = ctx.npcs.select().id(tannerID).nearest().poll();
 		ctx.camera.turnTo(Tanner.tile());
@@ -623,6 +647,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 
 	@Override
 	public void repaint(Graphics g1) {
+		
 		long millis = System.currentTimeMillis() - elapsedTime;
 		long hours = millis / (1000 * 60 * 60);
 		millis -= hours * (1000 * 60 * 60);
@@ -650,7 +675,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 		g.drawString("*" + (status) + "*", 10, 140);
 		g.setFont(fontThree);
 		g.setColor(Color.RED);
-		g.drawString("v5.3", 165, 120);
+		g.drawString("v5.4", 165, 120);
 		drawMouse(g);
 	}
 	
@@ -694,22 +719,28 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 		public rTannerGUI() {
 			initComponents();
 		}
-		
+
 		private void button1ActionPerformed(ActionEvent e) {
-			if (checkBox1.isSelected()) 
+			if(checkBox1.isSelected())
 				usePotions = true;
+			if(checkBox2.isSelected())
+				usePresent = true;
 			guiWait = false;
 			g.dispose();
 		}
-		
+
 		private void initComponents() {
 			label1 = new JLabel();
 			button1 = new JButton();
 			checkBox1 = new JCheckBox();
+			checkBox2 = new JCheckBox();
+
 			setTitle("rTannerGUI");
 			Container contentPane = getContentPane();
+
 			label1.setText("rTanner");
-			label1.setFont(new Font("Gabriola", Font.BOLD, 20));
+			label1.setFont(new Font("Comic Sans MS", Font.BOLD, 20));
+
 			button1.setText("Start");
 			button1.setFont(new Font("Comic Sans MS", Font.PLAIN, 12));
 			button1.addActionListener(new ActionListener() {
@@ -718,26 +749,51 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 					button1ActionPerformed(e);
 				}
 			});
-			checkBox1.setText("Potions");
+
+			checkBox1.setText("Use Potions");
+
+			checkBox2.setText("Use Present");
+
 			GroupLayout contentPaneLayout = new GroupLayout(contentPane);
 			contentPane.setLayout(contentPaneLayout);
-			contentPaneLayout.setHorizontalGroup(contentPaneLayout.createParallelGroup().addGroup(contentPaneLayout.createSequentialGroup().addGroup(contentPaneLayout.createParallelGroup()
-			.addGroup(contentPaneLayout.createSequentialGroup().addGap(24, 24, 24).addComponent(label1))
-			.addGroup(contentPaneLayout.createSequentialGroup().addGap(20, 20, 20)
-			.addGroup(contentPaneLayout.createParallelGroup().addComponent(checkBox1).addComponent(button1)))).addGap(20, 20, 20))
+			contentPaneLayout.setHorizontalGroup(
+				contentPaneLayout.createParallelGroup()
+					.addGroup(contentPaneLayout.createSequentialGroup()
+						.addGroup(contentPaneLayout.createParallelGroup()
+							.addGroup(contentPaneLayout.createSequentialGroup()
+								.addGap(21, 21, 21)
+								.addComponent(button1))
+							.addGroup(contentPaneLayout.createSequentialGroup()
+								.addContainerGap()
+								.addComponent(checkBox2))
+							.addGroup(contentPaneLayout.createSequentialGroup()
+								.addContainerGap()
+								.addComponent(checkBox1))
+							.addGroup(contentPaneLayout.createSequentialGroup()
+								.addContainerGap()
+								.addComponent(label1)))
+						.addContainerGap(18, Short.MAX_VALUE))
 			);
 			contentPaneLayout.setVerticalGroup(
-				contentPaneLayout.createParallelGroup().addGroup(GroupLayout.Alignment.TRAILING, contentPaneLayout.createSequentialGroup().addComponent(label1)
-						.addPreferredGap(LayoutStyle.ComponentPlacement.UNRELATED).addComponent(checkBox1)
-						.addPreferredGap(LayoutStyle.ComponentPlacement.RELATED, 11, Short.MAX_VALUE)
-						.addComponent(button1, GroupLayout.PREFERRED_SIZE, 27, GroupLayout.PREFERRED_SIZE))
+				contentPaneLayout.createParallelGroup()
+					.addGroup(GroupLayout.Alignment.TRAILING, contentPaneLayout.createSequentialGroup()
+						.addContainerGap()
+						.addComponent(label1, GroupLayout.PREFERRED_SIZE, 17, GroupLayout.PREFERRED_SIZE)
+						.addGap(18, 18, 18)
+						.addComponent(checkBox1, GroupLayout.PREFERRED_SIZE, 12, GroupLayout.PREFERRED_SIZE)
+						.addGap(14, 14, 14)
+						.addComponent(checkBox2, GroupLayout.PREFERRED_SIZE, 19, GroupLayout.PREFERRED_SIZE)
+						.addGap(11, 11, 11)
+						.addComponent(button1, GroupLayout.DEFAULT_SIZE, 21, Short.MAX_VALUE))
 			);
 			pack();
 			setLocationRelativeTo(getOwner());
 		}
+
 		private JLabel label1;
 		private JButton button1;
 		private JCheckBox checkBox1;
+		private JCheckBox checkBox2;
 	}
 }
 
