@@ -404,13 +404,13 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 				if (ctx.bank.opened()) {
 					hidesLeft = ctx.bank.select().id(hideID).count(true);
 					potionsLeft = ctx.bank.select().id(energyPotionID).count(true);
+					if(usePreset){
+						usePreset();
+					}else{
 					if (ctx.backpack.select().count() == 28) {
 						if (hasLeather() && hasPotion()) {
 							deposit(0, leatherID);
 						} else {
-							if(usePreset)
-								usePreset();
-							else
 							depositInventory();
 						}
 					} else {
@@ -432,6 +432,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 							logOut();
 						}
 					}
+				  }
 				} else {
 					status = "Opening Bank";
 					if(!ctx.players.local().inMotion())
