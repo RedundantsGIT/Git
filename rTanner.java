@@ -404,7 +404,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 				if (ctx.bank.opened()) {
 					hidesLeft = ctx.bank.select().id(hideID).count(true);
 					potionsLeft = ctx.bank.select().id(energyPotionID).count(true);
-					if(usePreset){
+					if(usePreset && bankHasHide()){
 						usePreset();
 					}else{
 					if (ctx.backpack.select().count() == 28) {
