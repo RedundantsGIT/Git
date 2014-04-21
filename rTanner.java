@@ -61,7 +61,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 	private static boolean atAlKharid = false;
 	private static boolean atBurthorpe = false;
 	private static boolean atVarrock = false;
-	private static boolean usePresent = false;
+	private static boolean usePreset = false;
 
 	private static int hideCount, hidesLeft, potionsLeft;
 
@@ -406,8 +406,8 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 						if (hasLeather() && hasPotion()) {
 							deposit(0, leatherID);
 						} else {
-							if(usePresent)
-								usePresent();
+							if(usePreset)
+								usePreset();
 							else
 							depositInventory();
 						}
@@ -533,7 +533,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 		return false;
 	}
 	
-	private boolean usePresent(){
+	private boolean usePreset(){
 		final Component present = ctx.widgets.widget(762).component(169);
 		status = "Withdraw";
 		if(present.visible()){
@@ -724,7 +724,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 			if(checkBox1.isSelected())
 				usePotions = true;
 			if(checkBox2.isSelected())
-				usePresent = true;
+				usePreset = true;
 			guiWait = false;
 			g.dispose();
 		}
@@ -752,7 +752,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 
 			checkBox1.setText("Use Potions");
 
-			checkBox2.setText("Use Present");
+			checkBox2.setText("Use Preset");
 
 			GroupLayout contentPaneLayout = new GroupLayout(contentPane);
 			contentPane.setLayout(contentPaneLayout);
