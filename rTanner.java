@@ -402,6 +402,8 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 		public void execute() {
 			if (atBank()) {
 				if (ctx.bank.opened()) {
+					hidesLeft = ctx.bank.select().id(hideID).count(true);
+					potionsLeft = ctx.bank.select().id(energyPotionID).count(true);
 					if (ctx.backpack.select().count() == 28) {
 						if (hasLeather() && hasPotion()) {
 							deposit(0, leatherID);
@@ -425,8 +427,6 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 							} else {
 								status = "Withdraw Hides";
 								withdraw(0, hideID);
-								hidesLeft = ctx.bank.select().id(hideID).count(true);
-								potionsLeft = ctx.bank.select().id(energyPotionID).count(true);
 							}
 						} else {
 							logOut();
