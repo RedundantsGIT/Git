@@ -45,15 +45,18 @@ import org.powerbot.script.rt6.Item;
 import org.powerbot.script.rt6.Npc;
 
 @Manifest(name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", properties = "topic=876982")
-public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
+public class rTanner extends
+		PollingScript<org.powerbot.script.rt6.ClientContext> implements
+		PaintListener, MessageListener {
 
 	private static long elapsedTime = 0;
 
-	private static RenderingHints antialiasing = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+	private static RenderingHints antialiasing = new RenderingHints(
+			RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
 	private static String location;
 	private static String status = "Starting...";
-	
+
 	private rTannerGUI g = new rTannerGUI();
 	private static boolean guiWait = true;
 	private static boolean usePotions = false;
@@ -66,7 +69,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 	private static int hideCount, hidesLeft, potionsLeft;
 
 	private static final int doorID = 24376, mangleID = 24920;
-	
+
 	private final Component make = ctx.widgets.widget(1370).component(20);
 	private final Component achievements = ctx.widgets.widget(1477).component(74);
 	private final Component collectionBox = ctx.widgets.widget(109).component(61);
@@ -74,24 +77,36 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 	private static final int[] tannerID = { 14877, 2824, 2320 };
 	private static final int[] hideID = { 1739, 1753, 1751, 24372, 6287, 7801, 1749, 1747 };
 	private static final int[] leatherID = { 1741, 1743, 1745, 2505, 24374, 6289, 2507, 2509 };
-	private static final int[] energyPotionID = { 3008, 3010, 3012, 3014, 23375, 23377, 23379, 23381, 
-		                                          23383, 23385, 11453, 11455, 23387, 23389, 23391, 23393, 
-		                                          23395, 23397, 11481, 11483, 3016, 3018, 3020, 3022 };
-	
+	private static final int[] energyPotionID = { 3008, 3010, 3012, 3014,
+			23375, 23377, 23379, 23381, 23383, 23385, 11453, 11455, 23387,
+			23389, 23391, 23393, 23395, 23397, 11481, 11483, 3016, 3018, 3020,
+			3022 };
 	private static final Tile doorTile = new Tile(3187, 3403, 0);
 	private static Tile[] tilePath;
-	
-	private static final Tile[] pathToEllis = { new Tile(3272, 3168, 0), new Tile(3276, 3178, 0), new Tile(3280, 3187, 0), new Tile(3275, 3195, 0) };
-	private static final Tile[] pathToJack = { new Tile(2884, 3535, 0), new Tile(2881, 3530, 0), new Tile(2882, 3523, 0), new Tile(2885, 3514, 0), new Tile(2889, 3510, 0), new Tile(2887, 3502, 0) };
-	private static final Tile[] pathToTanner = new Tile[] { 
-	    new Tile(3182, 3435, 0), new Tile(3184, 3430, 0),
-		new Tile(3183, 3427, 0), new Tile(3182, 3423, 0),
-		new Tile(3182, 3418, 0), new Tile(3182, 3413, 0),
-		new Tile(3182, 3408, 0), new Tile(3187, 3403, 0) };
-	
-	private static final Area areaBurthorpe = new Area(new Tile[] { new Tile(2877, 3540, 0), new Tile(2900, 3540, 0), new Tile(2899, 3479, 0), new Tile(2875, 3479, 0) });
-	private static final Area areaAlKharid = new Area(new Tile[] { new Tile(3239, 3154, 0), new Tile(3315, 3151, 0), new Tile(3319, 3224, 0), new Tile(3250, 3223, 0) });
-	private static final Area areaVarrock = new Area(new Tile[] { new Tile(3166, 3445, 0), new Tile(3171, 3390, 0), new Tile(3214, 3397, 0), new Tile(3206, 3453, 0) });
+	private static final Tile[] pathToEllis = new Tile[] {
+			new Tile(3272, 3168, 0), new Tile(3276, 3174, 0),
+			new Tile(3276, 3179, 0), new Tile(3278, 3181, 0),
+			new Tile(3280, 3184, 0), new Tile(3281, 3188, 0),
+			new Tile(3281, 3191, 0), new Tile(3281, 3194, 0),
+			new Tile(3275, 3195, 0) };
+	private static final Tile[] pathToJack = { new Tile(2884, 3535, 0),
+			new Tile(2881, 3531, 0), new Tile(2881, 3526, 0),
+			new Tile(2882, 3523, 0), new Tile(2885, 3514, 0),
+			new Tile(2889, 3510, 0), new Tile(2887, 3502, 0) };
+	private static final Tile[] pathToTanner = new Tile[] {
+			new Tile(3182, 3435, 0), new Tile(3184, 3430, 0),
+			new Tile(3183, 3427, 0), new Tile(3182, 3423, 0),
+			new Tile(3182, 3418, 0), new Tile(3182, 3413, 0),
+			new Tile(3182, 3408, 0), new Tile(3187, 3403, 0) };
+	private static final Area areaBurthorpe = new Area(new Tile[] {
+			new Tile(2877, 3540, 0), new Tile(2900, 3540, 0),
+			new Tile(2899, 3479, 0), new Tile(2875, 3479, 0) });
+	private static final Area areaAlKharid = new Area(new Tile[] {
+			new Tile(3239, 3154, 0), new Tile(3315, 3151, 0),
+			new Tile(3319, 3224, 0), new Tile(3250, 3223, 0) });
+	private static final Area areaVarrock = new Area(new Tile[] {
+			new Tile(3166, 3445, 0), new Tile(3171, 3390, 0),
+			new Tile(3214, 3397, 0), new Tile(3206, 3453, 0) });
 
 	private static JobContainer container;
 
@@ -99,13 +114,13 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 	public void start() {
 		elapsedTime = System.currentTimeMillis();
 		log.info("start()");
+		ctx.camera.pitch(false);
 		g.setVisible(true);
 		while (guiWait) {
 			status = "GUI";
 			final Timer guiTimer = new Timer(Random.nextInt(500, 1000));
 			while (guiTimer.isRunning());
 		}
-		ctx.camera.pitch(false);
 		rTanner.container = new JobContainer(new Job[] { new GetPlayerArea(ctx), new Pitch(ctx), new CloseInterfaces(ctx), new Door(ctx), 
 				new UseEnergyPotion(ctx), new Tan(ctx), new Banking(ctx) });
 	}
@@ -227,7 +242,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 		@Override
 		public void execute() {
 			status = "Set Pitch";
-			ctx.camera.pitch(Random.nextInt(35, 40));
+			ctx.camera.pitch(Random.nextInt(33, 43));
 		}
 	}
 
@@ -377,8 +392,6 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 						status = "Walking to Tanner";
 						if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(7, 8)) {
 							ctx.movement.step(getNextTile(randomizePath(tilePath , 3, 3)));
-							if(Random.nextInt(1, 5) == 3)
-								cameraTurnToTanner();
 						}
 					}
 				}
@@ -443,8 +456,6 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 				status = "Walking to Bank";
 				if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(7, 8)) {
 					ctx.movement.step(getNextTile(randomizePath(reversePath(tilePath), 3, 3)));
-					if(Random.nextInt(1, 3) == 2)
-					ctx.camera.turnTo(ctx.bank.nearest());
 				}
 			}
 		}
@@ -547,14 +558,6 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 			}, 250, 20);
 			return true;
 		}
-		return false;
-	}
-	
-	private boolean cameraTurnToTanner() {
-		final Npc Tanner = ctx.npcs.select().id(tannerID).nearest().poll();
-		ctx.camera.turnTo(Tanner.tile());
-		if (Tanner.inViewport())
-			return true;
 		return false;
 	}
 
@@ -676,7 +679,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 		g.drawString("*" + (status) + "*", 10, 140);
 		g.setFont(fontThree);
 		g.setColor(Color.RED);
-		g.drawString("v5.4", 165, 120);
+		g.drawString("v5.5", 165, 120);
 		drawMouse(g);
 	}
 	
