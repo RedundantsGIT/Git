@@ -361,7 +361,7 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 			ctx.bank.close();
 		}
 		if (ctx.game.logout(true)) {
-			ctx.controller().stop();
+			ctx.controller.stop();
 			return true;
 		}
 		return false;

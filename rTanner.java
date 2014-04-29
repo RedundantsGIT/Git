@@ -534,7 +534,7 @@ public class rTanner extends
 			ctx.bank.close();
 		}
 		if (ctx.game.logout(true)) {
-		ctx.controller().stop();
+			ctx.controller.stop();
 			return true;
 		}
 		return false;
