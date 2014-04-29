@@ -35,6 +35,7 @@ import org.powerbot.script.rt6.Npc;
 
 @Manifest(name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for money", properties = "topic=1135335")
 public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
+	
 	private static JobContainer container;
 	private static RenderingHints antialiasing = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	private static String status = "Starting...";
@@ -44,7 +45,6 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 	private final Component pressOne = ctx.widgets.widget(1188).component(3);
 	private static final Tile[] pathToNpc = { new Tile(3189, 3435, 0), new Tile(3200, 3429, 0), new Tile(3208, 3431, 0), new Tile(3215, 3433, 0) };
 	private static final Tile[] pathToBank = { new Tile(3215, 3433, 0), new Tile(3208, 3431, 0), new Tile(3200, 3429, 0), new Tile(3189, 3435, 0) };
-	
 	
 	@Override
 	public void start() {
