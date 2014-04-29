@@ -71,8 +71,6 @@ public class rTanner extends
 	private static final int doorID = 24376, mangleID = 24920;
 
 	private final Component make = ctx.widgets.widget(1370).component(20);
-	private final Component achievements = ctx.widgets.widget(1477).component(74);
-	private final Component collectionBox = ctx.widgets.widget(109).component(61);
 
 	private static final int[] tannerID = { 14877, 2824, 2320 };
 	private static final int[] hideID = { 1739, 1753, 1751, 24372, 6287, 7801, 1749, 1747 };
@@ -121,7 +119,7 @@ public class rTanner extends
 			final Timer guiTimer = new Timer(Random.nextInt(500, 1000));
 			while (guiTimer.isRunning());
 		}
-		rTanner.container = new JobContainer(new Job[] { new GetPlayerArea(ctx), new Pitch(ctx), new CloseInterfaces(ctx), new Door(ctx), 
+		rTanner.container = new JobContainer(new Job[] { new GetPlayerArea(ctx), new Pitch(ctx), new Door(ctx), 
 				new UseEnergyPotion(ctx), new Tan(ctx), new Banking(ctx) });
 	}
 
@@ -242,26 +240,10 @@ public class rTanner extends
 		@Override
 		public void execute() {
 			status = "Set Pitch";
-			ctx.camera.pitch(Random.nextInt(33, 43));
+			ctx.camera.pitch(Random.nextInt(30, 45));
 		}
 	}
 
-	private class CloseInterfaces extends Job {
-		public CloseInterfaces(ClientContext ctx) {
-			super(ctx);
-		}
-
-		@Override
-		public boolean activate() {
-			return achievements.visible() || collectionBox.visible();
-		}
-
-		@Override
-		public void execute() {
-			status = "Close";
-			close();
-		}
-	}
 
 	private class UseEnergyPotion extends Job {
 		public UseEnergyPotion(ClientContext ctx) {
@@ -347,6 +329,7 @@ public class rTanner extends
 				if (atTanner()) {
 					if (make.valid()) {
 						if (make.interact("Make")) {
+							takeBreak();
 							Condition.wait(new Callable<Boolean>() {
 								@Override
 								public Boolean call() throws Exception {
@@ -419,6 +402,7 @@ public class rTanner extends
 					potionsLeft = ctx.bank.select().id(energyPotionID).count(true);
 					if(usePreset && bankHasHide()){
 						usePreset();
+						takeBreak();
 					}else{
 					if (ctx.backpack.select().count() == 28) {
 						if (hasLeather() && hasPotion()) {
@@ -456,6 +440,11 @@ public class rTanner extends
 				status = "Walking to Bank";
 				if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(7, 8)) {
 					ctx.movement.step(getNextTile(randomizePath(reversePath(tilePath), 3, 3)));
+					if(atVarrock){
+						if(Random.nextInt(1, 4) == 2)
+						ctx.camera.turnTo(ctx.bank.nearest());
+					}
+						
 				}
 			}
 		}
@@ -506,6 +495,26 @@ public class rTanner extends
 		ctx.keyboard.send("{VK_ESCAPE up}");
 	}
 	
+	private void takeBreak() {
+		final Component Rest = ctx.widgets.component(1465, 1);
+		if (Random.nextInt(1, 150) == 75) {
+			status = "Taking a break..";
+			log.info("[Antipattern]: Break");
+			if (Random.nextInt(1, 15) == 10) {
+				ctx.mouse.hop(Random.nextInt(-10, (int) (ctx.game.dimensions()
+						.getWidth() + 10)), (int) (ctx.game.dimensions()
+						.getHeight() + Random.nextInt(10, 100)));
+			} else {
+				if (ctx.movement.energyLevel() < 80)
+					Rest.interact("Rest");
+				else
+					ctx.mouse.move(Random.nextInt(0, (int) (ctx.game.dimensions().getWidth() - 1)), 0);
+			}
+			final Timer breakTimer = new Timer(Random.nextInt(8000, 35000));
+			while (breakTimer.isRunning());
+		}
+	}
+	
 	public class Timer {
 		private long end;
 		private final long start;
@@ -549,14 +558,15 @@ public class rTanner extends
 		final Component present = ctx.widgets.widget(762).component(169);
 		status = "Withdraw";
 		if(present.visible()){
-			present.interact("Withdraw");
+			if(present.interact("Withdraw")){
 			Condition.wait(new Callable<Boolean>() {
 				@Override
 				public Boolean call() throws Exception {
 					return hasHide();
 				}
-			}, 250, 20);
-			return true;
+				}, 250, 20);
+				return true;
+			}
 		}
 		return false;
 	}

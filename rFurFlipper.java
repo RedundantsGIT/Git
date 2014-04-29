@@ -42,8 +42,6 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 	private static int furPrice, furBought, furStored;
 	private static int baraekID = 547, furID = 948;
 	private final Component pressOne = ctx.widgets.widget(1188).component(3);
-	private final Component achievements = ctx.widgets.widget(1477).component(74);
-	private final Component collectionBox = ctx.widgets.widget(109).component(61);
 	private static final Tile[] pathToNpc = { new Tile(3189, 3435, 0), new Tile(3200, 3429, 0), new Tile(3208, 3431, 0), new Tile(3215, 3433, 0) };
 	private static final Tile[] pathToBank = { new Tile(3215, 3433, 0), new Tile(3208, 3431, 0), new Tile(3200, 3429, 0), new Tile(3189, 3435, 0) };
 	
@@ -165,7 +163,7 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 
 		@Override
 		public boolean activate() {
-			return achievements.visible()|| collectionBox.visible() || ctx.widgets.widget(1191).component(10).text().contains("Can I have a newspaper, please?") || ctx.widgets.widget(1184).component(9).text().contains("Hiya. I'm giving out free books");
+			return ctx.widgets.widget(1191).component(10).text().contains("Can I have a newspaper, please?") || ctx.widgets.widget(1184).component(9).text().contains("Hiya. I'm giving out free books");
 		}
 
 		@Override
@@ -216,7 +214,7 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 			Condition.wait(new Callable<Boolean>() {
 				@Override
 				public Boolean call() throws Exception {
-					return !pressOne.visible() && ctx.chat.queryContinue();
+					return !pressOne.valid() && ctx.chat.queryContinue();
 				}
 			}, 250, 20);
 		}
@@ -254,7 +252,7 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 					Condition.wait(new Callable<Boolean>() {
 						@Override
 						public Boolean call() throws Exception {
-							return pressOne.visible();
+							return pressOne.valid();
 						}
 					}, 250, 20);
 			}
@@ -498,7 +496,7 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 		g.drawString("Profit: " + nf.format(profit()) + "(" + PerHour(profit()) + "/h)", 13, 120);
 		g.drawString("Status: " + (status), 10, 140);
 		g.setColor(Color.RED);
-		g.drawString("v1.2", 165, 140);
+		g.drawString("v1.3", 165, 140);
 		drawMouse(g);
 		drawTrail(g);
 	}
