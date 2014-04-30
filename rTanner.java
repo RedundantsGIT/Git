@@ -45,31 +45,21 @@ import org.powerbot.script.rt6.Item;
 import org.powerbot.script.rt6.Npc;
 
 @Manifest(name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", properties = "topic=876982")
-public class rTanner extends
-		PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
-
+public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
 	private static long elapsedTime = 0;
-
 	private static RenderingHints antialiasing = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
 	private static String location;
 	private static String status = "Starting...";
-
 	private rTannerGUI g = new rTannerGUI();
 	private static boolean guiWait = true;
 	private static boolean usePotions = false;
-
 	private static boolean atAlKharid = false;
 	private static boolean atBurthorpe = false;
 	private static boolean atVarrock = false;
 	private static boolean usePreset = false;
-
 	private static int hideCount, hidesLeft, potionsLeft;
-
 	private static final int doorID = 24376, mangleID = 24920;
-
 	private final Component make = ctx.widgets.widget(1370).component(20);
-
 	private static final int[] tannerID = { 14877, 2824, 2320 };
 	private static final int[] hideID = { 1739, 1753, 1751, 24372, 6287, 7801, 1749, 1747 };
 	private static final int[] leatherID = { 1741, 1743, 1745, 2505, 24374, 6289, 2507, 2509 };
