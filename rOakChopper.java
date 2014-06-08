@@ -182,6 +182,7 @@ public class rOakChopper extends
 		@Override
 		public void execute() {
 			status = "Close";
+			log.info("Close");
 			ctx.camera.turnTo(ctx.bank.nearest());
 			close();
 		}
@@ -202,6 +203,7 @@ public class rOakChopper extends
 			if (atBanker()) {
 				if (ctx.bank.opened()) {
 					status = "Banking";
+					log.info("Banking...");
 					ctx.bank.depositInventory();
 					Condition.wait(new Callable<Boolean>() {
 						@Override
@@ -248,6 +250,7 @@ public class rOakChopper extends
 								tries = 0;
 							} else {
 								status = "Interact with oak";
+								log.info("Chop down");
 								if (oak.interact("Chop down")) {
 									if (Random.nextInt(1, 3) == 2) {
 										mouseMoveSlightly();
@@ -264,6 +267,7 @@ public class rOakChopper extends
 							}
 						} else {
 							status = "Walk to tree";
+							log.info("Walk to tree");
 							if (ctx.camera.pitch() < 30) {
 								ctx.camera.pitch(Random.nextInt(35, 60));
 							}
@@ -281,12 +285,14 @@ public class rOakChopper extends
 			} else {
 				if (ctx.bank.opened()) {
 					status = "Bank Close";
+					log.info("Close bank");
 					if (Random.nextInt(1, 15) == 10)
 						ctx.bank.close();
 					else
 						close();
 				} else {
 					status = "Walk to Oaks";
+					log.info("Walking to oaks");
 					if (!ctx.players.local().inMotion()
 							|| ctx.players.local().tile()
 									.distanceTo(ctx.movement.destination()) < Random
