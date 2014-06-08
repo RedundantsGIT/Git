@@ -35,22 +35,26 @@ import org.powerbot.script.rt6.GameObject;
 import org.powerbot.script.rt6.GeItem;
 
 @Manifest(name = "rOakChopper", description = "Chops oak trees at the Grand Exchange", properties = "hidden=true")
-public class rOakChopper extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
-	
+public class rOakChopper extends
+		PollingScript<org.powerbot.script.rt6.ClientContext> implements
+		PaintListener, MessageListener {
+
 	private static long elapsedTime = 0;
-	
-	private static RenderingHints antialiasing = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-	
+
+	private static RenderingHints antialiasing = new RenderingHints(
+			RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
 	private static String status = "Starting...";
-	
+
 	private static int logsChopped, logPrice, profitGained, logsInBank, tries;
-	
+
 	private static final int oakLogID = 1521;
-	
+
 	private static int[] oakID = { 38732, 38731 };
-	
-	private final Component geWindow = ctx.widgets.component(105, 87).component(1);
-	
+
+	private final Component geWindow = ctx.widgets.component(105, 87)
+			.component(1);
+
 	public final static Area oakArea = new Area(new Tile[] {
 			new Tile(3168, 3472, 0), new Tile(3228, 3472, 0),
 			new Tile(3220, 3417, 0), new Tile(3176, 3418, 0) });
@@ -61,11 +65,12 @@ public class rOakChopper extends PollingScript<org.powerbot.script.rt6.ClientCon
 			new Tile(3198, 3479, 0), new Tile(3197, 3475, 0),
 			new Tile(3196, 3471, 0), new Tile(3196, 3467, 0),
 			new Tile(3195, 3464, 0) };
-	
+
 	private static final Filter<GameObject> FILTER_TREE = new Filter<GameObject>() {
 		public boolean accept(GameObject object) {
 			Arrays.sort(oakID);
-			return Arrays.binarySearch(oakID, object.id()) >= 0 && oakArea.contains(object.tile());
+			return Arrays.binarySearch(oakID, object.id()) >= 0
+					&& oakArea.contains(object.tile());
 		}
 	};
 
@@ -76,7 +81,8 @@ public class rOakChopper extends PollingScript<org.powerbot.script.rt6.ClientCon
 		System.out.println("Script started");
 		elapsedTime = System.currentTimeMillis();
 		logPrice = getGuidePrice(oakLogID);
-		rOakChopper.container = new JobContainer(new Job[] { new CloseInterfaces(ctx), new Banking(ctx), new Chopping(ctx) });
+		rOakChopper.container = new JobContainer(new Job[] {
+				new CloseInterfaces(ctx), new Banking(ctx), new Chopping(ctx) });
 	}
 
 	@Override
@@ -151,7 +157,7 @@ public class rOakChopper extends PollingScript<org.powerbot.script.rt6.ClientCon
 
 	@Override
 	public void poll() {
-		if (!ctx.game.loggedIn()) 
+		if (!ctx.game.loggedIn())
 			return;
 
 		final Job job = container.get();
@@ -162,7 +168,7 @@ public class rOakChopper extends PollingScript<org.powerbot.script.rt6.ClientCon
 
 		return;
 	}
-	
+
 	private class CloseInterfaces extends Job {
 		public CloseInterfaces(ClientContext ctx) {
 			super(ctx);
@@ -210,7 +216,10 @@ public class rOakChopper extends PollingScript<org.powerbot.script.rt6.ClientCon
 				}
 			} else {
 				status = "Walk to Bank";
-				if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(7, 9)) 
+				if (!ctx.players.local().inMotion()
+						|| ctx.players.local().tile()
+								.distanceTo(ctx.movement.destination()) < Random
+								.nextInt(7, 9))
 					ctx.movement.newTilePath(pathToOak).reverse().traverse();
 			}
 		}
@@ -229,7 +238,8 @@ public class rOakChopper extends PollingScript<org.powerbot.script.rt6.ClientCon
 		@Override
 		public void execute() {
 			if (oakArea.contains(ctx.players.local().tile())) {
-				for (GameObject oak : ctx.objects.select().select(FILTER_TREE).nearest().first()) {
+				for (GameObject oak : ctx.objects.select().select(FILTER_TREE)
+						.nearest().first()) {
 					if (ctx.players.local().animation() == -1) {
 						if (oak.inViewport()) {
 							if (tries > 1) {
@@ -246,7 +256,8 @@ public class rOakChopper extends PollingScript<org.powerbot.script.rt6.ClientCon
 									Condition.wait(new Callable<Boolean>() {
 										@Override
 										public Boolean call() throws Exception {
-											return ctx.players.local().animation() != -1;
+											return ctx.players.local()
+													.animation() != -1;
 										}
 									}, 250, 20);
 								}
@@ -256,53 +267,67 @@ public class rOakChopper extends PollingScript<org.powerbot.script.rt6.ClientCon
 							if (ctx.camera.pitch() < 30) {
 								ctx.camera.pitch(Random.nextInt(35, 60));
 							}
-							if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < 3) 
-								ctx.movement.step(ctx.movement.closestOnMap(oak).tile());
+							if (!ctx.players.local().inMotion()
+									|| ctx.players
+											.local()
+											.tile()
+											.distanceTo(
+													ctx.movement.destination()) < 3)
+								ctx.movement.step(ctx.movement
+										.closestOnMap(oak).tile());
 						}
 					}
 				}
 			} else {
 				if (ctx.bank.opened()) {
 					status = "Bank Close";
-					if(Random.nextInt(1, 15) == 10)
+					if (Random.nextInt(1, 15) == 10)
 						ctx.bank.close();
 					else
 						close();
 				} else {
 					status = "Walk to Oaks";
-					if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(7, 9)) 
+					if (!ctx.players.local().inMotion()
+							|| ctx.players.local().tile()
+									.distanceTo(ctx.movement.destination()) < Random
+									.nextInt(7, 9))
 						ctx.movement.newTilePath(pathToOak).traverse();
 				}
 			}
 
 		}
 	}
-	
+
 	public boolean atBanker() {
-		return ctx.bank.inViewport() && ctx.players.local().tile().distanceTo(ctx.bank.nearest()) < 6;
+		return ctx.bank.inViewport()
+				&& ctx.players.local().tile().distanceTo(ctx.bank.nearest()) < 6;
 	}
 
 	public void mouseMoveSlightly() {
-		Point p = new Point((int) (ctx.input.getLocation().getX() + (Math.random() * 50 > 25 ? 1 : -1) * (20 + Math.random() * 70)), 
-				(int) (ctx.input.getLocation().getY() + (Math.random() * 50 > 25 ? 1: -1) * (20 + Math.random() * 85)));
+		Point p = new Point(
+				(int) (ctx.input.getLocation().getX() + (Math.random() * 50 > 25 ? 1
+						: -1)
+						* (20 + Math.random() * 70)), (int) (ctx.input
+						.getLocation().getY() + (Math.random() * 50 > 25 ? 1
+						: -1) * (20 + Math.random() * 85)));
 		if (p.getX() < 1 || p.getY() < 1 || p.getX() > 761 || p.getY() > 499) {
 			mouseMoveSlightly();
 			return;
 		}
 		ctx.input.move(p);
 	}
-	
+
 	private void close() {
 		ctx.input.send("{VK_ESCAPE down}");
 		final Timer DelayTimer = new Timer(Random.nextInt(100, 200));
-		while (DelayTimer.isRunning());
+		while (DelayTimer.isRunning())
+			;
 		ctx.input.send("{VK_ESCAPE up}");
 	}
 
 	public boolean didInteract() {
 		return ctx.game.crosshair() == Crosshair.ACTION;
 	}
-
 
 	public class Timer {
 		private long end;
@@ -321,7 +346,7 @@ public class rOakChopper extends PollingScript<org.powerbot.script.rt6.ClientCon
 	@Override
 	public void messaged(MessageEvent msg) {
 		String message = msg.text();
-		if (message.contains("You get some oak logs.")) 
+		if (message.contains("You get some oak logs."))
 			logsChopped++;
 	}
 
@@ -339,7 +364,7 @@ public class rOakChopper extends PollingScript<org.powerbot.script.rt6.ClientCon
 		long minutes = millis / (1000 * 60);
 		millis -= minutes * (1000 * 60);
 		long seconds = millis / 1000;
-		if(ctx.players.local().animation() != -1)
+		if (ctx.players.local().animation() != -1)
 			status = "Chopping...";
 		profitGained = logsChopped * logPrice;
 		final Graphics2D g = (Graphics2D) g1;
@@ -353,9 +378,12 @@ public class rOakChopper extends PollingScript<org.powerbot.script.rt6.ClientCon
 		g.drawString("rOakChopper", 75, 222);
 		g.setFont(font);
 		g.setColor(Color.WHITE);
-		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 13, 245);
-		g.drawString("Chopped: " + nf.format(logsChopped) + "(" + PerHour(logsChopped) + "/h)", 13, 265);
-		g.drawString("Profit: " + nf.format(profitGained) + "(" + PerHour(profitGained) + "/h)", 13, 285);
+		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 13,
+				245);
+		g.drawString("Chopped: " + nf.format(logsChopped) + "("
+				+ PerHour(logsChopped) + "/h)", 13, 265);
+		g.drawString("Profit: " + nf.format(profitGained) + "("
+				+ PerHour(profitGained) + "/h)", 13, 285);
 		g.drawString("Log Price: " + (logPrice), 13, 305);
 		g.drawString("Logs In Bank: " + (logsInBank), 13, 325);
 		g.drawString("Status: " + (status), 13, 346);
@@ -364,7 +392,8 @@ public class rOakChopper extends PollingScript<org.powerbot.script.rt6.ClientCon
 	}
 
 	public String PerHour(int gained) {
-		return formatNumber((int) ((gained) * 3600000D / (System.currentTimeMillis() - elapsedTime)));
+		return formatNumber((int) ((gained) * 3600000D / (System
+				.currentTimeMillis() - elapsedTime)));
 	}
 
 	public String formatNumber(int start) {
