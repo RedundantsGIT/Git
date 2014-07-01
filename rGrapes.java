@@ -362,8 +362,14 @@ public class rGrapes extends
 		case 4:
 			ctx.camera.angle(Random.nextInt(1, 300));
 			break;
+		case 5:
+			ctx.input.move(Random.nextInt(0, (int) (ctx.game.dimensions().getWidth() - 1)), 0);
+			break;
+		case 6:
+			ctx.input.hop(Random.nextInt(-10, (int) (ctx.game.dimensions().getWidth() + 10)), (int) (ctx.game.dimensions().getHeight() + Random.nextInt(10, 100)));
+			break;
 		}
-		Condition.sleep(Random.nextInt(500, 1000));
+		Condition.sleep(Random.nextInt(500, 1500));
 	}
 
 	final static Color BLACK = new Color(25, 0, 0, 200);
