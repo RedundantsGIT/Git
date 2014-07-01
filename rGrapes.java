@@ -238,8 +238,7 @@ public class rGrapes extends
 	private boolean take(GroundItem g) {
 		final int count = ctx.backpack.select().id(ID_GRAPE).count();
 		final Point p = g.tile().matrix(ctx).point(0.5, 0.5, -417);
-		ctx.input.move(p);
-		if (ctx.input.click(true)) {
+		if (ctx.input.click(p, true)) {
 			Condition.wait(new Callable<Boolean>() {
 				@Override
 				public Boolean call() throws Exception {
