@@ -351,25 +351,16 @@ public class rGrapes extends
 		int antiban = Random.nextInt(1, 250);
 		switch (antiban) {
 		case 1:
-			ctx.input.hop(Random.nextInt(-10, (int) (ctx.game.dimensions()
-					.getWidth() + 10)), (int) (ctx.game.dimensions()
-					.getHeight() + Random.nextInt(10, 100)));
-			break;
-		case 2:
-			ctx.input.move(Random.nextInt(0, ctx.game.dimensions().width),
-					ctx.game.dimensions().height - 1);
-			break;
-		case 3:
 			ctx.camera.angle(Random.nextInt(21, 40));
 			break;
-		case 4:
+		case 2:
 			ctx.camera.angle(Random.nextInt(25, 75));
 			break;
-		case 5:
-			ctx.input.move(Random.nextInt(1, 15), Random.nextInt(1, 15));
-			break;
-		case 6:
+		case 3:
 			ctx.camera.angle(Random.nextInt(1, 200));
+			break;
+		case 4:
+			ctx.camera.angle(Random.nextInt(1, 300));
 			break;
 		}
 		Condition.sleep(Random.nextInt(500, 1000));
