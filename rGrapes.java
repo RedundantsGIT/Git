@@ -14,6 +14,7 @@ import java.util.concurrent.Callable;
 
 import org.powerbot.script.Area;
 import org.powerbot.script.Condition;
+import org.powerbot.script.Filter;
 import org.powerbot.script.PaintListener;
 import org.powerbot.script.PollingScript;
 import org.powerbot.script.Random;
@@ -23,6 +24,7 @@ import org.powerbot.script.rt6.GameObject;
 import org.powerbot.script.rt6.GeItem;
 import org.powerbot.script.rt6.GroundItem;
 import org.powerbot.script.rt6.Interactive;
+import org.powerbot.script.rt6.Menu;
 import org.powerbot.script.rt6.Npc;
 import org.powerbot.script.rt6.Game.Crosshair;
 
@@ -181,16 +183,13 @@ public class rGrapes extends
 							&& Random.nextInt(1, 10) == 5) {
 						LOOT_TILE.tile().matrix(ctx).interact("Walk here");
 						Condition.sleep(Random.nextInt(1000, 1500));
-						while (ctx.players.local().inMotion())
-							;
+						while (ctx.players.local().inMotion());
 					} else
 						ctx.movement.step(ctx.movement.closestOnMap(TILE_LOOT));
 					ctx.camera.turnTo(TILE_LOOT);
-					while (ctx.players.local().inMotion())
-						;
+					while (ctx.players.local().inMotion());
 				} else {
-					final GroundItem Grapes = ctx.groundItems.select()
-							.id(ID_GRAPE).nearest().poll();
+					final GroundItem Grapes = ctx.groundItems.select().id(ID_GRAPE).nearest().poll();
 					if (Grapes.inViewport()) {
 						STATUS = "Take grapes";
 						take(Grapes);
@@ -238,7 +237,14 @@ public class rGrapes extends
 	private boolean take(GroundItem g) {
 		final int count = ctx.backpack.select().id(ID_GRAPE).count();
 		final Point p = g.tile().matrix(ctx).point(0.5, 0.5, -417);
-		if (ctx.input.click(p, true)) {
+		final Filter<Menu.Command> filter = new Filter<Menu.Command>() {
+			@Override
+			public boolean accept(Menu.Command arg0) {
+				return arg0.action.equalsIgnoreCase("Take") && arg0.option.equalsIgnoreCase("Grapes");
+			}
+
+		};
+		if (ctx.menu.click(filter)) {
 			Condition.wait(new Callable<Boolean>() {
 				@Override
 				public Boolean call() throws Exception {
@@ -249,6 +255,7 @@ public class rGrapes extends
 			if (TRIES > 2) {
 				ctx.camera.turnTo(g.tile());
 			}
+			ctx.input.move(p);
 			TRIES++;
 		}
 		if (ctx.backpack.select().id(ID_GRAPE).count() == count + 1) {
@@ -262,16 +269,13 @@ public class rGrapes extends
 
 	private boolean openDoor() {
 		final int[] doorBounds = { -200, 150, -800, -300, 0, 0 };
-		final GameObject Door = ctx.objects.select().id(ID_DOOR)
-				.each(Interactive.doSetBounds(doorBounds)).nearest().poll();
-		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS1).nearest()
-				.poll();
+		final GameObject Door = ctx.objects.select().id(ID_DOOR).each(Interactive.doSetBounds(doorBounds)).nearest().poll();
+		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS1).nearest().poll();
 		if (ctx.players.local().tile().distanceTo(Door.tile()) < 5) {
 			if (Door.inViewport()) {
 				ctx.camera.turnTo(Stairs.tile());
 				Door.interact("Open", "Door");
-				while (ctx.players.local().inMotion())
-					;
+				while (ctx.players.local().inMotion());
 			}
 		} else {
 			ctx.movement.step(ctx.movement.closestOnMap(Door.tile()));
@@ -281,13 +285,11 @@ public class rGrapes extends
 	}
 
 	private boolean goDown() {
-		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS2).nearest()
-				.poll();
+		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS2).nearest().poll();
 		if (Stairs.inViewport()) {
 			ctx.camera.turnTo(Stairs.tile());
 			Stairs.interact("Climb-down");
-			while (ctx.players.local().inMotion())
-				;
+			while (ctx.players.local().inMotion());
 		} else {
 			ctx.movement.step(ctx.movement.closestOnMap(Stairs.tile()));
 		}
@@ -295,13 +297,11 @@ public class rGrapes extends
 	}
 
 	private boolean goUp() {
-		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS1).nearest()
-				.poll();
+		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS1).nearest().poll();
 		if (Stairs.inViewport()) {
 			ctx.camera.turnTo(Stairs.tile());
 			Stairs.interact("Climb-up");
-			while (ctx.players.local().inMotion())
-				;
+			while (ctx.players.local().inMotion());
 		} else {
 			ctx.movement.step(ctx.movement.closestOnMap(Stairs.tile()));
 		}
@@ -315,14 +315,12 @@ public class rGrapes extends
 	}
 
 	private boolean atLevelTwo() {
-		final GameObject Shoot = ctx.objects.select().id(ID_SHOOT1).nearest()
-				.poll();
+		final GameObject Shoot = ctx.objects.select().id(ID_SHOOT1).nearest().poll();
 		return Shoot.valid();
 	}
 
 	private boolean atLevelThree() {
-		final GameObject Shoot = ctx.objects.select().id(ID_SHOOT2).nearest()
-				.poll();
+		final GameObject Shoot = ctx.objects.select().id(ID_SHOOT2).nearest().poll();
 		return Shoot.valid();
 	}
 
@@ -331,10 +329,8 @@ public class rGrapes extends
 	}
 
 	private boolean atGuildEntranceDoor() {
-		final GameObject Door = ctx.objects.select().id(ID_DOOR).nearest()
-				.poll();
-		return Door.inViewport()
-				&& ctx.players.local().tile().distanceTo(Door.tile()) < 7
+		final GameObject Door = ctx.objects.select().id(ID_DOOR).nearest().poll();
+		return Door.inViewport() && ctx.players.local().tile().distanceTo(Door.tile()) < 7
 				&& !atLevelOne() && !atLevelTwo() && !atLevelThree();
 	}
 
@@ -365,7 +361,8 @@ public class rGrapes extends
 			ctx.input.move(Random.nextInt(0, (int) (ctx.game.dimensions().getWidth() - 1)), 0);
 			break;
 		case 6:
-			ctx.input.hop(Random.nextInt(-10, (int) (ctx.game.dimensions().getWidth() + 10)), (int) (ctx.game.dimensions().getHeight() + Random.nextInt(10, 100)));
+			ctx.input.hop(Random.nextInt(-10, (int) (ctx.game.dimensions().getWidth() + 10)), 
+		    (int) (ctx.game.dimensions().getHeight() + Random.nextInt(10, 100)));
 			break;
 		}
 		Condition.sleep(Random.nextInt(500, 1500));
@@ -408,8 +405,7 @@ public class rGrapes extends
 	}
 
 	public String PerHour(int gained) {
-		return formatNumber((int) ((gained) * 3600000D / (System
-				.currentTimeMillis() - TIMER_SCRIPT)));
+		return formatNumber((int) ((gained) * 3600000D / (System.currentTimeMillis() - TIMER_SCRIPT)));
 	}
 
 	public String formatNumber(int start) {
