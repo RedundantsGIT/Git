@@ -248,7 +248,7 @@ public class rGrapes extends
 			Condition.wait(new Callable<Boolean>() {
 				@Override
 				public Boolean call() throws Exception {
-					return ctx.backpack.select().id(ID_GRAPE).count() == count + 1;
+					return ctx.backpack.select().id(ID_GRAPE).count() != count;
 				}
 			}, 250, 20);
 		} else {
