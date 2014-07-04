@@ -56,6 +56,8 @@ public class rGrapes extends
 			new Tile(3143, 3443, 0) };
 
 	private static final Tile LOOT_TILE = new Tile(3143, 3450, 2);
+	private static final Tile LOOT_TILE2 = new Tile(3144, 3451, 2);
+	private static final Tile LOOT_TILE3 = new Tile(3145, 3450, 2);
 
 	@Override
 	public void start() {
@@ -179,9 +181,13 @@ public class rGrapes extends
 			} else if (atLevelThree()) {
 				if (ctx.players.local().tile().distanceTo(TILE_LOOT) > 2) {
 					STATUS = "Walk to grapes";
-					if (LOOT_TILE.tile().matrix(ctx).inViewport()
-							&& Random.nextInt(1, 10) == 5) {
-						LOOT_TILE.tile().matrix(ctx).interact("Walk here");
+					if (LOOT_TILE.tile().matrix(ctx).inViewport() && Random.nextInt(1, 10) == 5) {
+						if(Random.nextInt(1, 20) == 10)
+							LOOT_TILE3.matrix(ctx).interact("Walk here");
+						else if (Random.nextInt(1, 10) == 5)
+						LOOT_TILE2.matrix(ctx).interact("Walk here");
+						else 
+							LOOT_TILE.matrix(ctx).interact("Walk here");
 						Condition.sleep(Random.nextInt(1000, 1500));
 						while (ctx.players.local().inMotion());
 					} else
@@ -342,8 +348,8 @@ public class rGrapes extends
 		return ctx.backpack.select().count() == 28;
 	}
 
-	private void antiBan() {
-		int antiban = Random.nextInt(1, 250);
+	private int antiBan() {
+		int antiban = Random.nextInt(1, 1000);
 		switch (antiban) {
 		case 1:
 			ctx.camera.angle(Random.nextInt(21, 40));
@@ -352,10 +358,10 @@ public class rGrapes extends
 			ctx.camera.angle(Random.nextInt(25, 75));
 			break;
 		case 3:
-			ctx.camera.angle(Random.nextInt(1, 200));
+			ctx.camera.angle(Random.nextInt(0, 200));
 			break;
 		case 4:
-			ctx.camera.angle(Random.nextInt(1, 300));
+			ctx.camera.angle(Random.nextInt(0, 300));
 			break;
 		case 5:
 			ctx.input.move(Random.nextInt(0, (int) (ctx.game.dimensions().getWidth() - 1)), 0);
@@ -364,8 +370,18 @@ public class rGrapes extends
 			ctx.input.hop(Random.nextInt(-10, (int) (ctx.game.dimensions().getWidth() + 10)), 
 		    (int) (ctx.game.dimensions().getHeight() + Random.nextInt(10, 100)));
 			break;
-		}
-		Condition.sleep(Random.nextInt(500, 1500));
+		case 7:
+			ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
+			break;
+		case 8:
+			ctx.input.hop(Random.nextInt(0, 500), Random.nextInt(0, 500));
+			break;
+		case 9:
+			ctx.camera.pitch(Random.nextInt(40, 55));
+			ctx.camera.angle(Random.nextInt(0, 300));
+			break;
+			}
+		 return 0;
 	}
 
 	final static Color BLACK = new Color(25, 0, 0, 200);
@@ -393,8 +409,7 @@ public class rGrapes extends
 		g.setFont(FONT);
 		g.drawString("rGrapeGrabber", 60, 20);
 		g.setColor(Color.WHITE);
-		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 10,
-				40);
+		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 10, 40);
 		g.drawString("Grapes Picked: " + NF.format(GRAPES_GAINED) + "("
 				+ PerHour(GRAPES_GAINED) + "/h)", 10, 60);
 		g.drawString("Profit: " + NF.format(PROFIT_GAINED) + "("
