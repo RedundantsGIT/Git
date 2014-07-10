@@ -34,9 +34,7 @@ public class rGrapes extends
 		PaintListener {
 	private static long TIMER_SCRIPT = 0;
 	private static String STATUS = "Starting...";
-	private static RenderingHints ANTIALIASING = new RenderingHints(
-			RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
+	private static RenderingHints ANTIALIASING = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	private static final int ID_BANKER[] = { 553, 2759 };
 	private static final int ID_STAIRS1[] = { 24073, 24074, 24075 };
 	private static final int ID_STAIRS2[] = { 24074, 24075 };
@@ -196,7 +194,7 @@ public class rGrapes extends
 					while (ctx.players.local().inMotion());
 				} else {
 					final GroundItem Grapes = ctx.groundItems.select().id(ID_GRAPE).nearest().poll();
-					if (Grapes.inViewport()) {
+					if (Grapes.valid()) {
 						STATUS = "Take grapes";
 						take(Grapes);
 					} else {
