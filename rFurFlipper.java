@@ -32,31 +32,22 @@ import org.powerbot.script.rt6.GeItem;
 import org.powerbot.script.rt6.Npc;
 
 @Manifest(name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for money", properties = "topic=1135335")
-public class rFurFlipper extends
-		PollingScript<org.powerbot.script.rt6.ClientContext> implements
-		PaintListener, MessageListener {
-	private static JobContainer container;
-	private static RenderingHints antialiasing = new RenderingHints(
-			RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-	private static String status = "Starting...";
-	private static long scriptTimer = 0;
-	private static int furPrice, furBought, furStored;
-	private static int baraekID = 547, furID = 948;
-	private final Component pressOne = ctx.widgets.widget(1188).component(3);
-	private static final Tile[] pathToNpc = { new Tile(3189, 3435, 0),
-			new Tile(3200, 3429, 0), new Tile(3208, 3431, 0),
-			new Tile(3215, 3433, 0) };
-	private static final Tile[] pathToBank = { new Tile(3215, 3433, 0),
-			new Tile(3208, 3431, 0), new Tile(3200, 3429, 0),
-			new Tile(3189, 3435, 0) };
+public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
+	private static JobContainer CONTAINER;
+	private static RenderingHints ANTIALIASING = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+	private static String STATUS = "Starting...";
+	private static long TIMER_SCRIPT = 0;
+	private static int FUR_PRICE, FUR_BOUGHT, furStored;
+	private static int ID_BARAEK = 547, ID_FUR = 948;
+	private final Component WIDGET_MENU = ctx.widgets.component(1188, 3);
+	private static final Tile[] PATH_TO_NPC = { new Tile(3189, 3435, 0), new Tile(3200, 3429, 0), new Tile(3208, 3431, 0), new Tile(3215, 3433, 0) };
 
 	@Override
 	public void start() {
-		scriptTimer = System.currentTimeMillis();
-		status = "Get prices..";
-		furPrice = getGuidePrice(furID) - 20;
-		container = new JobContainer(new Job[] { new Camera(ctx), new Fix(ctx),
-				new CloseBank(ctx), new PressOne(ctx), new Continue(ctx),
+		TIMER_SCRIPT = System.currentTimeMillis();
+		STATUS = "Get prices..";
+		FUR_PRICE = getGuidePrice(ID_FUR) - 20;
+		CONTAINER = new JobContainer(new Job[] { new Camera(ctx), new Fix(ctx), new Menu(ctx), new Continue(ctx),
 				new Talking(ctx), new Banking(ctx) });
 	}
 
@@ -72,7 +63,7 @@ public class rFurFlipper extends
 
 	@Override
 	public void stop() {
-		log.info("[rFurFlipper]: -Total Fur Purchased: " + furBought);
+		log.info("[rFurFlipper]: -Total Fur Purchased: " + FUR_BOUGHT);
 		log.info("[rFurFlipper]: -Total Profit Gained: " + profit());
 		log.info("Script stopped");
 	}
@@ -137,7 +128,7 @@ public class rFurFlipper extends
 		if (!ctx.game.loggedIn())
 			return;
 
-		final Job job = container.get();
+		final Job job = CONTAINER.get();
 		if (job != null) {
 			job.execute();
 			return;
@@ -156,8 +147,8 @@ public class rFurFlipper extends
 
 		@Override
 		public void execute() {
-			status = "Set Pitch";
-			ctx.camera.pitch(Random.nextInt(50, 55));
+			STATUS = "Set Pitch";
+			ctx.camera.pitch(Random.nextInt(48, 55));
 		}
 	}
 
@@ -168,61 +159,34 @@ public class rFurFlipper extends
 
 		@Override
 		public boolean activate() {
-			return ctx.widgets.widget(1191).component(10).text()
-					.contains("Can I have a newspaper, please?")
-					|| ctx.widgets.widget(1184).component(9).text()
-							.contains("Hiya. I'm giving out free books");
+			return ctx.widgets.component(1191, 10).text().contains("Can I have a newspaper, please?");
 		}
 
 		@Override
 		public void execute() {
-			status = "Close";
+			STATUS = "Close Menu";
 			close();
 		}
 	}
 
-	private class CloseBank extends Job {
-		public CloseBank(ClientContext ctx) {
+	private class Menu extends Job {
+		public Menu(ClientContext ctx) {
 			super(ctx);
 		}
 
 		@Override
 		public boolean activate() {
-			return ctx.bank.opened() && ctx.backpack.select().count() != 28;
+			return WIDGET_MENU.valid();
 		}
 
 		@Override
 		public void execute() {
-			status = "Close Bank";
-			furStored = ctx.bank.select().id(furID).count(true);
-			if (Random.nextInt(1, 15) == 10)
-				ctx.bank.close();
-			else
-				close();
-		}
-	}
-
-	private class PressOne extends Job {
-		public PressOne(ClientContext ctx) {
-			super(ctx);
-		}
-
-		@Override
-		public boolean activate() {
-			return pressOne.valid();
-		}
-
-		@Override
-		public void execute() {
-			status = "Select Option";
-			if (Random.nextInt(1, 120) == 100)
-				pressOne.click(true);
-			else
-				ctx.input.send("1");
+			STATUS = "Select Option";
+			ctx.input.send("1");
 			Condition.wait(new Callable<Boolean>() {
 				@Override
 				public Boolean call() throws Exception {
-					return !pressOne.valid() && ctx.chat.queryContinue();
+					return !WIDGET_MENU.visible() && ctx.chat.queryContinue();
 				}
 			}, 250, 20);
 		}
@@ -235,43 +199,26 @@ public class rFurFlipper extends
 
 		@Override
 		public boolean activate() {
-			return ctx.widgets.widget(1191).component(10).valid()
-					|| ctx.widgets.widget(1184).component(10).valid();
+			return ctx.widgets.component(1191, 10).valid() || ctx.widgets.component(1184, 10).valid();
 		}
 
 		@Override
 		public void execute() {
-			status = "Select Continue";
-			if (ctx.widgets.widget(1191).component(10).text()
-					.contains("Can you sell me some furs?")
-					|| ctx.widgets.widget(1191).component(10).text()
-							.contains("Yeah, OK, here you go.")) {
-				if (Random.nextInt(1, 100) == 50)
-					ctx.chat.clickContinue();
-				else
-					ctx.input.send(" ");
+			STATUS = "Select Continue";
+			if (ctx.widgets.component(1191, 10).text().contains("Can you sell me some furs?") || ctx.widgets.component(1191, 10).text().contains("Yeah, OK, here you go.")) {
+				ctx.input.send(" ");
 				Condition.wait(new Callable<Boolean>() {
 					@Override
 					public Boolean call() throws Exception {
-						return ctx.widgets
-								.widget(1184)
-								.component(9)
-								.text()
-								.contains(
-										"Yeah, sure. They're 20 gold coins each.")
-								|| ctx.widgets.widget(1189).component(2).text()
-										.contains("Baraek sells you a fur.");
+						return ctx.widgets.component(1184, 9).text().contains("Yeah, sure. They're 20 gold coins each.") || ctx.widgets.component(1189, 2).text().contains("Baraek sells you a fur.");
 					}
 				}, 250, 20);
 			} else {
-				if (Random.nextInt(1, 80) == 63)
-					ctx.chat.clickContinue();
-				else
-					ctx.input.send(" ");
+				ctx.input.send(" ");
 				Condition.wait(new Callable<Boolean>() {
 					@Override
 					public Boolean call() throws Exception {
-						return pressOne.valid();
+						return WIDGET_MENU.valid();
 					}
 				}, 250, 20);
 			}
@@ -290,48 +237,48 @@ public class rFurFlipper extends
 
 		@Override
 		public void execute() {
-			final Npc baraek = ctx.npcs.select().id(baraekID).nearest().poll();
+			final Npc baraek = ctx.npcs.select().id(ID_BARAEK).nearest().poll();
+			if (ctx.backpack.moneyPouchCount() < 20) {
+				ctx.controller.stop();
+			} else {
 			if (ctx.players.local().tile().distanceTo(baraek.tile()) < 8) {
-				if (ctx.backpack.moneyPouchCount() < 20) {
-					logOut();
-				} else {
 					if (baraek.inViewport()) {
-						if (Random.nextInt(1, 20) == 10)
-							mouseMoveSlightly();
-						status = "Talk to Baraek";
+						STATUS = "Talk to Baraek";
 						if (baraek.interact("Talk-to", "Baraek")) {
-							if (Random.nextInt(1, 15) == 10)
-								mouseMoveSlightly();
 							if (didInteract()) {
 								Condition.wait(new Callable<Boolean>() {
 									@Override
 									public Boolean call() throws Exception {
-										return pressOne.valid();
+										return WIDGET_MENU.valid();
 									}
 								}, 250, 20);
 							}
-						}
+						
 					} else {
-						status = "Walk to Npc";
-						ctx.movement.step(ctx.movement.closestOnMap(baraek
-								.tile()));
+						STATUS = "Walk to Npc";
+						ctx.movement.step(ctx.movement.closestOnMap(baraek.tile()));
 						ctx.camera.turnTo(baraek.tile());
-						while (ctx.players.local().inMotion()
-								&& !baraek.inViewport())
-							;
+						while (ctx.players.local().inMotion() && !baraek.inViewport());
 					}
 				}
 			} else {
-				status = "Walk to Npc";
-				if (!ctx.players.local().inMotion()
-						|| ctx.players.local().tile()
-								.distanceTo(ctx.movement.destination()) < Random
-								.nextInt(6, 8)) {
-					ctx.movement
-							.step(getNextTile(randomizePath(pathToNpc, 3, 2)));
+				if (ctx.bank.opened()) {
+					STATUS = "Close Bank";
+					furStored = ctx.bank.select().id(ID_FUR).count(true);
+					if (Random.nextInt(1, 15) == 10)
+						ctx.bank.close();
+					else
+						close();
+				} else {
+					STATUS = "Walk to Npc";
+					if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(5, 8)) {
+						ctx.movement.step(getNextTile(randomizePath(PATH_TO_NPC, 2, 2)));
+						}
+					}
 				}
 			}
 		}
+
 	}
 
 	private class Banking extends Job {
@@ -346,11 +293,8 @@ public class rFurFlipper extends
 
 		@Override
 		public void execute() {
-			if (ctx.bank.inViewport()
-					&& ctx.players.local().tile()
-							.distanceTo(ctx.bank.nearest().tile()) < 6) {
 				if (ctx.bank.opened()) {
-					status = "Deposit";
+					STATUS = "Deposit";
 					ctx.bank.depositInventory();
 					Condition.wait(new Callable<Boolean>() {
 						@Override
@@ -358,84 +302,34 @@ public class rFurFlipper extends
 							return ctx.backpack.select().isEmpty();
 						}
 					}, 250, 20);
-				} else {
-					status = "Bank Open";
+			} else {
+				if (ctx.bank.inViewport() && ctx.players.local().tile().distanceTo(ctx.bank.nearest()) < 6) {
+					STATUS = "Bank Open";
 					ctx.camera.turnTo(ctx.bank.nearest());
 					ctx.bank.open();
+				} else {
+				STATUS = "Walk to Bank";
+				if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(5, 8)) {
+					ctx.movement.step(getNextTile(randomizePath(reversePath(PATH_TO_NPC), 3, 3)));
+						if (Random.nextInt(1, 10) == 5)
+							ctx.camera.turnTo(ctx.bank.nearest());
+					}
 				}
-			} else {
-				status = "Walk to Bank";
-				if (!ctx.players.local().inMotion()
-						|| ctx.players.local().tile()
-								.distanceTo(ctx.movement.destination()) < Random
-								.nextInt(6, 8)) {
-					ctx.movement.step(getNextTile(randomizePath(pathToBank, 3,
-							2)));
-					if (Random.nextInt(1, 10) == 5)
-						ctx.camera.turnTo(ctx.bank.nearest());
-				}
+
 			}
 		}
-	}
-
-	private boolean logOut() {
-		status = "Logout";
-		if (ctx.bank.opened() && !ctx.backpack.select().isEmpty()) {
-			ctx.bank.depositInventory();
-			Condition.wait(new Callable<Boolean>() {
-				@Override
-				public Boolean call() throws Exception {
-					return ctx.backpack.isEmpty();
-				}
-			}, 250, 20);
-			ctx.bank.close();
-		}
-		if (ctx.game.logout(true)) {
-			ctx.controller.stop();
-			return true;
-		}
-		return false;
 	}
 
 	private boolean didInteract() {
 		return ctx.game.crosshair() == Crosshair.ACTION;
 	}
 
-	private void close() {
+	private boolean close() {
 		ctx.input.send("{VK_ESCAPE down}");
-		final Timer DelayTimer = new Timer(Random.nextInt(50, 1000));
-		while (DelayTimer.isRunning())
-			;
-		ctx.input.send("{VK_ESCAPE up}");
+		Condition.sleep(Random.nextInt(50, 200));
+		return ctx.input.send("{VK_ESCAPE up}");
 	}
 
-	public void mouseMoveSlightly() {
-		Point p = new Point(
-				(int) (ctx.input.getLocation().getX() + (Math.random() * 50 > 25 ? 1
-						: -1)
-						* (20 + Math.random() * 70)), (int) (ctx.input
-						.getLocation().getY() + (Math.random() * 50 > 25 ? 1
-						: -1) * (20 + Math.random() * 85)));
-		if (p.getX() < 1 || p.getY() < 1 || p.getX() > 761 || p.getY() > 499) {
-			mouseMoveSlightly();
-			return;
-		}
-		ctx.input.move(p);
-	}
-
-	public class Timer {
-		private long end;
-		private final long start;
-
-		public Timer(final long period) {
-			start = System.currentTimeMillis();
-			end = start + period;
-		}
-
-		public boolean isRunning() {
-			return System.currentTimeMillis() < end;
-		}
-	}
 
 	public Tile[] randomizePath(Tile[] path, int maxXDeviation,
 			int maxYDeviation) {
@@ -493,57 +387,62 @@ public class rFurFlipper extends
 	public int distanceTo(Tile tile) {
 		return (int) ctx.players.local().tile().distanceTo(tile);
 	}
+	
+	private Tile[] reversePath(Tile tiles[]) {
+		Tile r[] = new Tile[tiles.length];
+		int i;
+		for (i = 0; i < tiles.length; i++) {
+			r[i] = tiles[(tiles.length - 1) - i];
+		}
+		return r;
+	}
 
 	@Override
 	public void messaged(MessageEvent msg) {
 		String message = msg.text();
-		if (message
-				.contains("20 coins have been removed from your money pouch."))
-			furBought++;
+		if (message.contains("20 coins have been removed from your money pouch."))
+			FUR_BOUGHT++;
 	}
 
-	final static Color black = new Color(25, 0, 0, 200);
-	final static Font fontTwo = new Font("Comic Sans MS", 1, 12);
-	final static NumberFormat nf = new DecimalFormat("###,###,###,###");
+	final static Color BLACK = new Color(25, 0, 0, 200);
+	final static Font FONT = new Font("Comic Sans MS", 1, 12);
+	final static NumberFormat NF = new DecimalFormat("###,###,###,###");
 
 	@Override
 	public void repaint(Graphics g1) {
 
 		final Graphics2D g = (Graphics2D) g1;
 
-		long millis = System.currentTimeMillis() - scriptTimer;
+		long millis = System.currentTimeMillis() - TIMER_SCRIPT;
 		long hours = millis / (1000 * 60 * 60);
 		millis -= hours * (1000 * 60 * 60);
 		long minutes = millis / (1000 * 60);
 		millis -= minutes * (1000 * 60);
 		long seconds = millis / 1000;
 
-		g.setRenderingHints(antialiasing);
-		g.setColor(black);
+		g.setRenderingHints(ANTIALIASING);
+		g.setColor(BLACK);
 		g.fillRect(5, 5, 190, 145);
 		g.setColor(Color.RED);
 		g.drawRect(5, 5, 190, 145);
-		g.setFont(fontTwo);
+		g.setFont(FONT);
 		g.drawString("rFurFlipper", 70, 20);
 		g.setColor(Color.WHITE);
-		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 10,
-				40);
-		g.drawString("Fur Bought: " + nf.format(furBought) + "("
-				+ PerHour(furBought) + "/h)", 10, 60);
-		g.drawString("Fur In Bank: " + nf.format(furStored), 10, 80);
-		g.drawString("Fur Price: " + furPrice, 10, 100);
-		g.drawString("Profit: " + nf.format(profit()) + "(" + PerHour(profit())
-				+ "/h)", 13, 120);
-		g.drawString("Status: " + (status), 10, 140);
+		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 10, 40);
+		g.drawString("Fur Bought: " + NF.format(FUR_BOUGHT) + "(" + PerHour(FUR_BOUGHT) + "/h)", 10, 60);
+		g.drawString("Fur In Bank: " + NF.format(furStored), 10, 80);
+		g.drawString("Fur Price: " + FUR_PRICE, 10, 100);
+		g.drawString("Profit: " + NF.format(profit()) + "(" + PerHour(profit()) + "/h)", 13, 120);
+		g.drawString("Status: " + (STATUS), 10, 140);
 		g.setColor(Color.RED);
-		g.drawString("v1.4", 165, 140);
+		g.drawString("v1.5", 165, 140);
 		drawMouse(g);
 		drawTrail(g);
+		drawBaraekTile(g);
 	}
 
 	public String PerHour(int gained) {
-		return formatNumber((int) ((gained) * 3600000D / (System
-				.currentTimeMillis() - scriptTimer)));
+		return formatNumber((int) ((gained) * 3600000D / (System.currentTimeMillis() - TIMER_SCRIPT)));
 	}
 
 	public String formatNumber(int start) {
@@ -584,15 +483,11 @@ public class rFurFlipper extends
 
 		public void draw(final Graphics g) {
 			double alpha = 0;
-			for (int i = index; i != (index == 0 ? SIZE - 1 : index - 1); i = (i + 1)
-					% SIZE) {
+			for (int i = index; i != (index == 0 ? SIZE - 1 : index - 1); i = (i + 1) % SIZE) {
 				if (points[i] != null && points[(i + 1) % SIZE] != null) {
-					Color rainbow = Color.getHSBColor((float) (alpha / 255), 1,
-							1);
-					g.setColor(new Color(rainbow.getRed(), rainbow.getGreen(),
-							rainbow.getBlue(), (int) alpha));
-					g.drawLine(points[i].x, points[i].y,
-							points[(i + 1) % SIZE].x, points[(i + 1) % SIZE].y);
+					Color rainbow = Color.getHSBColor((float) (alpha / 255), 1, 1);
+					g.setColor(new Color(rainbow.getRed(), rainbow.getGreen(), rainbow.getBlue(), (int) alpha));
+					g.drawLine(points[i].x, points[i].y, points[(i + 1) % SIZE].x, points[(i + 1) % SIZE].y);
 					alpha += ALPHA_STEP;
 				}
 			}
@@ -600,7 +495,7 @@ public class rFurFlipper extends
 	}
 
 	private static int profit() {
-		return furBought * furPrice;
+		return FUR_BOUGHT * FUR_PRICE;
 	}
 
 	public void drawMouse(Graphics2D g) {
@@ -609,6 +504,12 @@ public class rFurFlipper extends
 		g.setStroke(new BasicStroke(2));
 		g.fill(new Rectangle(p.x + 1, p.y - 4, 2, 15));
 		g.fill(new Rectangle(p.x - 6, p.y + 2, 16, 2));
+	}
+	
+	private void drawBaraekTile(final Graphics g) {
+		final Npc Baraek = ctx.npcs.select().id(ID_BARAEK).nearest().poll();
+			if (Baraek.inViewport() && ctx.backpack.select().count() != 28)
+				Baraek.tile().matrix(ctx).draw(g);
 	}
 
 	private static int getGuidePrice(final int id) {
