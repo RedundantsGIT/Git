@@ -150,7 +150,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 					Condition.wait(new Callable<Boolean>() {
 						@Override
 						public Boolean call() throws Exception {
-							return ctx.movement.energyLevel() > 50;
+							return energyLevel() > 50;
 						}
 					}, 250, 20);
 				}
@@ -297,7 +297,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 			return State.CAMERA;
 		if(!atAlKharid && !atBurthorpe && !atVarrock)
 			return State.LOCATION;
-		if(ctx.players.local().inMotion() && ctx.movement.energyLevel() < 50 && hasPotion() && !ctx.bank.opened() && !make.visible())
+		if(ctx.players.local().inMotion() && energyLevel() < 50 && hasPotion() && !ctx.bank.opened() && !make.visible())
 			return State.POTION;
 		if(tileContainsDoor() && !make.visible())
 			return State.DOOR;
@@ -308,6 +308,12 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 	
 	private enum State {
 		CAMERA, LOCATION, POTION, DOOR, TAN, BANK
+	}
+	
+	private int energyLevel(){
+		String message = ctx.widgets.component(1465, 20).text();
+		int count = Integer.parseInt(message.replaceAll("\\D", ""));
+		return count;
 	}
 
 
@@ -361,6 +367,8 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 			depositInventory();
 			ctx.bank.close();
 		}
+		
+		ctx.game.logout(true);
 		ctx.controller.stop();
 		return true;
 	}
