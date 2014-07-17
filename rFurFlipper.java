@@ -199,13 +199,13 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 
 		@Override
 		public boolean activate() {
-			return ctx.widgets.component(1191, 10).valid() || ctx.widgets.component(1184, 10).valid();
+			return ctx.widgets.component(1191, 6).valid() || ctx.widgets.component(1184, 10).valid();
 		}
 
 		@Override
 		public void execute() {
 			STATUS = "Select Continue";
-			if (ctx.widgets.component(1191, 10).text().contains("Can you sell me some furs?") || ctx.widgets.component(1191, 10).text().contains("Yeah, OK, here you go.")) {
+			if (ctx.widgets.component(1191, 6).text().contains("Can you sell me some furs?") || ctx.widgets.component(1191, 6).text().contains("Yeah, OK, here you go.")) {
 				ctx.input.send(" ");
 				Condition.wait(new Callable<Boolean>() {
 					@Override
@@ -239,6 +239,7 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 		public void execute() {
 			final Npc baraek = ctx.npcs.select().id(ID_BARAEK).nearest().poll();
 			if (ctx.backpack.moneyPouchCount() < 20) {
+				log.info("Out of gold...stopping script");
 				ctx.controller.stop();
 			} else {
 			if (ctx.players.local().tile().distanceTo(baraek.tile()) < 8) {
@@ -435,7 +436,7 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 		g.drawString("Profit: " + NF.format(profit()) + "(" + PerHour(profit()) + "/h)", 13, 120);
 		g.drawString("Status: " + (STATUS), 10, 140);
 		g.setColor(Color.RED);
-		g.drawString("v1.5", 165, 140);
+		g.drawString("v1.6", 165, 140);
 		drawMouse(g);
 		drawTrail(g);
 		drawBaraekTile(g);
