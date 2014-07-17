@@ -361,12 +361,8 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 			depositInventory();
 			ctx.bank.close();
 		}
-		if (ctx.game.logout(true)) {
-			ctx.controller.stop();
-			return true;
-		}
-		
-		return false;
+		ctx.controller.stop();
+		return true;
 	}
 
 	private boolean depositInventory() {
