@@ -53,7 +53,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 	private static boolean usePreset = false;
 	private static int hideCount, hidesLeft, potionsLeft;
 	private static final int doorID = 24376, mangleID = 24920;
-	private final Component make = ctx.widgets.widget(1370).component(20);
+	private final Component make = ctx.widgets.component(1370, 20);
 	private static final int[] tannerID = { 14877, 2824, 2320 };
 	private static final int[] hideID = { 1739, 1753, 1751, 24372, 6287, 7801, 1749, 1747 };
 	private static final int[] leatherID = { 1741, 1743, 1745, 2505, 24374, 6289, 2507, 2509 };
@@ -282,10 +282,8 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 				status = "Walking to Bank";
 				if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(6, 8)) {
 					ctx.movement.step(getNextTile(randomizePath(reversePath(tilePath), 2, 2)));
-					if (atVarrock) {
-						if (Random.nextInt(1, 4) == 2)
+						if (Random.nextInt(1, 6) == 3)
 							ctx.camera.turnTo(ctx.bank.nearest());
-					}
 
 				}
 			}
@@ -386,7 +384,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 	}
 
 	private boolean usePreset() {
-		final Component present = ctx.widgets.widget(762).component(171);
+		final Component present = ctx.widgets.widget(762).component(45);
 		status = "Withdraw";
 		if (present.visible()) {
 			if (present.interact("Withdraw")) {
@@ -521,7 +519,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 		g.drawString("*" + (status) + "*", 10, 140);
 		g.setFont(fontThree);
 		g.setColor(Color.RED);
-		g.drawString("v5.8", 165, 120);
+		g.drawString("v0.59", 165, 120);
 		drawMouse(g);
 		drawTannerTile(g);
 	}
