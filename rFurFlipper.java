@@ -184,7 +184,7 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 			return State.CAMERA;
 		}
 		
-		if(ctx.widgets.component(1191, 10).text().contains("Can I have a newspaper, please?")){
+		if(ctx.widgets.component(1188, 12).text().contains("Can I have a newspaper, please?")){
 			return State.FIX;
 		}
 		
