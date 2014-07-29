@@ -29,9 +29,7 @@ import org.powerbot.script.rt6.Npc;
 import org.powerbot.script.rt6.Game.Crosshair;
 
 @Manifest(name = "rGrapes", description = "Loots grapes from the upper level of the cooking guild for money.", properties = "hidden=true")
-public class rGrapes extends
-		PollingScript<org.powerbot.script.rt6.ClientContext> implements
-		PaintListener {
+public class rGrapes extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener {
 	private static long TIMER_SCRIPT = 0;
 	private static String STATUS = "Starting...";
 	private static RenderingHints ANTIALIASING = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
@@ -40,8 +38,7 @@ public class rGrapes extends
 	private static final int ID_STAIRS2[] = { 24074, 24075 };
 	private static final Tile TILE_LOOT = new Tile(3144, 3450, 2);
 	private static int GRAPES_GAINED, GRAPE_PRICE, PROFIT_GAINED, TRIES;
-	private static final int ID_SHOOT1 = 24068, ID_SHOOT2 = 24067,
-			ID_DOOR = 2712, ID_GRAPE = 1987;
+	private static final int ID_SHOOT1 = 24068, ID_SHOOT2 = 24067, ID_DOOR = 2712, ID_GRAPE = 1987;
 	private static final Area AREA_IN_GUILD = new Area(new Tile[] {
 			new Tile(3147, 3446, 0), new Tile(3145, 3444, 0),
 			new Tile(3141, 3444, 0), new Tile(3138, 3448, 0),
@@ -132,15 +129,9 @@ public class rGrapes extends
 						ctx.bank.open();
 					}
 				} else {
-					if (!ctx.players.local().inMotion()
-							|| ctx.players.local().tile()
-									.distanceTo(ctx.movement.destination()) < Random
-									.nextInt(5, 8)) {
-						STATUS = "Walk to bank";
-						ctx.movement.newTilePath(PATH_GUILD).reverse()
-								.traverse();
-						ctx.camera.turnTo(ctx.bank.nearest());
-					}
+					STATUS = "Walk to bank";
+					ctx.movement.newTilePath(PATH_GUILD).reverse().traverse();
+					ctx.camera.turnTo(ctx.bank.nearest());
 				}
 
 			}
@@ -203,17 +194,12 @@ public class rGrapes extends
 					}
 				}
 			} else {
-				if (!ctx.players.local().inMotion()
-						|| ctx.players.local().tile()
-								.distanceTo(ctx.movement.destination()) < Random
-								.nextInt(5, 8)) {
-					if (ctx.bank.opened()) {
-						STATUS = "Bank close";
-						ctx.bank.close();
-					} else {
-						STATUS = "Walk to guild";
-						ctx.movement.newTilePath(PATH_GUILD).traverse();
-					}
+				if (ctx.bank.opened()) {
+					STATUS = "Bank close";
+					ctx.bank.close();
+				} else {
+					STATUS = "Walk to guild";
+					ctx.movement.newTilePath(PATH_GUILD).traverse();
 				}
 			}
 
@@ -249,6 +235,7 @@ public class rGrapes extends
 
 		};
 		if (ctx.menu.click(filter)) {
+			log.info("Click grapes");
 			Condition.wait(new Callable<Boolean>() {
 				@Override
 				public Boolean call() throws Exception {
@@ -259,10 +246,11 @@ public class rGrapes extends
 			if (TRIES > 2) {
 				ctx.camera.turnTo(g.tile());
 			}
+			log.info("Move mouse to grapes");
 			ctx.input.move(p);
 			TRIES++;
 		}
-		if (ctx.backpack.select().id(ID_GRAPE).count() == count + 1) {
+		if (ctx.backpack.select().id(ID_GRAPE).count() != count) {
 			TRIES = 0;
 			GRAPES_GAINED++;
 			return true;
@@ -408,10 +396,8 @@ public class rGrapes extends
 		g.drawString("rGrapeGrabber", 60, 20);
 		g.setColor(Color.WHITE);
 		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 10, 40);
-		g.drawString("Grapes Picked: " + NF.format(GRAPES_GAINED) + "("
-				+ PerHour(GRAPES_GAINED) + "/h)", 10, 60);
-		g.drawString("Profit: " + NF.format(PROFIT_GAINED) + "("
-				+ PerHour(PROFIT_GAINED) + "/h)", 10, 80);
+		g.drawString("Grapes Picked: " + NF.format(GRAPES_GAINED) + "(" + PerHour(GRAPES_GAINED) + "/h)", 10, 60);
+		g.drawString("Profit: " + NF.format(PROFIT_GAINED) + "(" + PerHour(PROFIT_GAINED) + "/h)", 10, 80);
 		g.drawString("Profit ea: " + (GRAPE_PRICE), 10, 100);
 		g.drawString("Status: " + (STATUS), 10, 120);
 		drawMouse(g);

@@ -33,28 +33,20 @@ import org.powerbot.script.rt6.Component;
 import org.powerbot.script.rt6.Game.Crosshair;
 import org.powerbot.script.rt6.GameObject;
 import org.powerbot.script.rt6.GeItem;
+import org.powerbot.script.rt6.Skills;
 
 @Manifest(name = "rOakChopper", description = "Chops oak trees at the Grand Exchange", properties = "hidden=true")
-public class rOakChopper extends
-		PollingScript<org.powerbot.script.rt6.ClientContext> implements
-		PaintListener, MessageListener {
+public class rOakChopper extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
 
 	private static long elapsedTime = 0;
-
-	private static RenderingHints antialiasing = new RenderingHints(
-			RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
+	private static RenderingHints antialiasing = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	private static String status = "Starting...";
-
 	private static int logsChopped, logPrice, profitGained, logsInBank, tries;
-
 	private static final int oakLogID = 1521;
-
+	private static int startExperience = 0;
+	private static int startLevel = 0;
 	private static int[] oakID = { 38732, 38731 };
-
-	private final Component geWindow = ctx.widgets.component(105, 87)
-			.component(1);
-
+	private final Component geWindow = ctx.widgets.component(105, 87).component(1);
 	public final static Area oakArea = new Area(new Tile[] {
 			new Tile(3168, 3472, 0), new Tile(3228, 3472, 0),
 			new Tile(3220, 3417, 0), new Tile(3176, 3418, 0) });
@@ -81,8 +73,10 @@ public class rOakChopper extends
 		System.out.println("Script started");
 		elapsedTime = System.currentTimeMillis();
 		logPrice = getGuidePrice(oakLogID);
+		startExperience = ctx.skills.experience(Skills.WOODCUTTING);
+		startLevel = ctx.skills.level(Skills.WOODCUTTING);
 		rOakChopper.container = new JobContainer(new Job[] {
-				new CloseInterfaces(ctx), new Banking(ctx), new Chopping(ctx) });
+				new CloseInterfaces(ctx), new AntiPattern(ctx), new Banking(ctx), new Chopping(ctx) });
 	}
 
 	@Override
@@ -103,10 +97,6 @@ public class rOakChopper extends
 	public abstract class Job extends ClientAccessor {
 		public Job(ClientContext ctx) {
 			super(ctx);
-		}
-
-		public int delay() {
-			return 100;
 		}
 
 		public int priority() {
@@ -182,9 +172,26 @@ public class rOakChopper extends
 		@Override
 		public void execute() {
 			status = "Close";
-			log.info("Close");
 			ctx.camera.turnTo(ctx.bank.nearest());
 			close();
+		}
+	}
+	
+	private class AntiPattern extends Job {
+		public AntiPattern(ClientContext ctx) {
+			super(ctx);
+		}
+
+		@Override
+		public boolean activate() {
+			return ctx.players.local().animation() != -1;
+		}
+
+		@Override
+		public void execute() {
+			status = "Chopping...";
+			antiBan();
+			log.info("ANTIPATTERN" );
 		}
 	}
 
@@ -203,7 +210,6 @@ public class rOakChopper extends
 			if (atBanker()) {
 				if (ctx.bank.opened()) {
 					status = "Banking";
-					log.info("Banking...");
 					ctx.bank.depositInventory();
 					Condition.wait(new Callable<Boolean>() {
 						@Override
@@ -234,15 +240,13 @@ public class rOakChopper extends
 
 		@Override
 		public boolean activate() {
-			return ctx.backpack.select().count() != 28;
+			return ctx.players.local().animation() == -1 && ctx.backpack.select().count() != 28;
 		}
 
 		@Override
 		public void execute() {
 			if (oakArea.contains(ctx.players.local().tile())) {
-				for (GameObject oak : ctx.objects.select().select(FILTER_TREE)
-						.nearest().first()) {
-					if (ctx.players.local().animation() == -1) {
+				for (GameObject oak : ctx.objects.select().select(FILTER_TREE).nearest().first()) {
 						if (oak.inViewport()) {
 							if (tries > 1) {
 								ctx.camera.pitch(Random.nextInt(30, 40));
@@ -256,6 +260,7 @@ public class rOakChopper extends
 										mouseMoveSlightly();
 									}
 									tries++;
+									if(didInteract()){
 									Condition.wait(new Callable<Boolean>() {
 										@Override
 										public Boolean call() throws Exception {
@@ -265,6 +270,7 @@ public class rOakChopper extends
 									}, 250, 20);
 								}
 							}
+						}
 						} else {
 							status = "Walk to tree";
 							log.info("Walk to tree");
@@ -281,7 +287,6 @@ public class rOakChopper extends
 										.closestOnMap(oak).tile());
 						}
 					}
-				}
 			} else {
 				if (ctx.bank.opened()) {
 					status = "Bank Close";
@@ -304,7 +309,7 @@ public class rOakChopper extends
 		}
 	}
 
-	public boolean atBanker() {
+	private boolean atBanker() {
 		return ctx.bank.inViewport()
 				&& ctx.players.local().tile().distanceTo(ctx.bank.nearest()) < 6;
 	}
@@ -322,31 +327,54 @@ public class rOakChopper extends
 		}
 		ctx.input.move(p);
 	}
+	
 
-	private void close() {
+	private boolean close() {
 		ctx.input.send("{VK_ESCAPE down}");
-		final Timer DelayTimer = new Timer(Random.nextInt(100, 200));
-		while (DelayTimer.isRunning())
-			;
-		ctx.input.send("{VK_ESCAPE up}");
+		Condition.sleep(Random.nextInt(50, 200));
+		return ctx.input.send("{VK_ESCAPE up}");
 	}
 
 	public boolean didInteract() {
 		return ctx.game.crosshair() == Crosshair.ACTION;
 	}
 
-	public class Timer {
-		private long end;
-		private final long start;
-
-		public Timer(final long period) {
-			start = System.currentTimeMillis();
-			end = start + period;
+	private int antiBan() {
+		int antiban = Random.nextInt(1, 1000);
+		switch (antiban) {
+		case 1:
+			ctx.camera.angle(Random.nextInt(21, 40));
+			break;
+		case 2:
+			ctx.camera.angle(Random.nextInt(25, 75));
+			break;
+		case 3:
+			ctx.camera.angle(Random.nextInt(0, 200));
+			break;
+		case 4:
+			ctx.camera.angle(Random.nextInt(0, 300));
+			break;
+		case 5:
+			ctx.input.move(Random.nextInt(0, (int) (ctx.game.dimensions()
+					.getWidth() - 1)), 0);
+			break;
+		case 6:
+			ctx.input.hop(Random.nextInt(-10, (int) (ctx.game.dimensions()
+					.getWidth() + 10)), (int) (ctx.game.dimensions()
+					.getHeight() + Random.nextInt(10, 100)));
+			break;
+		case 7:
+			ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
+			break;
+		case 8:
+			ctx.input.hop(Random.nextInt(0, 500), Random.nextInt(0, 500));
+			break;
+		case 9:
+			ctx.camera.pitch(Random.nextInt(40, 55));
+			ctx.camera.angle(Random.nextInt(0, 300));
+			break;
 		}
-
-		public boolean isRunning() {
-			return System.currentTimeMillis() < end;
-		}
+		return 0;
 	}
 
 	@Override
@@ -364,22 +392,22 @@ public class rOakChopper extends
 	@Override
 	public void repaint(Graphics g1) {
 
+		final Graphics2D g = (Graphics2D) g1;
+
 		long millis = System.currentTimeMillis() - elapsedTime;
 		long hours = millis / (1000 * 60 * 60);
 		millis -= hours * (1000 * 60 * 60);
 		long minutes = millis / (1000 * 60);
 		millis -= minutes * (1000 * 60);
 		long seconds = millis / 1000;
-		if (ctx.players.local().animation() != -1)
-			status = "Chopping...";
+
 		profitGained = logsChopped * logPrice;
-		final Graphics2D g = (Graphics2D) g1;
 
 		g.setRenderingHints(antialiasing);
 		g.setColor(black);
-		g.fillRect(6, 210, 200, 145);
+		g.fillRect(6, 210, 205, 168);
 		g.setColor(Color.RED);
-		g.drawRect(6, 210, 200, 145);
+		g.drawRect(6, 210, 205, 168);
 		g.setFont(fontTwo);
 		g.drawString("rOakChopper", 75, 222);
 		g.setFont(font);
@@ -390,9 +418,18 @@ public class rOakChopper extends
 				+ PerHour(logsChopped) + "/h)", 13, 265);
 		g.drawString("Profit: " + nf.format(profitGained) + "("
 				+ PerHour(profitGained) + "/h)", 13, 285);
-		g.drawString("Log Price: " + (logPrice), 13, 305);
-		g.drawString("Logs In Bank: " + (logsInBank), 13, 325);
-		g.drawString("Status: " + (status), 13, 346);
+		g.drawString(
+				"Exp: "
+						+ nf.format(ctx.skills.experience(Skills.WOODCUTTING)
+								- startExperience)
+						+ "("
+						+ PerHour(ctx.skills.experience(Skills.WOODCUTTING)
+								- startExperience) + "/h" + ")" + "+"
+						+ (ctx.skills.level(Skills.WOODCUTTING) - startLevel),
+				13, 305);
+		g.drawString("Log Price: " + (logPrice), 13, 325);
+		g.drawString("Logs In Bank: " + (logsInBank), 13, 345);
+		g.drawString("Status: " + (status), 13, 365);
 		drawMouse(g);
 
 	}
