@@ -150,10 +150,10 @@ public class rGrapes extends PollingScript<org.powerbot.script.rt6.ClientContext
 						Condition.sleep(Random.nextInt(1000, 1500));
 						while (ctx.players.local().inMotion());
 					} else
-						do{
+						
 							ctx.movement.step(ctx.movement.closestOnMap(TILE_LOOT));
 							ctx.camera.turnTo(TILE_LOOT);
-						} while (ctx.players.local().inMotion());
+					while (ctx.players.local().inMotion());
 				} else {
 					final GroundItem Grape = ctx.groundItems.select().id(ID_GRAPE).nearest().poll();
 					if (Grape.valid()) {
@@ -234,11 +234,10 @@ public class rGrapes extends PollingScript<org.powerbot.script.rt6.ClientContext
 		final GameObject Door = ctx.objects.select().id(ID_DOOR).each(Interactive.doSetBounds(doorBounds)).nearest().poll();
 		final GameObject Stairs = ctx.objects.select().id(IDS_STAIRS_UP).nearest().poll();
 		if (Door.inViewport()) {
-			do {
 				STATUS = "Open door";
 				ctx.camera.turnTo(Stairs.tile());
 				Door.interact("Open", "Door");
-			} while (ctx.players.local().inMotion());
+		 while (ctx.players.local().inMotion());
 		} else {
 			ctx.movement.step(ctx.movement.closestOnMap(Door.tile()));
 		}
@@ -248,7 +247,6 @@ public class rGrapes extends PollingScript<org.powerbot.script.rt6.ClientContext
 		final int Floor = ctx.game.floor();
 		final GameObject Stairs = ctx.objects.select().id(IDS_STAIRS_DOWN).nearest().poll();
 		if (Stairs.inViewport()) {
-			do{
 				STATUS = "Go down";
 				ctx.camera.turnTo(Stairs.tile());
 				if (Stairs.interact("Climb-down")) {
@@ -258,8 +256,7 @@ public class rGrapes extends PollingScript<org.powerbot.script.rt6.ClientContext
 							return ctx.game.floor() == Floor - 1;
 						}
 					}, 250, 20);
-				}
-			} while (ctx.players.local().inMotion());
+				}while (ctx.players.local().inMotion());
 		} else {
 			ctx.movement.step(ctx.movement.closestOnMap(Stairs.tile()));
 		}
@@ -269,18 +266,17 @@ public class rGrapes extends PollingScript<org.powerbot.script.rt6.ClientContext
 		final int Floor = ctx.game.floor();
 		final GameObject Stairs = ctx.objects.select().id(IDS_STAIRS_UP).nearest().poll();
 		if (Stairs.inViewport()) {
-			do{
 				STATUS = "Go up";
 				ctx.camera.turnTo(Stairs.tile());
-				if(Stairs.interact("Climb-up")){
+			if (Stairs.interact("Climb-up")) {
 				Condition.wait(new Callable<Boolean>() {
 					@Override
 					public Boolean call() throws Exception {
 						return ctx.game.floor() == Floor + 1;
 					}
 				}, 250, 20);
-				}
-			} while (ctx.players.local().inMotion());
+			}
+			while (ctx.players.local().inMotion());
 		} else {
 			ctx.movement.step(ctx.movement.closestOnMap(Stairs.tile()));
 		}
