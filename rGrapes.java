@@ -33,14 +33,12 @@ public class rGrapes extends PollingScript<org.powerbot.script.rt6.ClientContext
 	private static RenderingHints ANTIALIASING = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	private static long TIMER_SCRIPT = 0;
 	private static String STATUS = "Starting...";
-	/*ID*/
 	private static final int IDS_BANKER[] = { 553, 2759 };
 	private static final int IDS_STAIRS_UP[] = { 24073, 24074, 24075 };
 	private static final int IDS_STAIRS_DOWN[] = { 24074, 24075 };
 	private static final Tile TILE_LOOT = new Tile(3144, 3450, 2);
 	private static int GRAPES_GAINED, GRAPE_PRICE, PROFIT_GAINED, TRIES;
 	private static final int ID_DOOR = 2712, ID_GRAPE = 1987;
-	/*Tile*/
 	private static final Tile LOOT_TILE = new Tile(3143, 3450, 2);
 	private static final Tile LOOT_TILE2 = new Tile(3144, 3451, 2);
 	private static final Tile LOOT_TILE3 = new Tile(3145, 3450, 2);
