@@ -326,7 +326,7 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 		g.drawString("Status: " + (STATUS), 10, 140);
 		g.setColor(Color.RED);
 		g.setFont(FONT_TWO);
-		g.drawString("v0.19", 165, 140);
+		g.drawString("v0.18", 165, 140);
 		drawMouse(g);
 	}
 	
