@@ -27,8 +27,8 @@ import org.powerbot.script.rt6.Npc;
 
 @Manifest(name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for money", properties = "topic=1135335")
 public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
-	private static String STATUS = "Starting...";
 	private static RenderingHints ANTIALIASING = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+	private static String STATUS = "Starting...";
 	private static long TIMER_SCRIPT = 0;
 	private static int FUR_PRICE, FUR_BOUGHT, FUR_STORED;
 	private static int ID_BARAEK = 547, ID_FUR = 948;
@@ -326,11 +326,8 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 		g.drawString("Status: " + (STATUS), 10, 140);
 		g.setColor(Color.RED);
 		g.setFont(FONT_TWO);
-		g.drawString("v0.17", 165, 140);
+		g.drawString("v0.19", 165, 140);
 		drawMouse(g);
-		drawTrail(g);
-		drawBaraekTile(g);
-		drawWidget(g);
 	}
 	
 	private static int profit() {
@@ -353,67 +350,12 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 		return "" + start;
 	}
 
-	private mouseTrail trail = new mouseTrail();
-
-	private void drawTrail(final Graphics g) {
-		final Point m = ctx.input.getLocation();
-		trail.add(m);
-		trail.draw(g);
-	}
-
-	private final class mouseTrail {
-		private final int SIZE = 50;
-		private final double ALPHA_STEP = (255.0 / SIZE);
-		private final Point[] points;
-		private int index;
-
-		public mouseTrail() {
-			points = new Point[SIZE];
-			index = 0;
-		}
-
-		public void add(final Point p) {
-			points[index++] = p;
-			index %= SIZE;
-		}
-
-		public void draw(final Graphics g) {
-			double alpha = 0;
-			for (int i = index; i != (index == 0 ? SIZE - 1 : index - 1); i = (i + 1) % SIZE) {
-				if (points[i] != null && points[(i + 1) % SIZE] != null) {
-					Color rainbow = Color.getHSBColor((float) (alpha / 255), 1, 1);
-					g.setColor(new Color(rainbow.getRed(), rainbow.getGreen(), rainbow.getBlue(), (int) alpha));
-					g.drawLine(points[i].x, points[i].y, points[(i + 1) % SIZE].x, points[(i + 1) % SIZE].y);
-					alpha += ALPHA_STEP;
-				}
-			}
-		}
-	}
-	
-	private static final int[][] DRAW = { { 1188, 3}, { 1184, 11}, { 1191, 7 }};
-	
-	private void drawWidget(Graphics2D g) {
-		for (int[] i : DRAW) {
-			Component c = ctx.widgets.component(i[0], i[1]);
-			if (c.visible()) {
-				c.draw(g);
-			}
-		}
-	}
-
 	public void drawMouse(Graphics2D g) {
 		Point p = ctx.input.getLocation();
 		g.setColor(Color.RED);
 		g.setStroke(new BasicStroke(2));
 		g.fill(new Rectangle(p.x + 1, p.y - 4, 2, 15));
 		g.fill(new Rectangle(p.x - 6, p.y + 2, 16, 2));
-	}
-	
-	private void drawBaraekTile(final Graphics g) {
-		final Npc Baraek = ctx.npcs.select().id(ID_BARAEK).nearest().poll();
-			if (Baraek.inViewport() && ctx.backpack.select().count() != 28){
-			Baraek.tile().matrix(ctx).draw(g);
-		}
 	}
 
 	private static int getGuidePrice(final int id) {
