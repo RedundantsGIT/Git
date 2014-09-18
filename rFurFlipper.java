@@ -74,46 +74,60 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 			break;
 		case MENU:
 			STATUS = "Select Option";
-			ctx.input.send("1");
-			Condition.wait(new Callable<Boolean>() {
-				@Override
-				public Boolean call() throws Exception {
-					return !WIDGET_MENU.visible() && ctx.chat.queryContinue();
+			if (Random.nextInt(1, 50) == 25) {
+				ctx.camera.angle(Random.nextInt(1, 360));
+			} else {
+				if (ctx.input.send("1")) {
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return !WIDGET_MENU.visible()
+									&& ctx.chat.queryContinue();
+						}
+					}, 250, 20);
 				}
-			}, 250, 20);
+			}
 			break;
 		case CONTINUE:
 			STATUS = "Select Continue";
-			if (ctx.widgets.component(1191, 6).text().contains("Can you sell me some furs?") 
-					|| ctx.widgets.component(1191, 6).text().contains("Yeah, OK, here you go.")) {
-				ctx.input.send(" ");
+			if (ctx.widgets.component(1191, 6).text().contains("Can you sell me some furs?") || ctx.widgets.component(1191, 6).text().contains("Yeah, OK, here you go.")) {
+				if (Random.nextInt(1, 75) == 40) {
+					ctx.camera.angle(Random.nextInt(1, 360));
+				} else {
+					if (ctx.input.send(" ")) {
 				Condition.wait(new Callable<Boolean>() {
 					@Override
 					public Boolean call() throws Exception {
-						return ctx.widgets.component(1184, 9).text().contains("Yeah, sure. They're 20 gold coins each.") 
-								|| ctx.widgets.component(1189, 2).text().contains("Baraek sells you a fur.");
+						return ctx.widgets.component(1184, 9).text().contains("Yeah, sure. They're 20 gold coins each.") || ctx.widgets.component(1189, 2).text().contains("Baraek sells you a fur.");
+							}
+						}, 250, 20);
 					}
-				}, 250, 20);
+				}
 			} else {
-				ctx.input.send(" ");
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return WIDGET_MENU.valid();
+				if (Random.nextInt(1, 100) == 50) {
+					ctx.camera.angle(Random.nextInt(1, 360));
+				} else {
+					if (ctx.input.send(" ")) {
+						Condition.wait(new Callable<Boolean>() {
+							@Override
+							public Boolean call() throws Exception {
+								return WIDGET_MENU.valid();
+							}
+						}, 250, 20);
 					}
-				}, 250, 20);
+				}
 			}
 			break;
 		case TALKING:
-			final Npc baraek = ctx.npcs.select().id(ID_BARAEK).nearest().poll();
+			final Npc Baraek = ctx.npcs.select().id(ID_BARAEK).nearest().poll();
 			if (ctx.backpack.moneyPouchCount() < 20) {
 				log.info("Out of gold...stopping script");
 				ctx.controller.stop();
 			} else {
-			if (ctx.players.local().tile().distanceTo(baraek.tile()) < 8) {
-					if (baraek.inViewport()) {
+			if (ctx.players.local().tile().distanceTo(Baraek.tile()) < 8) {
+					if (Baraek.inViewport()) {
 						STATUS = "Talk to Baraek";
-						if (baraek.interact("Talk-to", "Baraek")) {
+						if (Baraek.interact("Talk-to", "Baraek")) {
 							if (didInteract()) {
 								Condition.wait(new Callable<Boolean>() {
 									@Override
@@ -125,9 +139,9 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 						
 					} else {
 						STATUS = "Walk to Npc";
-						ctx.movement.step(ctx.movement.closestOnMap(baraek.tile()));
-						ctx.camera.turnTo(baraek.tile());
-						while (ctx.players.local().inMotion() && !baraek.inViewport());
+						ctx.movement.step(ctx.movement.closestOnMap(Baraek.tile()));
+						ctx.camera.turnTo(Baraek.tile());
+						while (ctx.players.local().inMotion() && !Baraek.inViewport());
 					}
 				}
 			} else {
@@ -141,7 +155,7 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 				} else {
 					STATUS = "Walk to Npc";
 					if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(5, 8)) {
-						ctx.movement.step(getNextTile(randomizePath(PATH_TO_NPC, 2, 2)));
+						ctx.movement.step(getNextTile(randomizePath(PATH_TO_NPC, 3, 2)));
 						}
 					}
 				}
@@ -165,7 +179,7 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 			} else {
 			STATUS = "Walk to Bank";
 			if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(5, 8)) {
-				ctx.movement.step(getNextTile(randomizePath(reversePath(PATH_TO_NPC), 3, 3)));
+				ctx.movement.step(getNextTile(randomizePath(reversePath(PATH_TO_NPC), 3, 2)));
 					if (Random.nextInt(1, 10) == 5)
 						ctx.camera.turnTo(ctx.bank.nearest());
 					}
@@ -326,7 +340,7 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 		g.drawString("Status: " + (STATUS), 10, 140);
 		g.setColor(Color.RED);
 		g.setFont(FONT_TWO);
-		g.drawString("v0.18", 165, 140);
+		g.drawString("v0.19", 165, 140);
 		drawMouse(g);
 	}
 	

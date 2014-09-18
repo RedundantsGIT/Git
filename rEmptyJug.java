@@ -61,7 +61,7 @@ public class rEmptyJug extends PollingScript<org.powerbot.script.rt6.ClientConte
 			return;
 		switch (state()) {
 		case ANTIPATTERN:
-			int antiban = Random.nextInt(1, 1000);
+			int antiban = Random.nextInt(1, 500);
 			switch (antiban) {
 			case 1:
 				ctx.camera.angle(Random.nextInt(21, 40));
@@ -74,9 +74,6 @@ public class rEmptyJug extends PollingScript<org.powerbot.script.rt6.ClientConte
 				break;
 			case 4:
 				ctx.camera.angle(Random.nextInt(0, 300));
-				break;
-			case 5:
-				ctx.input.move(Random.nextInt(0, (int) (ctx.game.dimensions().getWidth() - 1)), 0);
 				break;
 			}
 			break;
@@ -195,7 +192,7 @@ public class rEmptyJug extends PollingScript<org.powerbot.script.rt6.ClientConte
 		g.drawString("Profit: " + nf.format(profit()) + "(" + perHour(profit()) + ")", 10, 80);
 		g.drawString("Status: " + (STATUS), 10, 100);
 		g.setColor(Color.RED);
-		g.drawString("v0.1", 165, 100);
+		g.drawString("v0.2", 165, 100);
 		drawMouse(g);
 	}
 
