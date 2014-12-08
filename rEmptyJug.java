@@ -192,7 +192,7 @@ public class rEmptyJug extends PollingScript<org.powerbot.script.rt6.ClientConte
 		g.drawString("Profit: " + nf.format(profit()) + "(" + perHour(profit()) + ")", 10, 80);
 		g.drawString("Status: " + (STATUS), 10, 100);
 		g.setColor(Color.RED);
-		g.drawString("v0.3", 165, 100);
+		g.drawString("v0.2", 165, 100);
 		drawMouse(g);
 	}
 
