@@ -78,40 +78,44 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 			break;
 		case MENU:
 			STATUS = "Select Option";
-			if (Random.nextInt(1, 50) == 25) {
-				ctx.camera.angle(Random.nextInt(1, 360));
-			} else {
-				if (ctx.input.send("1")) {
-					Condition.wait(new Callable<Boolean>() {
-						@Override
-						public Boolean call() throws Exception {
-							return !WIDGET_MENU.visible()
-									&& ctx.chat.queryContinue();
-						}
-					}, 250, 20);
-				}
+			if (ctx.input.send("1")) {
+				Condition.wait(new Callable<Boolean>() {
+					@Override
+					public Boolean call() throws Exception {
+						return !WIDGET_MENU.visible()
+								&& ctx.chat.queryContinue();
+					}
+				}, 250, 20);
 			}
 			break;
 		case CONTINUE:
 			STATUS = "Select Continue";
 			if (ctx.widgets.component(1191, 6).text().contains("Can you sell me some furs?") || ctx.widgets.component(1191, 6).text().contains("Yeah, OK, here you go.")) {
-				if (Random.nextInt(1, 75) == 40) {
-					ctx.camera.angle(Random.nextInt(1, 360));
-				} else {
 					if (ctx.input.send(" ")) {
 				Condition.wait(new Callable<Boolean>() {
 					@Override
 					public Boolean call() throws Exception {
 						return ctx.widgets.component(1184, 9).text().contains("Yeah, sure. They're 20 gold coins each.") || ctx.widgets.component(1189, 2).text().contains("Baraek sells you a fur.");
-							}
-						}, 250, 20);
-					}
+						}
+					}, 250, 20);
 				}
 			} else {
-				if (Random.nextInt(1, 100) == 50) {
-					ctx.camera.angle(Random.nextInt(1, 360));
-				} else {
-					if (ctx.input.send(" ")) {
+				if (ctx.input.send(" ")) {
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return WIDGET_MENU.valid();
+						}
+					}, 250, 20);
+				}
+			}
+			break;
+		case TALKING:
+			final Npc Baraek = ctx.npcs.select().id(ID_BARAEK).nearest().poll();
+			if (Baraek.inViewport()) {
+				STATUS = "Talk to Baraek";
+				if (Baraek.interact("Talk-to", "Baraek")) {
+					if (didInteract()) {
 						Condition.wait(new Callable<Boolean>() {
 							@Override
 							public Boolean call() throws Exception {
@@ -120,41 +124,21 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 						}, 250, 20);
 					}
 				}
-			}
-			break;
-		case TALKING:
-			final Npc Baraek = ctx.npcs.select().id(ID_BARAEK).nearest().poll();
-					if (Baraek.inViewport()) {
-						STATUS = "Talk to Baraek";
-						if (Baraek.interact("Talk-to", "Baraek")) {
-							if (didInteract()) {
-								Condition.wait(new Callable<Boolean>() {
-									@Override
-									public Boolean call() throws Exception {
-										return WIDGET_MENU.valid();
-									}
-								}, 250, 20);
-						}
-						else {
-								STATUS = "Walk to Npc";
-								ctx.movement.step(ctx.movement.closestOnMap(Baraek.tile()));
-								ctx.camera.turnTo(Baraek.tile());
-							
-						}
-					}
-				} else {
+			} else {
 				if (ctx.bank.opened()) {
 					STATUS = "Close Bank";
 					FUR_STORED = ctx.bank.select().id(ID_FUR).count(true);
-					if (Random.nextInt(1, 15) == 10)
-						ctx.bank.close();
-					else
-						close();
+					ctx.bank.close();
 				} else {
 					STATUS = "Walk to Npc";
+					if (ctx.players.local().tile().distanceTo(Baraek.tile()) < 8) {
+						ctx.movement.step(ctx.movement.closestOnMap(Baraek.tile()));
+						ctx.camera.turnTo(Baraek.tile());
+					} else {
 						ctx.movement.newTilePath(PATH_TO_NPC).traverse();
 					}
 				}
+			}
 			break;
 		case BANKING:
 			if (ctx.bank.opened()) {
@@ -268,7 +252,7 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 		g.drawString("Status: " + (STATUS), 10, 140);
 		g.setColor(Color.RED);
 		g.setFont(FONT_TWO);
-		g.drawString("v0.20", 165, 140);
+		g.drawString("v0.21", 165, 140);
 		drawMouse(g);
 	}
 	
