@@ -531,7 +531,7 @@ public class rTanner extends PollingScript<org.powerbot.script.rt6.ClientContext
 		g.drawString("*" + (status) + "*", 10, 140);
 		g.setFont(fontThree);
 		g.setColor(Color.RED);
-		g.drawString("v0.1", 165, 120);
+		g.drawString("v0.2", 165, 120);
 		drawMouse(g);
 		drawTannerTile(g);
 	}
