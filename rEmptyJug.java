@@ -75,12 +75,18 @@ public class rEmptyJug extends PollingScript<org.powerbot.script.rt6.ClientConte
 			case 4:
 				ctx.camera.angle(Random.nextInt(0, 300));
 				break;
+			case 5:
+				ctx.camera.pitch(Random.nextInt(35, 45));
+				break;
 			}
 			break;
 		case EMPTY:
 			if (ctx.bank.opened()) {
 				STATUS = "Close bank";
-				ctx.bank.close();
+				if(Random.nextInt(1, 15) == 10)
+					ctx.bank.close();
+					else
+						close();
 			} else {
 				final Item Wine = ctx.backpack.poll();
 				if (ctx.hud.opened(Window.BACKPACK)) {
@@ -153,6 +159,12 @@ public class rEmptyJug extends PollingScript<org.powerbot.script.rt6.ClientConte
 	private enum State {
 		ANTIPATTERN, EMPTY, BANKING
 	}
+	
+	private void close() {
+		ctx.input.send("{VK_ESCAPE down}");
+		Condition.sleep(Random.nextInt(50, 400));
+		ctx.input.send("{VK_ESCAPE up}");
+	}
 
 	@Override
 	public void messaged(MessageEvent msg) {
@@ -192,7 +204,7 @@ public class rEmptyJug extends PollingScript<org.powerbot.script.rt6.ClientConte
 		g.drawString("Profit: " + nf.format(profit()) + "(" + perHour(profit()) + ")", 10, 80);
 		g.drawString("Status: " + (STATUS), 10, 100);
 		g.setColor(Color.RED);
-		g.drawString("v0.2", 165, 100);
+		g.drawString("v0.3", 165, 100);
 		drawMouse(g);
 	}
 
