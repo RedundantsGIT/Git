@@ -128,14 +128,18 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 				if (ctx.bank.opened()) {
 					STATUS = "Close Bank";
 					FUR_STORED = ctx.bank.select().id(ID_FUR).count(true);
+					if(Random.nextInt(1, 15) == 10)
 					ctx.bank.close();
+					else
+						close();
 				} else {
 					STATUS = "Walk to Npc";
 					if (ctx.players.local().tile().distanceTo(Baraek.tile()) < 8) {
 						ctx.movement.step(ctx.movement.closestOnMap(Baraek.tile()));
 						ctx.camera.turnTo(Baraek.tile());
 					} else {
-						ctx.movement.newTilePath(PATH_TO_NPC).traverse();
+						if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(6, 8)) 
+						ctx.movement.step(getNextTile(randomizePath((PATH_TO_NPC), 2, 2)));
 					}
 				}
 			}
@@ -157,9 +161,8 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 					ctx.bank.open();
 				} else {
 					STATUS = "Walk to Bank";
-						ctx.movement.newTilePath(PATH_TO_NPC).reverse().traverse();
-						if (Random.nextInt(1, 3) == 2)
-						ctx.camera.turnTo(ctx.bank.nearest());
+					if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(6, 8)) 
+					ctx.movement.step(getNextTile(randomizePath(reversePath(PATH_TO_NPC), 2, 2)));
 				}
 			}
 
@@ -205,10 +208,76 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 		return ctx.game.crosshair() == Crosshair.ACTION;
 	}
 
-	private boolean close() {
+	private void close() {
 		ctx.input.send("{VK_ESCAPE down}");
-		Condition.sleep(Random.nextInt(50, 200));
-		return ctx.input.send("{VK_ESCAPE up}");
+		Condition.sleep(Random.nextInt(50, 400));
+		ctx.input.send("{VK_ESCAPE up}");
+	}
+	
+	public Tile[] randomizePath(Tile[] path, int maxXDeviation,
+			int maxYDeviation) {
+		Tile[] rez = new Tile[path.length];
+
+		for (int i = 0; i < path.length; i++) {
+			int x = path[i].x();
+			int y = path[i].y();
+			if (maxXDeviation > 0) {
+				double d = Math.random() * 2 - 1.0;
+				d *= maxXDeviation;
+				x += (int) d;
+			}
+			if (maxYDeviation > 0) {
+				double d = Math.random() * 2 - 1.0;
+				d *= maxYDeviation;
+				y += (int) d;
+			}
+			rez[i] = new Tile(x, y, path[i].floor());
+		}
+
+		return rez;
+	}
+
+	public Tile getNextTile(Tile[] path) {
+		int dist = 99;
+		int closest = -1;
+		for (int i = path.length - 1; i >= 0; i--) {
+			Tile tile = path[i];
+			int d = distanceTo(tile);
+			if (d < dist) {
+				dist = d;
+				closest = i;
+			}
+		}
+
+		int feasibleTileIndex = -1;
+
+		for (int i = closest; i < path.length; i++) {
+
+			if (distanceTo(path[i]) <= 16) {
+				feasibleTileIndex = i;
+			} else {
+				break;
+			}
+		}
+
+		if (feasibleTileIndex == -1) {
+			return null;
+		} else {
+			return path[feasibleTileIndex];
+		}
+	}
+
+	public int distanceTo(Tile tile) {
+		return (int) ctx.players.local().tile().distanceTo(tile);
+	}
+
+	private Tile[] reversePath(Tile tiles[]) {
+		Tile r[] = new Tile[tiles.length];
+		int i;
+		for (i = 0; i < tiles.length; i++) {
+			r[i] = tiles[(tiles.length - 1) - i];
+		}
+		return r;
 	}
 
 
@@ -252,7 +321,7 @@ public class rFurFlipper extends PollingScript<org.powerbot.script.rt6.ClientCon
 		g.drawString("Status: " + (STATUS), 10, 140);
 		g.setColor(Color.RED);
 		g.setFont(FONT_TWO);
-		g.drawString("v0.21", 165, 140);
+		g.drawString("v0.22", 165, 140);
 		drawMouse(g);
 	}
 	
