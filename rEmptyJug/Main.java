@@ -25,7 +25,7 @@ import org.powerbot.script.rt6.Item;
 import org.powerbot.script.rt6.Hud.Window;
 
 @Manifest(name = "rEmptyJug (Beta)", description = "Drinks jugs of wine for profit", properties = "hidden=true")
-public class rEmptyJug extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
+public class Main extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
 	private static RenderingHints antialiasing = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
 	private static long TIMER_SCRIPT = 0;
