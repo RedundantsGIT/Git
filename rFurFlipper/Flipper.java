@@ -26,7 +26,7 @@ import org.powerbot.script.rt6.GeItem;
 import org.powerbot.script.rt6.Npc;
 
 @Manifest(name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for money", properties = "topic=1135335")
-public class Main extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
+public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
 	private static RenderingHints ANTIALIASING = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	private static String STATUS = "Starting...";
 	private static long TIMER_SCRIPT = 0;
