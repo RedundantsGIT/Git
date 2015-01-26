@@ -77,6 +77,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			close();
 			break;
 		case MENU:
+			antiBan();
 			STATUS = "Select Option";
 			if (ctx.input.send("1")) {
 				Condition.wait(new Callable<Boolean>() {
@@ -89,6 +90,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			}
 			break;
 		case CONTINUE:
+			antiBan();
 			STATUS = "Select Continue";
 			if (ctx.widgets.component(1191, 6).text().contains("Can you sell me some furs?") || ctx.widgets.component(1191, 6).text().contains("Yeah, OK, here you go.")) {
 					if (ctx.input.send(" ")) {
@@ -111,6 +113,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			}
 			break;
 		case TALKING:
+			antiBan();
 			final Npc Baraek = ctx.npcs.select().id(ID_BARAEK).nearest().poll();
 			if (Baraek.inViewport()) {
 				STATUS = "Talk to Baraek";
@@ -134,12 +137,12 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 						close();
 				} else {
 					STATUS = "Walk to Npc";
-					if (ctx.players.local().tile().distanceTo(Baraek.tile()) < 8) {
+					if (!Baraek.inViewport() && ctx.players.local().tile().distanceTo(Baraek.tile()) < 8) {
 						ctx.movement.step(ctx.movement.closestOnMap(Baraek.tile()));
 						ctx.camera.turnTo(Baraek.tile());
 					} else {
-						if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(6, 8)) 
-						ctx.movement.step(getNextTile(randomizePath((PATH_TO_NPC), 2, 2)));
+						if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(5, 8)) 
+						ctx.movement.step(getNextTile(randomizePath((PATH_TO_NPC), 3, 1)));
 					}
 				}
 			}
@@ -161,8 +164,8 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 					ctx.bank.open();
 				} else {
 					STATUS = "Walk to Bank";
-					if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(6, 8)) 
-					ctx.movement.step(getNextTile(randomizePath(reversePath(PATH_TO_NPC), 2, 2)));
+					if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(5, 8)) 
+					ctx.movement.step(getNextTile(randomizePath(reversePath(PATH_TO_NPC), 3, 1)));
 				}
 			}
 
@@ -279,6 +282,32 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		}
 		return r;
 	}
+	
+	private int antiBan() {
+		int antiban = Random.nextInt(1, 600);
+		switch (antiban) {
+		case 1:
+			ctx.camera.angle(Random.nextInt(21, 40));
+			break;
+		case 2:
+			ctx.camera.angle(Random.nextInt(25, 75));
+			break;
+		case 3:
+			ctx.camera.angle(Random.nextInt(0, 200));
+			break;
+		case 4:
+			ctx.camera.angle(Random.nextInt(0, 300));
+			break;
+		case 8:
+			ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
+			break;
+		case 6:
+			ctx.camera.pitch(Random.nextInt(40, 55));
+			ctx.camera.angle(Random.nextInt(0, 300));
+			break;
+		}
+		return 0;
+	}
 
 
 	@Override
@@ -321,7 +350,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		g.drawString("Status: " + (STATUS), 10, 140);
 		g.setColor(Color.RED);
 		g.setFont(FONT_TWO);
-		g.drawString("v0.22", 165, 140);
+		g.drawString("v0.23", 165, 140);
 		drawMouse(g);
 	}
 	
