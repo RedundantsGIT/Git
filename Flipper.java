@@ -77,7 +77,6 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			close();
 			break;
 		case MENU:
-			antiBan();
 			STATUS = "Select Option";
 			if (ctx.input.send("1")) {
 				Condition.wait(new Callable<Boolean>() {
@@ -90,7 +89,6 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			}
 			break;
 		case CONTINUE:
-			antiBan();
 			STATUS = "Select Continue";
 			if (ctx.widgets.component(1191, 6).text().contains("Can you sell me some furs?") || ctx.widgets.component(1191, 6).text().contains("Yeah, OK, here you go.")) {
 					if (ctx.input.send(" ")) {
@@ -113,7 +111,6 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			}
 			break;
 		case TALKING:
-			antiBan();
 			final Npc Baraek = ctx.npcs.select().id(ID_BARAEK).nearest().poll();
 			if (Baraek.inViewport()) {
 				STATUS = "Talk to Baraek";
@@ -175,13 +172,17 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 	}
 	
 	private State state() {
+		
 		if (ctx.camera.pitch() < 40){
 			return State.CAMERA;
 		}
 		
+		
+		antiBan();
+		
 		if(ctx.widgets.component(1188, 12).text().contains("I can't afford that.")){
 			return State.STOP;
-	}
+	    }
 		
 		if(ctx.widgets.component(1188, 12).text().contains("Can I have a newspaper, please?")){
 			return State.FIX;
@@ -350,8 +351,15 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		g.drawString("Status: " + (STATUS), 10, 140);
 		g.setColor(Color.RED);
 		g.setFont(FONT_TWO);
-		g.drawString("v0.23", 165, 140);
+		g.drawString("v0.24", 165, 140);
 		drawMouse(g);
+		drawBaraekTile(g);
+	}
+	
+	private void drawBaraekTile(final Graphics g) {
+		final Npc Baraek = ctx.npcs.select().id(ID_BARAEK).nearest().poll();
+			if (Baraek.inViewport() && ctx.backpack.select().count() != 28)
+				Baraek.tile().matrix(ctx).draw(g);
 	}
 	
 	private static int profit() {
