@@ -65,7 +65,6 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	public void start() {
 		TIMER_SCRIPT = System.currentTimeMillis();
 		GRAPE_PRICE = getGuidePrice(ID_GRAPE);
-		ctx.properties.setProperty("bank.antipattern", "disable");
 		log.info("G.E. Grape Price : " + GRAPE_PRICE);
 	}
 
@@ -133,19 +132,16 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 							}
 						}, 250, 20);
 					} else {
+						STATUS = "Bank open";
 						ctx.bank.open();
 					}
 				} else {
-					if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(5, 8)) {
-						STATUS = "Walk to bank";
-						ctx.movement.newTilePath(PATH_GUILD).reverse().traverse();
-						ctx.camera.turnTo(ctx.bank.nearest());
-					}
+					STATUS = "Walk to bank";
+					ctx.movement.newTilePath(PATH_GUILD).reverse().traverse();
+					ctx.camera.turnTo(ctx.bank.nearest());
 				}
-
 			}
-
-			break;
+		break;
 		case GRAPES:
 			if (atGuildEntranceDoor()) {
 				STATUS = "Open door";
@@ -177,19 +173,19 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					}
 				}, 250, 20);
 			} else if (atLevelThree()) {
+				STATUS = "Walk to grapes";
 				if (ctx.players.local().tile().distanceTo(TILE_LOOT) > 2) {
-					STATUS = "Walk to grapes";
-					if (LOOT_TILE.tile().matrix(ctx).inViewport() && Random.nextInt(1, 10) == 5) {
-						if(Random.nextInt(1, 20) == 10)
+					if (Random.nextInt(1, 10) == 5) {
+						if (LOOT_TILE3.tile().matrix(ctx).inViewport() && Random.nextInt(1, 20) == 10)
 							LOOT_TILE3.matrix(ctx).interact("Walk here");
-						else if (Random.nextInt(1, 10) == 5)
-						LOOT_TILE2.matrix(ctx).interact("Walk here");
-						else 
+						else if (LOOT_TILE2.tile().matrix(ctx).inViewport() && Random.nextInt(1, 10) == 5)
+							LOOT_TILE2.matrix(ctx).interact("Walk here");
+						else if(LOOT_TILE.tile().matrix(ctx).inViewport())
 							LOOT_TILE.matrix(ctx).interact("Walk here");
-						Condition.sleep(Random.nextInt(1000, 1500));
+						Condition.sleep(Random.nextInt(1200, 2500));
 						while (ctx.players.local().inMotion());
 					} else
-						ctx.movement.step(ctx.movement.closestOnMap(TILE_LOOT));
+					ctx.movement.step(ctx.movement.closestOnMap(TILE_LOOT));
 					ctx.camera.turnTo(TILE_LOOT);
 					while (ctx.players.local().inMotion());
 				} else {
@@ -203,21 +199,19 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					}
 				}
 			} else {
-				if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(5, 8)) {
-					if (ctx.bank.opened()) {
-						STATUS = "Bank close";
-						ctx.bank.close();
-					} else {
-						STATUS = "Walk to guild";
-						ctx.movement.newTilePath(PATH_GUILD).traverse();
-					}
+				if (ctx.bank.opened()) {
+					STATUS = "Bank close";
+					if(Random.nextInt(1, 10) == 5)
+					ctx.bank.close();
+					else
+						close();
+				} else {
+					STATUS = "Walk to guild";
+					ctx.movement.newTilePath(PATH_GUILD).traverse();
 				}
 			}
-
 			break;
-
 		}
-
 	}
 
 	private State state() {
@@ -264,7 +258,6 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 			GRAPES_GAINED++;
 			return true;
 		}
-
 		return false;
 	}
 
@@ -277,37 +270,47 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 				ctx.camera.turnTo(Stairs.tile());
 				Door.interact("Open", "Door");
 				while (ctx.players.local().inMotion());
+				return true;
 			}
 		} else {
 			ctx.movement.step(ctx.movement.closestOnMap(Door.tile()));
+			return true;
 		}
-
-		return true;
+		return false;
 	}
 
 	private boolean goDown() {
 		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS2).nearest().poll();
+		STATUS = "Climb-down";
 		if (Stairs.inViewport()) {
 			Stairs.interact("Climb-down");
 			while (ctx.players.local().inMotion());
+			return true;
 		} else {
 			ctx.camera.turnTo(Stairs.tile());
 			ctx.movement.step(ctx.movement.closestOnMap(Stairs.tile()));
+			return true;
 		}
-		return true;
 	}
 
 	private boolean goUp() {
 		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS1).nearest().poll();
+		STATUS = "Climb-up";
 		if (Stairs.inViewport()) {
 			Stairs.interact("Climb-up");
 			while (ctx.players.local().inMotion());
+			return true;
 		} else {
 			ctx.camera.turnTo(Stairs.tile());
 			ctx.movement.step(ctx.movement.closestOnMap(Stairs.tile()));
+			return true;
 		}
-
-		return true;
+	}
+	
+	private void close() {
+		ctx.input.send("{VK_ESCAPE down}");
+		Condition.sleep(Random.nextInt(50, 400));
+		ctx.input.send("{VK_ESCAPE up}");
 	}
 
 	public boolean bankerIsOnScreen() {
@@ -331,8 +334,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 
 	private boolean atGuildEntranceDoor() {
 		final GameObject Door = ctx.objects.select().id(ID_DOOR).nearest().poll();
-		return Door.inViewport() && ctx.players.local().tile().distanceTo(Door.tile()) < 7
-				&& !atLevelOne() && !atLevelTwo() && !atLevelThree();
+		return Door.inViewport() && ctx.players.local().tile().distanceTo(Door.tile()) < 7 && !atLevelOne() && !atLevelTwo() && !atLevelThree();
 	}
 
 	private boolean didInteract() {
@@ -405,10 +407,8 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		g.drawString("rGrapeGrabber", 60, 20);
 		g.setColor(Color.WHITE);
 		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 10, 40);
-		g.drawString("Grapes Picked: " + NF.format(GRAPES_GAINED) + "("
-				+ PerHour(GRAPES_GAINED) + "/h)", 10, 60);
-		g.drawString("Profit: " + NF.format(PROFIT_GAINED) + "("
-				+ PerHour(PROFIT_GAINED) + "/h)", 10, 80);
+		g.drawString("Grapes Picked: " + NF.format(GRAPES_GAINED) + "(" + PerHour(GRAPES_GAINED) + "/h)", 10, 60);
+		g.drawString("Profit: " + NF.format(PROFIT_GAINED) + "(" + PerHour(PROFIT_GAINED) + "/h)", 10, 80);
 		g.drawString("Profit ea: " + (GRAPE_PRICE), 10, 100);
 		g.drawString("Status: " + (STATUS), 10, 120);
 		drawMouse(g);
