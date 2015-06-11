@@ -172,7 +172,6 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 				}, 250, 20);
 			} else if (atLevelThree()) {
 				if (ctx.players.local().tile().distanceTo(TILE_LOOT) > 2) {
-							LOOT_TILE3.matrix(ctx).interact("Walk here");
 					STATUS = "Walk to grapes";
 					ctx.camera.turnTo(TILE_LOOT);
 					ctx.movement.step(ctx.movement.closestOnMap(TILE_LOOT));
