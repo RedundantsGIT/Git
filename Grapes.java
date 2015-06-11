@@ -43,7 +43,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	
 	private static int GRAPES_GAINED, GRAPE_PRICE, PROFIT_GAINED, TRIES;
 	
-	private static final int ID_SHOOT1 = 24068, ID_SHOOT2 = 24067, ID_DOOR = 2712, ID_GRAPE = 1987;
+	private static final int ID_DOOR = 2712, ID_GRAPE = 1987;
 	
 	private static final Area AREA_IN_GUILD = new Area(new Tile[] {
 			new Tile(3147, 3446, 0), new Tile(3145, 3444, 0),
@@ -56,10 +56,6 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 			new Tile(3160, 3450, 0), new Tile(3155, 3449, 0),
 			new Tile(3152, 3446, 0), new Tile(3148, 3443, 0),
 			new Tile(3143, 3443, 0) };
-
-	private static final Tile LOOT_TILE = new Tile(3143, 3450, 2);
-	private static final Tile LOOT_TILE2 = new Tile(3144, 3451, 2);
-	private static final Tile LOOT_TILE3 = new Tile(3145, 3450, 2);
 
 	@Override
 	public void start() {
@@ -138,7 +134,9 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 				} else {
 					STATUS = "Walk to bank";
 					ctx.movement.newTilePath(PATH_GUILD).reverse().traverse();
+					if(Random.nextInt(1, 16) == 8){
 					ctx.camera.turnTo(ctx.bank.nearest());
+					}
 				}
 			}
 		break;
@@ -173,21 +171,15 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					}
 				}, 250, 20);
 			} else if (atLevelThree()) {
-				STATUS = "Walk to grapes";
 				if (ctx.players.local().tile().distanceTo(TILE_LOOT) > 2) {
-					if (Random.nextInt(1, 10) == 5) {
-						if (LOOT_TILE3.tile().matrix(ctx).inViewport() && Random.nextInt(1, 20) == 10)
 							LOOT_TILE3.matrix(ctx).interact("Walk here");
-						else if (LOOT_TILE2.tile().matrix(ctx).inViewport() && Random.nextInt(1, 10) == 5)
-							LOOT_TILE2.matrix(ctx).interact("Walk here");
-						else if(LOOT_TILE.tile().matrix(ctx).inViewport())
-							LOOT_TILE.matrix(ctx).interact("Walk here");
-						Condition.sleep(Random.nextInt(1200, 2500));
-						while (ctx.players.local().inMotion());
-					} else
-					ctx.movement.step(ctx.movement.closestOnMap(TILE_LOOT));
+					STATUS = "Walk to grapes";
 					ctx.camera.turnTo(TILE_LOOT);
-					while (ctx.players.local().inMotion());
+					ctx.movement.step(ctx.movement.closestOnMap(TILE_LOOT));
+					Condition.sleep();
+					while (ctx.players.local().inMotion()){
+						Condition.sleep();
+					}
 				} else {
 					final GroundItem Grapes = ctx.groundItems.select().id(ID_GRAPE).nearest().poll();
 					if (Grapes.valid()) {
@@ -201,10 +193,8 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 			} else {
 				if (ctx.bank.opened()) {
 					STATUS = "Bank close";
-					if(Random.nextInt(1, 10) == 5)
 					ctx.bank.close();
-					else
-						close();
+					Condition.sleep();
 				} else {
 					STATUS = "Walk to guild";
 					ctx.movement.newTilePath(PATH_GUILD).traverse();
@@ -261,7 +251,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		return false;
 	}
 
-	private boolean openDoor() {
+	private void openDoor() {
 		final int[] doorBounds = { -200, 150, -800, -300, 0, 0 };
 		final GameObject Door = ctx.objects.select().id(ID_DOOR).each(Interactive.doSetBounds(doorBounds)).nearest().poll();
 		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS1).nearest().poll();
@@ -269,63 +259,54 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 			if (Door.inViewport()) {
 				ctx.camera.turnTo(Stairs.tile());
 				Door.interact("Open", "Door");
-				while (ctx.players.local().inMotion());
-				return true;
+				while (ctx.players.local().inMotion()){
+					Condition.sleep();
+				}
 			}
 		} else {
 			ctx.movement.step(ctx.movement.closestOnMap(Door.tile()));
-			return true;
 		}
-		return false;
 	}
 
-	private boolean goDown() {
+	private void goDown() {
 		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS2).nearest().poll();
 		STATUS = "Climb-down";
 		if (Stairs.inViewport()) {
 			Stairs.interact("Climb-down");
-			while (ctx.players.local().inMotion());
-			return true;
+			while (ctx.players.local().inMotion()){
+				Condition.sleep();
+			}
 		} else {
 			ctx.camera.turnTo(Stairs.tile());
 			ctx.movement.step(ctx.movement.closestOnMap(Stairs.tile()));
-			return true;
 		}
 	}
 
-	private boolean goUp() {
+	private void goUp() {
 		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS1).nearest().poll();
 		STATUS = "Climb-up";
 		if (Stairs.inViewport()) {
 			Stairs.interact("Climb-up");
-			while (ctx.players.local().inMotion());
-			return true;
+			while (ctx.players.local().inMotion()){
+				Condition.sleep();
+			}
 		} else {
 			ctx.camera.turnTo(Stairs.tile());
 			ctx.movement.step(ctx.movement.closestOnMap(Stairs.tile()));
-			return true;
 		}
 	}
 	
-	private void close() {
-		ctx.input.send("{VK_ESCAPE down}");
-		Condition.sleep(Random.nextInt(50, 400));
-		ctx.input.send("{VK_ESCAPE up}");
-	}
-
 	public boolean bankerIsOnScreen() {
 		final Npc Banker = ctx.npcs.select().id(ID_BANKER).nearest().poll();
 		return Banker.inViewport();
 	}
 
 	private boolean atLevelTwo() {
-		final GameObject Shoot = ctx.objects.select().id(ID_SHOOT1).nearest().poll();
-		return Shoot.valid();
+		return ctx.game.floor() == 1;
 	}
 
 	private boolean atLevelThree() {
-		final GameObject Shoot = ctx.objects.select().id(ID_SHOOT2).nearest().poll();
-		return Shoot.valid();
+		return ctx.game.floor() == 2;
 	}
 
 	private boolean atLevelOne() {
@@ -346,7 +327,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	}
 
 	private int antiBan() {
-		int antiban = Random.nextInt(1, 1000);
+		int antiban = Random.nextInt(1, 9000);
 		switch (antiban) {
 		case 1:
 			ctx.camera.angle(Random.nextInt(21, 40));
