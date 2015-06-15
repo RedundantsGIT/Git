@@ -87,7 +87,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 
 		switch (state()) {
 		case CAMERA:
-			ctx.camera.pitch(Random.nextInt(45, 50));
+			ctx.camera.pitch(Random.nextInt(55, 65));
 			break;
 		case BANKING:
 			if (atLevelThree()) {
@@ -117,7 +117,8 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					}, 250, 20);
 				}
 			} else {
-				if (bankerIsOnScreen()) {
+				final Npc Banker = ctx.npcs.select().id(ID_BANKER).nearest().poll();
+				if (Banker.inViewport()) {
 					if (ctx.bank.opened()) {
 						STATUS = "Deposit backpack";
 						ctx.bank.depositInventory();
@@ -134,7 +135,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 				} else {
 					STATUS = "Walk to bank";
 					ctx.movement.newTilePath(PATH_GUILD).reverse().traverse();
-					if(Random.nextInt(1, 16) == 8){
+					if(Random.nextInt(1, 14) == 8){
 					ctx.camera.turnTo(ctx.bank.nearest());
 					}
 				}
@@ -204,10 +205,10 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	}
 
 	private State state() {
-		if (ctx.camera.pitch() < 40) {
+		if (ctx.camera.pitch() < 55) {
 			return State.CAMERA;
 		}
-		if (isFull()) {
+		if (ctx.backpack.select().count() == 28) {
 			return State.BANKING;
 		}
 
@@ -229,12 +230,14 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 
 		};
 		if (ctx.menu.click(filter)) {
-			Condition.wait(new Callable<Boolean>() {
-				@Override
-				public Boolean call() throws Exception {
-					return ctx.backpack.select().id(ID_GRAPE).count() != count;
-				}
-			}, 250, 20);
+			if (didInteract()) {
+				Condition.wait(new Callable<Boolean>() {
+					@Override
+					public Boolean call() throws Exception {
+						return ctx.backpack.select().id(ID_GRAPE).count() != count;
+					}
+				}, 250, 20);
+			}
 		} else {
 			if (TRIES > 2) {
 				ctx.camera.turnTo(g.tile());
@@ -251,55 +254,53 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	}
 
 	private void openDoor() {
-		final int[] doorBounds = { -200, 150, -800, -300, 0, 0 };
-		final GameObject Door = ctx.objects.select().id(ID_DOOR).each(Interactive.doSetBounds(doorBounds)).nearest().poll();
+		final int[] doorBounds = {-212, 232, -956, -184, -128, 128};
 		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS1).nearest().poll();
-		if (ctx.players.local().tile().distanceTo(Door.tile()) < 5) {
-			if (Door.inViewport()) {
-				ctx.camera.turnTo(Stairs.tile());
-				Door.interact("Open", "Door");
-				while (ctx.players.local().inMotion()){
-					Condition.sleep();
-				}
+		final GameObject Door = ctx.objects.select().id(ID_DOOR).each(Interactive.doSetBounds(doorBounds)).nearest().poll();
+		if (Door.inViewport() && ctx.players.local().tile().distanceTo(Door.tile()) < 5) {
+			ctx.camera.turnTo(Stairs.tile());
+			Door.interact("Open", "Door");
+			while (ctx.players.local().inMotion()) {
+				Condition.sleep();
 			}
 		} else {
 			ctx.movement.step(ctx.movement.closestOnMap(Door.tile()));
+			Condition.sleep();
 		}
 	}
 
 	private void goDown() {
 		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS2).nearest().poll();
 		STATUS = "Climb-down";
-		if (Stairs.inViewport()) {
+		if (Stairs.inViewport() && ctx.players.local().tile().distanceTo(Stairs.tile()) < 6) {
 			Stairs.interact("Climb-down");
+			Condition.sleep();
 			while (ctx.players.local().inMotion()){
 				Condition.sleep();
 			}
 		} else {
 			ctx.camera.turnTo(Stairs.tile());
 			ctx.movement.step(ctx.movement.closestOnMap(Stairs.tile()));
+			Condition.sleep();
 		}
 	}
 
 	private void goUp() {
 		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS1).nearest().poll();
 		STATUS = "Climb-up";
-		if (Stairs.inViewport()) {
+		if (Stairs.inViewport() && ctx.players.local().tile().distanceTo(Stairs.tile()) < 6) {
 			Stairs.interact("Climb-up");
+			Condition.sleep();
 			while (ctx.players.local().inMotion()){
 				Condition.sleep();
 			}
 		} else {
 			ctx.camera.turnTo(Stairs.tile());
 			ctx.movement.step(ctx.movement.closestOnMap(Stairs.tile()));
+			Condition.sleep();
 		}
 	}
 	
-	public boolean bankerIsOnScreen() {
-		final Npc Banker = ctx.npcs.select().id(ID_BANKER).nearest().poll();
-		return Banker.inViewport();
-	}
-
 	private boolean atLevelTwo() {
 		return ctx.game.floor() == 1;
 	}
@@ -321,12 +322,8 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		return ctx.game.crosshair() == Crosshair.ACTION;
 	}
 
-	private boolean isFull() {
-		return ctx.backpack.select().count() == 28;
-	}
-
 	private int antiBan() {
-		int antiban = Random.nextInt(1, 9000);
+		int antiban = Random.nextInt(1, 8000);
 		switch (antiban) {
 		case 1:
 			ctx.camera.angle(Random.nextInt(21, 40));
@@ -354,7 +351,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 			ctx.input.hop(Random.nextInt(0, 500), Random.nextInt(0, 500));
 			break;
 		case 9:
-			ctx.camera.pitch(Random.nextInt(40, 55));
+			ctx.camera.pitch(Random.nextInt(55, 65));
 			ctx.camera.angle(Random.nextInt(0, 300));
 			break;
 			}
@@ -391,7 +388,19 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		g.drawString("Profit: " + NF.format(PROFIT_GAINED) + "(" + PerHour(PROFIT_GAINED) + "/h)", 10, 80);
 		g.drawString("Profit ea: " + (GRAPE_PRICE), 10, 100);
 		g.drawString("Status: " + (STATUS), 10, 120);
-		drawMouse(g);
+		drawTiles(g);
+	}
+	
+	private void drawTiles(Graphics2D g) {
+		Point p = ctx.input.getLocation();
+		final GroundItem Grapes = ctx.groundItems.select().id(ID_GRAPE).nearest().poll();
+		if (Grapes.valid() && atLevelThree()) {
+				TILE_LOOT.matrix(ctx).draw(g);
+		}
+		g.setColor(Color.MAGENTA);
+		g.setStroke(new BasicStroke(2));
+		g.fill(new Rectangle(p.x + 1, p.y - 4, 2, 15));
+		g.fill(new Rectangle(p.x - 6, p.y + 2, 16, 2));	
 	}
 
 	public String PerHour(int gained) {
@@ -408,14 +417,6 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 			return nf.format((i / 1000)) + "k";
 		}
 		return "" + start;
-	}
-
-	public void drawMouse(Graphics2D g) {
-		Point p = ctx.input.getLocation();
-		g.setColor(Color.MAGENTA);
-		g.setStroke(new BasicStroke(2));
-		g.fill(new Rectangle(p.x + 1, p.y - 4, 2, 15));
-		g.fill(new Rectangle(p.x - 6, p.y + 2, 16, 2));
 	}
 
 	private static int getGuidePrice(final int id) {
