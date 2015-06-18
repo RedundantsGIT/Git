@@ -27,7 +27,7 @@ import org.powerbot.script.rt6.Hud.Window;
 @Manifest(name = "rEmptyJug (Beta)", description = "Drinks jugs of wine for profit", properties = "hidden=true")
 public class Empty extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
 	private static RenderingHints antialiasing = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
+	
 	private static long TIMER_SCRIPT = 0;
 	private static String STATUS = "Starting...";
 	private static final int ID_JUG_OF_WINE = 1993, ID_JUG = 1935;
@@ -83,12 +83,9 @@ public class Empty extends PollingScript<org.powerbot.script.rt6.ClientContext> 
 		case EMPTY:
 			if (ctx.bank.opened()) {
 				STATUS = "Close bank";
-				if(Random.nextInt(1, 15) == 10)
-					ctx.bank.close();
-					else
-						close();
+				ctx.bank.close();
 			} else {
-				final Item Wine = ctx.backpack.poll();
+				final Item Wine = ctx.backpack.select().id(ID_JUG_OF_WINE).poll();
 				if (ctx.hud.opened(Window.BACKPACK)) {
 					STATUS = "Drink wine";
 					Wine.interact("Drink", "Jug of wine");
@@ -129,14 +126,17 @@ public class Empty extends PollingScript<org.powerbot.script.rt6.ClientContext> 
 			} else {
 				if (ctx.bank.inViewport()) {
 					STATUS = "Open bank";
-					if(ctx.camera.pitch() < 35)
-						ctx.camera.pitch(40);
-						ctx.bank.open();
+					if (ctx.camera.pitch() < 40) {
+						ctx.camera.pitch(Random.nextInt(45, 55));
+					}
+					ctx.bank.open();
 				} else {
 					STATUS = "Walk to bank";
-					ctx.camera.turnTo(ctx.bank.nearest());
 					ctx.movement.step(ctx.movement.closestOnMap(ctx.bank.nearest()));
-					while (ctx.players.local().inMotion());
+					ctx.camera.turnTo(ctx.bank.nearest());
+					while (ctx.players.local().inMotion()){
+						Condition.sleep();
+					}
 				}
 			}
 			break;
@@ -160,12 +160,6 @@ public class Empty extends PollingScript<org.powerbot.script.rt6.ClientContext> 
 		ANTIPATTERN, EMPTY, BANKING
 	}
 	
-	private void close() {
-		ctx.input.send("{VK_ESCAPE down}");
-		Condition.sleep(Random.nextInt(50, 400));
-		ctx.input.send("{VK_ESCAPE up}");
-	}
-
 	@Override
 	public void messaged(MessageEvent msg) {
 		String m = msg.text();
