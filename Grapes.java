@@ -254,7 +254,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	}
 
 	private void openDoor() {
-		final int[] doorBounds = {-212, 232, -956, -184, -128, 128};
+		final int[] doorBounds = { -200, 150, -800, -300, 0, 0 };
 		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS1).nearest().poll();
 		final GameObject Door = ctx.objects.select().id(ID_DOOR).each(Interactive.doSetBounds(doorBounds)).nearest().poll();
 		if (Door.inViewport() && ctx.players.local().tile().distanceTo(Door.tile()) < 5) {
@@ -323,7 +323,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	}
 
 	private int antiBan() {
-		int antiban = Random.nextInt(1, 8000);
+		int antiban = Random.nextInt(1, 7000);
 		switch (antiban) {
 		case 1:
 			ctx.camera.angle(Random.nextInt(21, 40));
