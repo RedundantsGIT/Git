@@ -38,7 +38,7 @@ import org.powerbot.script.rt6.Npc;
 import org.powerbot.script.rt6.Game.Crosshair;
 import org.powerbot.script.rt6.Hud.Window;
 
-@Manifest(name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", properties = "topic=876982;")
+@Manifest(name = "rTanner", description = "Tans all hides in Al-Kharid & Burthorpe for (gp) [Supports all hides/potions]", properties = "topic=876982;vip=true;")
 public class Tanner extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
 	private static long elapsedTime = 0;
 	private static RenderingHints antialiasing = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
