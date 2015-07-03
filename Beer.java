@@ -1,15 +1,14 @@
-package rBeerFlipper;
+package rBeer;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.LinkedList;
 import java.util.concurrent.Callable;
 
 import org.powerbot.script.Condition;
@@ -20,30 +19,35 @@ import org.powerbot.script.PollingScript;
 import org.powerbot.script.Random;
 import org.powerbot.script.Script.Manifest;
 import org.powerbot.script.Tile;
+import org.powerbot.script.rt6.GameObject;
 import org.powerbot.script.rt6.GeItem;
 import org.powerbot.script.rt6.Interactive;
 import org.powerbot.script.rt6.Npc;
+import org.powerbot.script.rt6.Game.Crosshair;
 
-@Manifest(name = "rBeerFlipper", description = "Buys beer in varrock for money.", properties = "hidden=true")
+@Manifest(name = "rBeer", description = "Buys beer in falador for money.", properties = "hidden=true")
 public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
 	private static RenderingHints ANTIALIASING = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	private static String STATUS = "Starting...";
-	private static long TIMER_SCRIPT = 0;
-	private static int ID_BARTENDER = 733;
-	private static int BEER_BOUGHT, BEER_PRICE;
+	private static long SCRIPT_TIMER = 0;
 	
-	private static final Tile[] PATH_TO_BARTENDER = { 
-		    new Tile(3189, 3435, 0), new Tile(3194, 3430, 0), 
-			new Tile(3197, 3426, 0), new Tile(3199, 3419, 0), 
-			new Tile(3204, 3411, 0), new Tile(3211, 3404, 0), 
-			new Tile(3211, 3398, 0), new Tile(3215, 3395, 0), 
-			new Tile(3223, 3399, 0) };
-
+	private static int BEER_BOUGHT, BEER_PRICE, BEER_COUNT;
+	private static final int[] FAIL_SAFE_STAIRS_IDS = { 26149, 26151 };
+	private static final int BEER_ID = 1917, MEGAN_ID = 661, STAIRS_UP_ID = 26144, STAIRS_DOWN_ID = 26148;
+	
+	private static final Tile STAIRS_TILE_UP = new Tile(3038, 3382, 0);
+	private static final Tile STAIRS_TILE_DOWN = new Tile(3039, 3383, 1);
+	
+	private static final Tile[] PATH_TO_MEGAN = { 
+		    new Tile(3013, 3355, 0), new Tile(3013, 3361, 0), 
+			new Tile(3021, 3362, 0), new Tile(3028, 3367, 0), 
+			new Tile(3035, 3369, 0), new Tile(3038, 3382, 0)};
+	
 	@Override
 	public void start() {
-		TIMER_SCRIPT = System.currentTimeMillis();
+		SCRIPT_TIMER = System.currentTimeMillis();
 		STATUS = "Get prices..";
-		BEER_PRICE = getGuidePrice(1917);
+		BEER_PRICE = getGuidePrice(BEER_ID);
 	}
 
 	@Override
@@ -66,81 +70,166 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		if (!ctx.game.loggedIn())
 			return;
 		switch (state()) {
+		case CAMERA:
+			STATUS = "Setting camera";
+			ctx.camera.pitch(Random.nextInt(52, 60));
+			break;
 		case STOP:
 				ctx.controller.stop();
 			break;
-		case BUY:
-			if (ctx.chat.queryContinue()) {
-				STATUS = "Select continue";
-				ctx.chat.clickContinue(true);
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return ctx.widgets.component(1188, 12).visible() 
-							|| ctx.widgets.component(1184, 9).text().contains("No problemo. That'll be 2 coins.")
-							|| !ctx.chat.queryContinue();
-					}
-				}, 250, 20);
-			} else {
-				if (ctx.chat.select().text("A glass of your finest ale please.").poll().valid()) {
-					STATUS = "Select option";
-					ctx.input.send("1");
+		case ANTIPATTERN:
+			int antiban = Random.nextInt(1, 800);
+			switch (antiban) {
+			case 1:
+				ctx.camera.angle(Random.nextInt(21, 40));
+				break;
+			case 2:
+				ctx.camera.angle(Random.nextInt(25, 75));
+				break;
+			case 3:
+				ctx.camera.angle(Random.nextInt(0, 200));
+				break;
+			case 4:
+				ctx.camera.angle(Random.nextInt(0, 300));
+				break;
+			case 5:
+				ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
+				break;
+			case 6:
+				
+				break;
+			}
+			break;
+		case FAILSAFE:
+			final GameObject FailsafeStairs = ctx.objects.select().id(FAIL_SAFE_STAIRS_IDS).nearest().poll();
+			if (FailsafeStairs.inViewport()) {
+				ctx.camera.angle(Random.nextInt(0, 300));
+				FailsafeStairs.interact("Climb-down", "Staircase");
+				ctx.input.move(FailsafeStairs.centerPoint());
+				if (didInteract()) {
 					Condition.wait(new Callable<Boolean>() {
 						@Override
 						public Boolean call() throws Exception {
-							return ctx.chat.queryContinue();
+							return atFloor();
 						}
 					}, 250, 20);
+				}
+			} else {
+				ctx.camera.turnTo(FailsafeStairs);
+			}
+			break;
+		case BUY:
+			final GameObject StairsUp = ctx.objects.select().id(STAIRS_UP_ID).nearest().poll();
+			if (ctx.players.local().tile().distanceTo(StairsUp) < 8) {
+				if (StairsUp.inViewport() && ctx.players.local().tile().distanceTo(StairsUp.tile()) < 7) {
+					STATUS = "Climb-up";
+					StairsUp.interact("Climb-up");
+					if(didInteract()){
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return atFloor();
+						}
+					}, 250, 20);
+					}
 				} else {
-					final int[] BartenderBounds = {240, 184, -660, -320, -136, 76};
-					final Npc Bartender = ctx.npcs.select().id(ID_BARTENDER).each(Interactive.doSetBounds(BartenderBounds)).nearest().poll();
-					if (ctx.players.local().tile().distanceTo(Bartender.tile()) < 8) {
-						if (Bartender.inViewport()) {
-							if (!ctx.players.local().inMotion()) {
-								STATUS = "Talk to NPC";
-								Bartender.interact("Talk-to", "Bartender");
-								Condition.wait(new Callable<Boolean>() {
-									@Override
-									public Boolean call() throws Exception {
-										return ctx.chat.queryContinue();
+					STATUS = "Walk to stairs";
+					ctx.movement.step(ctx.movement.closestOnMap(STAIRS_TILE_UP));
+					ctx.camera.turnTo(StairsUp.tile());
+				}
+			} else {
+				if (atFloor()) {
+					if (ctx.chat.queryContinue()) {
+						STATUS = "Select Continue";
+						ctx.chat.clickContinue(true);
+						Condition.wait(new Callable<Boolean>() {
+							@Override
+							public Boolean call() throws Exception {
+								return ctx.widgets.component(1188, 5).visible()
+								    || ctx.widgets.component(1184, 10).visible()
+								    || ctx.widgets.component(1189, 6).visible();
+							}
+						}, 250, 20);
+					}else if (ctx.widgets.component(1188, 5).visible()) {
+						STATUS = "Select Option";
+						ctx.input.send("1");
+						Condition.wait(new Callable<Boolean>() {
+							@Override
+							public Boolean call() throws Exception {
+								return ctx.chat.queryContinue();
+							}
+						}, 250, 20);
+					}else{
+					final int[] MeganBounds = {-104, 88, -728, -92, -124, 120};
+					final Npc Megan = ctx.npcs.select().id(MEGAN_ID).each(Interactive.doSetBounds(MeganBounds)).nearest().poll();
+					if (Megan.inViewport() && ctx.players.local().tile().distanceTo(Megan) < 7) {
+						STATUS = "Talk-to Megan";
+						Megan.interact("Talk-to", "Megan");
+						if (didInteract()) {
+							Condition.wait(new Callable<Boolean>() {
+								@Override
+								public Boolean call() throws Exception {
+									return ctx.chat.queryContinue();
 									}
 								}, 250, 20);
 							}
 						} else {
-							ctx.camera.turnTo(Bartender);
-						}
-					} else {
-						if (ctx.bank.opened()) {
-							STATUS = "Closing bank";
-							ctx.bank.close();
-						} else {
-							STATUS = "Path to NPC";
-							ctx.movement.newTilePath(PATH_TO_BARTENDER).traverse();
+							ctx.movement.step(ctx.movement.closestOnMap(Megan.tile()));
+							ctx.camera.turnTo(Megan);
 						}
 					}
+				} else {
+					if (ctx.bank.opened()) {
+						BEER_COUNT = ctx.bank.select().id(BEER_ID).count(true);
+						STATUS = "Close bank";
+						ctx.bank.close();
+					} else {
+						STATUS = "Path to stairs";
+						ctx.movement.newTilePath(PATH_TO_MEGAN).traverse();
+					}
+
 				}
 			}
 			break;
 		case BANKING:
-			if (ctx.players.local().tile().distanceTo(ctx.bank.nearest().tile()) < 4){
-				if (ctx.bank.inViewport()) {
-					if (ctx.bank.open()) {
-						STATUS = "Deposit";
-						ctx.bank.depositInventory();
+			if (ctx.bank.inViewport()) {
+				if (ctx.bank.opened()) {
+                    STATUS = "Deposit";
+					ctx.bank.depositInventory();
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return ctx.backpack.select().isEmpty();
+						}
+					}, 250, 20);
+				} else {
+					STATUS = "Open bank";
+					ctx.bank.open();
+				}
+			} else {
+				if (atFloor()) {
+					final int[] StairBounds = {116, 500, 56, 0, -448, -88};
+					final GameObject StairsDown = ctx.objects.select().id(STAIRS_DOWN_ID).each(Interactive.doSetBounds(StairBounds)).nearest().poll();
+					if (StairsDown.inViewport() && ctx.players.local().tile().distanceTo(StairsDown.tile()) < 7) {
+						STATUS = "Climb-down";
+						StairsDown.interact("Climb-down");
+						if(didInteract()){
 						Condition.wait(new Callable<Boolean>() {
 							@Override
 							public Boolean call() throws Exception {
-								return ctx.backpack.select().isEmpty();
+								return !atFloor();
 							}
 						}, 250, 20);
+						}
 					} else {
-						STATUS = "Opening bank";
-						ctx.bank.open();
+						STATUS = "Walk to stairs";
+						ctx.movement.step(ctx.movement.closestOnMap(STAIRS_TILE_DOWN));
+						ctx.camera.turnTo(StairsDown.tile());
 					}
+				} else {
+					STATUS = "Path to bank";
+					ctx.movement.newTilePath(PATH_TO_MEGAN).reverse().traverse();
 				}
-			} else {
-				STATUS = "Path to Bank";
-				ctx.movement.newTilePath(PATH_TO_BARTENDER).reverse().traverse();
 			}
 			break;
 		}
@@ -149,11 +238,19 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	private State state() {
 		
 		if(ctx.camera.pitch() < 52){
-			ctx.camera.pitch(Random.nextInt(55, 60));
+			return State.CAMERA;
 		}
 		
 		if(ctx.backpack.moneyPouchCount() < 2){
 			return State.STOP;
+		}
+		
+		if(Random.nextInt(1, 10) == 5){
+			return State.ANTIPATTERN;
+		}
+		
+		if(ctx.game.floor() == 2){
+			return State.FAILSAFE;
 		}
 		
 		if(ctx.backpack.select().count() != 28){
@@ -164,18 +261,21 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	}
 
 	private enum State {
-		STOP, BANKING, BUY
+		CAMERA, STOP, ANTIPATTERN, FAILSAFE, BUY, BANKING
+	}
+	
+	private boolean didInteract() {
+		return ctx.game.crosshair() == Crosshair.ACTION;
 	}
 
+	private boolean atFloor() {
+		return ctx.game.floor() == 1;
+	}
+	
 	@Override
 	public void messaged(MessageEvent msg) {
 		String message = msg.text();
-
-		if (message.contains("You can't reach that.")){
-			ctx.movement.newTilePath(PATH_TO_BARTENDER).traverse();
-		}
-		
-		if (message.contains("2 coins have")){
+		if (message.contains("2 coins have")) {
 			BEER_BOUGHT++;
 		}
 	}
@@ -190,7 +290,7 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 
 		final Graphics2D g = (Graphics2D) g1;
 
-		long millis = System.currentTimeMillis() - TIMER_SCRIPT;
+		long millis = System.currentTimeMillis() - SCRIPT_TIMER;
 		long hours = millis / (1000 * 60 * 60);
 		millis -= hours * (1000 * 60 * 60);
 		long minutes = millis / (1000 * 60);
@@ -199,19 +299,20 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 
 		g.setRenderingHints(ANTIALIASING);
 		g.setColor(BLACK);
-		g.fillRect(5, 5, 180, 105);
-		g.setColor(Color.RED);
-		g.drawRect(5, 5, 180, 105);
+		g.fillRect(5, 5, 180, 125);
+		g.setColor(Color.GREEN);
+		g.drawRect(5, 5, 180, 125);
 		g.setFont(FONT);
-		g.drawString("rBeerFlipper", 65, 20);
+		g.drawString("rBeer", 80, 20);
 		g.setColor(Color.WHITE);
 		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 10, 40);
 		g.drawString("Beer Bought: " + NF.format(BEER_BOUGHT) + "(" + PerHour(BEER_BOUGHT) + "/h)", 10, 60);
-		g.drawString("Profit: " + NF.format(profit()) + "(" + PerHour(profit()) + "/h)", 13, 80);
-		g.drawString("Status: " + (STATUS), 10, 100);
-		g.setColor(Color.RED);
+		g.drawString("Beer Stored: " + NF.format(BEER_COUNT), 10, 80);
+		g.drawString("Profit: " + NF.format(profit()) + "(" + PerHour(profit()) + "/h)", 13, 100);
+		g.drawString("Status: " + (STATUS), 10, 120);
+		g.setColor(Color.GREEN);
 		g.setFont(FONT_TWO);
-		g.drawString("v0.01", 160, 125);
+		g.drawString("v0.01", 160, 145);
 		drawMouse(g);
 	}
 	
@@ -220,7 +321,7 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	}
 
 	public String PerHour(int gained) {
-		return formatNumber((int) ((gained) * 3600000D / (System.currentTimeMillis() - TIMER_SCRIPT)));
+		return formatNumber((int) ((gained) * 3600000D / (System.currentTimeMillis() - SCRIPT_TIMER)));
 	}
 
 	public String formatNumber(int start) {
@@ -235,16 +336,40 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		return "" + start;
 	}
 
-	public void drawMouse(Graphics2D g) {
-		Point p = ctx.input.getLocation();
-		g.setColor(Color.RED);
-		g.setStroke(new BasicStroke(2));
-		g.fill(new Rectangle(p.x + 1, p.y - 4, 2, 15));
-		g.fill(new Rectangle(p.x - 6, p.y + 2, 16, 2));
+	public void drawMouse(Graphics g) {
+		int mouseY = (int) ctx.input.getLocation().getY();
+		int mouseX = (int) ctx.input.getLocation().getX();
+		g.drawLine(mouseX - 5, mouseY + 5, mouseX + 5, mouseY - 5);
+		g.drawLine(mouseX + 5, mouseY + 5, mouseX - 5, mouseY - 5);
+
+		while (!mousePath.isEmpty() && mousePath.peek().isUp()) mousePath.remove();
+		Point clientCursor = ctx.input.getLocation();
+		MousePathPoint mpp = new MousePathPoint(clientCursor.x, clientCursor.y, 600); // 1000 = lasting time/MS
+		if (mousePath.isEmpty() || !mousePath.getLast().equals(mpp)) mousePath.add(mpp);
+		MousePathPoint lastPoint = null;
+		for (MousePathPoint a : mousePath) {
+			if (lastPoint != null) {
+				g.setColor(Color.GRAY);
+				g.drawLine(a.x, a.y, lastPoint.x, lastPoint.y);
+			}
+			lastPoint = a;
+		}
+	}
+	
+	private final LinkedList<MousePathPoint> mousePath = new LinkedList<MousePathPoint>();
+	@SuppressWarnings("serial")
+	private class MousePathPoint extends Point {
+		private long finishTime;
+		public MousePathPoint(int x, int y, int lastingTime) {
+			super(x, y);
+			finishTime = System.currentTimeMillis() + lastingTime;
+		}
+		public boolean isUp() {
+			return System.currentTimeMillis() > finishTime;
+		}
 	}
 	
 	private static int getGuidePrice(final int id) {
 		return GeItem.price(id);
 	}
-
 }
