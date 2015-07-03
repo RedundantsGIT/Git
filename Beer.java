@@ -121,7 +121,7 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		case BUY:
 			final GameObject StairsUp = ctx.objects.select().id(STAIRS_UP_ID).nearest().poll();
 			if (ctx.players.local().tile().distanceTo(StairsUp) < 8) {
-				if (StairsUp.inViewport() && ctx.players.local().tile().distanceTo(StairsUp.tile()) < 7) {
+				if (StairsUp.inViewport() && ctx.players.local().tile().distanceTo(StairsUp.tile()) < 8) {
 					STATUS = "Climb-up";
 					StairsUp.interact("Climb-up");
 					if(didInteract()){
@@ -160,9 +160,10 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 							}
 						}, 250, 20);
 					}else{
-					final int[] MeganBounds = {-104, 88, -728, -92, -124, 120};
-					final Npc Megan = ctx.npcs.select().id(MEGAN_ID).each(Interactive.doSetBounds(MeganBounds)).nearest().poll();
-					if (Megan.inViewport() && ctx.players.local().tile().distanceTo(Megan) < 7) {
+					//final int[] MeganBounds = {-104, 88, -728, -92, -124, 120};
+					//final Npc Megan = ctx.npcs.select().id(MEGAN_ID).each(Interactive.doSetBounds(MeganBounds)).nearest().poll();
+					final Npc Megan = ctx.npcs.select().id(MEGAN_ID).nearest().poll();
+					if (Megan.inViewport() && ctx.players.local().tile().distanceTo(Megan) < 8) {
 						STATUS = "Talk-to Megan";
 						Megan.interact("Talk-to", "Megan");
 						if (didInteract()) {
@@ -210,7 +211,7 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 				if (atFloor()) {
 					final int[] StairBounds = {116, 500, 56, 0, -448, -88};
 					final GameObject StairsDown = ctx.objects.select().id(STAIRS_DOWN_ID).each(Interactive.doSetBounds(StairBounds)).nearest().poll();
-					if (StairsDown.inViewport() && ctx.players.local().tile().distanceTo(StairsDown.tile()) < 7) {
+					if (StairsDown.inViewport() && ctx.players.local().tile().distanceTo(StairsDown.tile()) < 8) {
 						STATUS = "Climb-down";
 						StairsDown.interact("Climb-down");
 						if(didInteract()){
