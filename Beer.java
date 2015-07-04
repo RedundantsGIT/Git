@@ -39,9 +39,9 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	private static final Tile STAIRS_TILE_DOWN = new Tile(3039, 3383, 1);
 	
 	private static final Tile[] PATH_TO_MEGAN = { 
-		    new Tile(3013, 3355, 0), new Tile(3013, 3361, 0), 
-			new Tile(3021, 3362, 0), new Tile(3028, 3367, 0), 
-			new Tile(3035, 3369, 0), new Tile(3038, 3382, 0)};
+		    new Tile(3012, 3355, 0), new Tile(3020, 3363, 0), 
+			new Tile(3027, 3367, 0), new Tile(3034, 3368, 0), 
+			new Tile(3040, 3378, 0), new Tile(3038, 3382, 0)};
 	
 	@Override
 	public void start() {
@@ -76,29 +76,6 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			break;
 		case STOP:
 				ctx.controller.stop();
-			break;
-		case ANTIPATTERN:
-			int antiban = Random.nextInt(1, 800);
-			switch (antiban) {
-			case 1:
-				ctx.camera.angle(Random.nextInt(21, 40));
-				break;
-			case 2:
-				ctx.camera.angle(Random.nextInt(25, 75));
-				break;
-			case 3:
-				ctx.camera.angle(Random.nextInt(0, 200));
-				break;
-			case 4:
-				ctx.camera.angle(Random.nextInt(0, 300));
-				break;
-			case 5:
-				ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
-				break;
-			case 6:
-				
-				break;
-			}
 			break;
 		case FAILSAFE:
 			final GameObject FailsafeStairs = ctx.objects.select().id(FAIL_SAFE_STAIRS_IDS).nearest().poll();
@@ -135,7 +112,7 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 				} else {
 					STATUS = "Walk to stairs";
 					ctx.movement.step(ctx.movement.closestOnMap(STAIRS_TILE_UP));
-					ctx.camera.turnTo(StairsUp.tile());
+					ctx.camera.turnTo(StairsUp);
 				}
 			} else {
 				if (atFloor()) {
@@ -145,12 +122,12 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 						Condition.wait(new Callable<Boolean>() {
 							@Override
 							public Boolean call() throws Exception {
-								return ctx.widgets.component(1188, 5).visible()
-								    || ctx.widgets.component(1184, 10).visible()
-								    || ctx.widgets.component(1189, 6).visible();
+								return ctx.widgets.component(1188, 5).valid()
+								    || ctx.widgets.component(1184, 10).valid()
+								    || ctx.widgets.component(1189, 6).valid();
 							}
 						}, 250, 20);
-					}else if (ctx.widgets.component(1188, 5).visible()) {
+					}else if (ctx.widgets.component(1188, 5).valid()) {
 						STATUS = "Select Option";
 						ctx.input.send("1");
 						Condition.wait(new Callable<Boolean>() {
@@ -160,23 +137,22 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 							}
 						}, 250, 20);
 					}else{
-					//final int[] MeganBounds = {-104, 88, -728, -92, -124, 120};
-					//final Npc Megan = ctx.npcs.select().id(MEGAN_ID).each(Interactive.doSetBounds(MeganBounds)).nearest().poll();
-					final Npc Megan = ctx.npcs.select().id(MEGAN_ID).nearest().poll();
-					if (Megan.inViewport() && ctx.players.local().tile().distanceTo(Megan) < 8) {
-						STATUS = "Talk-to Megan";
-						Megan.interact("Talk-to", "Megan");
-						if (didInteract()) {
-							Condition.wait(new Callable<Boolean>() {
-								@Override
-								public Boolean call() throws Exception {
-									return ctx.chat.queryContinue();
-									}
-								}, 250, 20);
-							}
-						} else {
-							ctx.movement.step(ctx.movement.closestOnMap(Megan.tile()));
-							ctx.camera.turnTo(Megan);
+						final int[] MeganBounds = { -104, 88, -728, -92, -124, 120 };
+						final Npc Megan = ctx.npcs.select().id(MEGAN_ID).each(Interactive.doSetBounds(MeganBounds)).nearest().poll();
+							if (Megan.inViewport() && ctx.players.local().tile().distanceTo(Megan) < 8) {
+								STATUS = "Talk-to Megan";
+								Megan.interact("Talk-to", "Megan");
+								if (didInteract()) {
+									Condition.wait(new Callable<Boolean>() {
+										@Override
+										public Boolean call() throws Exception {
+											return ctx.chat.queryContinue();
+										}
+									}, 250, 20);
+								}
+							} else {
+								ctx.movement.step(ctx.movement.closestOnMap(Megan));
+								ctx.camera.turnTo(Megan);
 						}
 					}
 				} else {
@@ -225,7 +201,7 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 					} else {
 						STATUS = "Walk to stairs";
 						ctx.movement.step(ctx.movement.closestOnMap(STAIRS_TILE_DOWN));
-						ctx.camera.turnTo(StairsDown.tile());
+						ctx.camera.turnTo(StairsDown);
 					}
 				} else {
 					STATUS = "Path to bank";
@@ -246,10 +222,6 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			return State.STOP;
 		}
 		
-		if(Random.nextInt(1, 10) == 5){
-			return State.ANTIPATTERN;
-		}
-		
 		if(ctx.game.floor() == 2){
 			return State.FAILSAFE;
 		}
@@ -262,7 +234,7 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	}
 
 	private enum State {
-		CAMERA, STOP, ANTIPATTERN, FAILSAFE, BUY, BANKING
+		CAMERA, STOP, FAILSAFE, BUY, BANKING
 	}
 	
 	private boolean didInteract() {
@@ -297,11 +269,16 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		long minutes = millis / (1000 * 60);
 		millis -= minutes * (1000 * 60);
 		long seconds = millis / 1000;
+		
+		if(hours == 2){
+			ctx.controller.stop();
+			log.info("Timer reached stopping script....");
+		}
 
 		g.setRenderingHints(ANTIALIASING);
 		g.setColor(BLACK);
 		g.fillRect(5, 5, 180, 125);
-		g.setColor(Color.GREEN);
+		g.setColor(Color.ORANGE);
 		g.drawRect(5, 5, 180, 125);
 		g.setFont(FONT);
 		g.drawString("rBeer", 80, 20);
@@ -311,9 +288,9 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		g.drawString("Beer Stored: " + NF.format(BEER_COUNT), 10, 80);
 		g.drawString("Profit: " + NF.format(profit()) + "(" + PerHour(profit()) + "/h)", 13, 100);
 		g.drawString("Status: " + (STATUS), 10, 120);
-		g.setColor(Color.GREEN);
 		g.setFont(FONT_TWO);
-		g.drawString("v0.01", 160, 145);
+		g.setColor(Color.ORANGE);
+		g.drawString("v0.02", 160, 145);
 		drawMouse(g);
 	}
 	
@@ -350,7 +327,6 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		MousePathPoint lastPoint = null;
 		for (MousePathPoint a : mousePath) {
 			if (lastPoint != null) {
-				g.setColor(Color.GRAY);
 				g.drawLine(a.x, a.y, lastPoint.x, lastPoint.y);
 			}
 			lastPoint = a;
