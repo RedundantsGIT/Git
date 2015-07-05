@@ -270,7 +270,7 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		millis -= minutes * (1000 * 60);
 		long seconds = millis / 1000;
 		
-		if(hours == 5){
+		if(hours == 2){
 			ctx.controller.stop();
 			log.info("Timer reached stopping script....");
 		}
