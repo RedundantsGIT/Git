@@ -20,6 +20,7 @@ import org.powerbot.script.PollingScript;
 import org.powerbot.script.Random;
 import org.powerbot.script.Tile;
 import org.powerbot.script.Script.Manifest;
+import org.powerbot.script.rt6.Component;
 import org.powerbot.script.rt6.GameObject;
 import org.powerbot.script.rt6.GeItem;
 import org.powerbot.script.rt6.GroundItem;
@@ -33,23 +34,25 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	private static RenderingHints ANTIALIASING = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	
 	private static long TIMER_SCRIPT = 0;
+	
 	private static String STATUS = "Starting...";
 	
 	private static final int ID_BANKER[] = { 553, 2759 };
-	private static final int ID_STAIRS1[] = { 24073, 24074, 24075 };
-	private static final int ID_STAIRS2[] = { 24074, 24075 };
+	private static final int ID_STAIRS_UP[] = { 24073, 24074, 24075 };
+	private static final int ID_STAIRS_DOWN[] = { 24074, 24075 };
+	private static final int ID_DOOR = 2712, ID_GRAPE = 1987;
+	private static int GRAPES_GAINED, GRAPE_PRICE, PROFIT_GAINED, TRIES;
 	
 	private static final Tile TILE_LOOT = new Tile(3144, 3450, 2);
 	
-	private static int GRAPES_GAINED, GRAPE_PRICE, PROFIT_GAINED, TRIES;
-	
-	private static final int ID_DOOR = 2712, ID_GRAPE = 1987;
-	
+	private final Component PLAY_NOW_WIDGET = ctx.widgets.component(906, 154);
+	private final Component CLOSE_MENU_WIDGET = ctx.widgets.component(1477, 27).component(1);
+
 	private static final Area AREA_IN_GUILD = new Area(new Tile[] {
 			new Tile(3147, 3446, 0), new Tile(3145, 3444, 0),
 			new Tile(3141, 3444, 0), new Tile(3138, 3448, 0),
 			new Tile(3140, 3453, 0), new Tile(3148, 3451) });
-	
+
 	private static final Tile[] PATH_GUILD = { new Tile(3182, 3443, 0),
 			new Tile(3183, 3450, 0), new Tile(3176, 3450, 0),
 			new Tile(3172, 3450, 0), new Tile(3166, 3451, 0),
@@ -81,10 +84,8 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 
 	@Override
 	public void poll() {
-
 		if (!ctx.game.loggedIn())
 			return;
-
 		switch (state()) {
 		case CAMERA:
 			ctx.camera.pitch(Random.nextInt(55, 65));
@@ -92,20 +93,24 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		case BANKING:
 			if (atLevelThree()) {
 				goDown();
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return atLevelTwo();
-					}
-				}, 250, 20);
+				if (didInteract()) {
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return atLevelTwo();
+						}
+					}, 250, 20);
+				}
 			} else if (atLevelTwo()) {
-				goDown();
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return atLevelOne();
-					}
-				}, 250, 20);
+					goDown();
+					if(didInteract()) {
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return atLevelOne();
+						}
+					}, 250, 20);
+				}
 			} else if (atLevelOne()) {
 				openDoor();
 				if (didInteract()) {
@@ -135,15 +140,14 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 				} else {
 					STATUS = "Walk to bank";
 					ctx.movement.newTilePath(PATH_GUILD).reverse().traverse();
-					if(Random.nextInt(1, 14) == 8){
-					ctx.camera.turnTo(ctx.bank.nearest());
+					if (Random.nextInt(1, 20) == 10) {
+						ctx.camera.turnTo(ctx.bank.nearest());
 					}
 				}
 			}
-		break;
+			break;
 		case GRAPES:
-			if (atGuildEntranceDoor()) {
-				STATUS = "Open door";
+			if (atDoor()) {
 				openDoor();
 				if (didInteract()) {
 					Condition.wait(new Callable<Boolean>() {
@@ -152,32 +156,38 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 							return atLevelOne();
 						}
 					}, 250, 20);
-
 				}
 			} else if (atLevelOne()) {
 				goUp();
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return atLevelTwo();
-					}
-				}, 250, 20);
-
+				if (didInteract()) {
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return atLevelTwo();
+						}
+					}, 250, 20);
+				}
 			} else if (atLevelTwo()) {
 				goUp();
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return atLevelThree();
-					}
-				}, 250, 20);
+				if (didInteract()) {
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return atLevelThree();
+						}
+					}, 250, 20);
+				}
 			} else if (atLevelThree()) {
 				if (ctx.players.local().tile().distanceTo(TILE_LOOT) > 2) {
 					STATUS = "Walk to grapes";
 					ctx.camera.turnTo(TILE_LOOT);
-					ctx.movement.step(ctx.movement.closestOnMap(TILE_LOOT));
+					if (TILE_LOOT.matrix(ctx).inViewport()) {
+						TILE_LOOT.matrix(ctx).interact("Walk here");
+					} else {
+						ctx.movement.step(ctx.movement.closestOnMap(TILE_LOOT));
+					}
 					Condition.sleep();
-					while (ctx.players.local().inMotion()){
+					while (ctx.players.local().inMotion()) {
 						Condition.sleep();
 					}
 				} else {
@@ -187,14 +197,12 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 						take(Grapes);
 					} else {
 						STATUS = "Waiting for spawn..";
-						antiBan();
 					}
 				}
 			} else {
 				if (ctx.bank.opened()) {
 					STATUS = "Bank close";
 					ctx.bank.close();
-					Condition.sleep();
 				} else {
 					STATUS = "Walk to guild";
 					ctx.movement.newTilePath(PATH_GUILD).traverse();
@@ -254,53 +262,47 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	}
 
 	private void openDoor() {
-		final int[] doorBounds = { -200, 150, -800, -300, 0, 0 };
-		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS1).nearest().poll();
-		final GameObject Door = ctx.objects.select().id(ID_DOOR).each(Interactive.doSetBounds(doorBounds)).nearest().poll();
+		final int[] DoorBounds = { -216, 232, -876, -108, 148, 204 };
+		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS_UP).nearest().poll();
+		final GameObject Door = ctx.objects.select().id(ID_DOOR).each(Interactive.doSetBounds(DoorBounds)).nearest().poll();
 		if (Door.inViewport() && ctx.players.local().tile().distanceTo(Door.tile()) < 5) {
-			ctx.camera.turnTo(Stairs.tile());
+			STATUS = "Open door";
+			ctx.camera.turnTo(Stairs);
 			Door.interact("Open", "Door");
-			while (ctx.players.local().inMotion()) {
-				Condition.sleep();
-			}
 		} else {
-			ctx.movement.step(ctx.movement.closestOnMap(Door.tile()));
-			Condition.sleep();
+			STATUS = "Walk to door";
+			ctx.movement.step(ctx.movement.closestOnMap(Door));
 		}
 	}
 
 	private void goDown() {
-		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS2).nearest().poll();
-		STATUS = "Climb-down";
-		if (Stairs.inViewport() && ctx.players.local().tile().distanceTo(Stairs.tile()) < 6) {
+		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS_DOWN).nearest().poll();
+		if (Stairs.inViewport() && ctx.players.local().tile().distanceTo(Stairs.tile()) < 5) {
+			STATUS = "Climb-down";
 			Stairs.interact("Climb-down");
-			Condition.sleep();
-			while (ctx.players.local().inMotion()){
-				Condition.sleep();
-			}
 		} else {
-			ctx.camera.turnTo(Stairs.tile());
+			STATUS = "Walk to stairs";
 			ctx.movement.step(ctx.movement.closestOnMap(Stairs.tile()));
-			Condition.sleep();
+			ctx.camera.turnTo(Stairs);
 		}
 	}
 
 	private void goUp() {
-		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS1).nearest().poll();
-		STATUS = "Climb-up";
-		if (Stairs.inViewport() && ctx.players.local().tile().distanceTo(Stairs.tile()) < 6) {
+		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS_UP).nearest().poll();
+		if (Stairs.inViewport() && ctx.players.local().tile().distanceTo(Stairs.tile()) < 4) {
+			STATUS = "Climb-up";
 			Stairs.interact("Climb-up");
-			Condition.sleep();
-			while (ctx.players.local().inMotion()){
-				Condition.sleep();
-			}
 		} else {
-			ctx.camera.turnTo(Stairs.tile());
+			STATUS = "Walk to stairs";
 			ctx.movement.step(ctx.movement.closestOnMap(Stairs.tile()));
-			Condition.sleep();
+			ctx.camera.turnTo(Stairs);
 		}
 	}
-	
+
+	private boolean atLevelOne() {
+		return AREA_IN_GUILD.contains(ctx.players.local().tile());
+	}
+
 	private boolean atLevelTwo() {
 		return ctx.game.floor() == 1;
 	}
@@ -309,11 +311,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		return ctx.game.floor() == 2;
 	}
 
-	private boolean atLevelOne() {
-		return AREA_IN_GUILD.contains(ctx.players.local().tile());
-	}
-
-	private boolean atGuildEntranceDoor() {
+	private boolean atDoor() {
 		final GameObject Door = ctx.objects.select().id(ID_DOOR).nearest().poll();
 		return Door.inViewport() && ctx.players.local().tile().distanceTo(Door.tile()) < 7 && !atLevelOne() && !atLevelTwo() && !atLevelThree();
 	}
@@ -321,41 +319,32 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	private boolean didInteract() {
 		return ctx.game.crosshair() == Crosshair.ACTION;
 	}
+	
+	private void logIn() {
+		if (PLAY_NOW_WIDGET.valid()) {
+			PLAY_NOW_WIDGET.click(true);
+			Condition.wait(new Callable<Boolean>() {
+				@Override
+				public Boolean call() throws Exception {
+					return ctx.game.loggedIn();
+				}
+			}, 250, 20);
+		}
+	}
 
-	private int antiBan() {
-		int antiban = Random.nextInt(1, 7000);
-		switch (antiban) {
-		case 1:
-			ctx.camera.angle(Random.nextInt(21, 40));
-			break;
-		case 2:
-			ctx.camera.angle(Random.nextInt(25, 75));
-			break;
-		case 3:
-			ctx.camera.angle(Random.nextInt(0, 200));
-			break;
-		case 4:
-			ctx.camera.angle(Random.nextInt(0, 300));
-			break;
-		case 5:
-			ctx.input.move(Random.nextInt(0, (int) (ctx.game.dimensions().getWidth() - 1)), 0);
-			break;
-		case 6:
-			ctx.input.hop(Random.nextInt(-10, (int) (ctx.game.dimensions().getWidth() + 10)), 
-		    (int) (ctx.game.dimensions().getHeight() + Random.nextInt(10, 100)));
-			break;
-		case 7:
-			ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
-			break;
-		case 8:
-			ctx.input.hop(Random.nextInt(0, 500), Random.nextInt(0, 500));
-			break;
-		case 9:
-			ctx.camera.pitch(Random.nextInt(55, 65));
-			ctx.camera.angle(Random.nextInt(0, 300));
-			break;
-			}
-		 return 0;
+	private void logOut() {
+		if (CLOSE_MENU_WIDGET.valid()) {
+			CLOSE_MENU_WIDGET.click(true);
+			Condition.sleep();
+		} else {
+			ctx.game.logout(true);
+			Condition.wait(new Callable<Boolean>() {
+				@Override
+				public Boolean call() throws Exception {
+					return !ctx.game.loggedIn();
+				}
+			}, 250, 20);
+		}
 	}
 
 	final static Color BLACK = new Color(25, 0, 0, 200);
@@ -373,8 +362,9 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		long minutes = millis / (1000 * 60);
 		millis -= minutes * (1000 * 60);
 		long seconds = millis / 1000;
+		
 		PROFIT_GAINED = GRAPES_GAINED * GRAPE_PRICE;
-
+		
 		g.setRenderingHints(ANTIALIASING);
 		g.setColor(BLACK);
 		g.fillRect(5, 5, 190, 125);
@@ -389,18 +379,55 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		g.drawString("Profit ea: " + (GRAPE_PRICE), 10, 100);
 		g.drawString("Status: " + (STATUS), 10, 120);
 		drawTiles(g);
+		
+		/* Break handler */
+		if (ctx.game.loggedIn()) {
+			if (hours == 2 && minutes <= 30) {
+				log.info("log out ran @@ 2hrs");
+				logOut();
+			} else if (hours == 5 && minutes <= 30) {
+				log.info("log out ran @@ 5hrs");
+				logOut();
+			} else if (hours == 8 && minutes <= 30) {
+				log.info("log out ran @@ 8hrs");
+				logOut();
+			} else if (hours == 11 && minutes <= 30) {
+				log.info("log out ran @@ 11hrs");
+				logOut();
+			} else if (hours == 13 && minutes <= 30) {
+				log.info("log out ran @@ 13hrs");
+				logOut();
+			} else if (hours == 15) {
+				ctx.controller.stop();
+			}
+		} else {
+			if (hours == 2 && minutes >= 30) {
+				log.info("log in ran @@ 2hrs 30 mins");
+				logIn();
+			} else if (hours == 5 && minutes >= 30) {
+				log.info("log in ran @@ 5hrs 30 mins");
+				logIn();
+			} else if (hours == 8 && minutes >= 30) {
+				log.info("log in ran @@ 8hrs 30 mins");
+				logIn();
+			} else if (hours == 11 && minutes >= 30) {
+				logIn();
+			} else if (hours == 13 && minutes >= 30) {
+				logIn();
+			}
+		}
 	}
 	
 	private void drawTiles(Graphics2D g) {
 		Point p = ctx.input.getLocation();
 		final GroundItem Grapes = ctx.groundItems.select().id(ID_GRAPE).nearest().poll();
 		if (Grapes.valid() && atLevelThree()) {
-				TILE_LOOT.matrix(ctx).draw(g);
+			TILE_LOOT.matrix(ctx).draw(g);
 		}
 		g.setColor(Color.MAGENTA);
 		g.setStroke(new BasicStroke(2));
 		g.fill(new Rectangle(p.x + 1, p.y - 4, 2, 15));
-		g.fill(new Rectangle(p.x - 6, p.y + 2, 16, 2));	
+		g.fill(new Rectangle(p.x - 6, p.y + 2, 16, 2));
 	}
 
 	public String PerHour(int gained) {
@@ -422,5 +449,4 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	private static int getGuidePrice(final int id) {
 		return GeItem.price(id);
 	}
-
 }
