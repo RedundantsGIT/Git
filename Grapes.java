@@ -206,7 +206,10 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 			} else {
 				if (ctx.bank.opened()) {
 					STATUS = "Bank close";
-					ctx.bank.close();
+					//ctx.bank.close();
+					ctx.input.send("{VK_ESCAPE down}");
+					Condition.sleep();
+					ctx.input.send("{VK_ESCAPE up}");
 				} else {
 					STATUS = "Walk to guild";
 					ctx.movement.newTilePath(PATH_GUILD).traverse();
@@ -346,27 +349,27 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 
 		if (started) {
 			if (ctx.game.loggedIn()) {
-				if (hours == 2 && minutes < 30) {
+				if (hours == 2) {
 					ctx.game.logout(true);
 					return;
-				} else if (hours == 4 && minutes < 30) {
+				} else if (hours == 5) {
 					ctx.game.logout(true);
 					return;
-				} else if (hours == 6 && minutes < 30) {
+				} else if (hours == 8) {
 					ctx.game.logout(true);
 					return;
-				} else if (hours == 8 && minutes == 30) {
+				} else if (hours == 11) {
 					log.info("Reached 8 hrs 30 minutes running, stopping script..");
 					ctx.controller.stop();
 				}
 			} else {
-				if (hours == 2 && minutes > 30) {
+				if (hours == 3) {
 					logIn();
 					return;
-				} else if (hours == 4 && minutes > 30) {
+				} else if (hours == 6) {
 					logIn();
 					return;
-				} else if (hours == 6 && minutes > 30) {
+				} else if (hours == 9) {
 					logIn();
 					return;
 				}
