@@ -201,6 +201,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 						take(Grapes);
 					} else {
 						STATUS = "Waiting for spawn..";
+						antiBan();
 					}
 				}
 			} else {
@@ -376,6 +377,32 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 			}
 		}
 		return;
+	}
+	
+	private int antiBan() {
+		int antiban = Random.nextInt(1, 800);
+		switch (antiban) {
+		case 1:
+			ctx.camera.angle(Random.nextInt(21, 40));
+			break;
+		case 2:
+			ctx.camera.angle(Random.nextInt(25, 75));
+			break;
+		case 3:
+			ctx.camera.angle(Random.nextInt(0, 200));
+			break;
+		case 4:
+			ctx.camera.angle(Random.nextInt(0, 300));
+			break;
+		case 5:
+			ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
+			break;
+		case 6:
+			ctx.camera.pitch(Random.nextInt(52, 60));
+			ctx.camera.angle(Random.nextInt(0, 300));
+			break;
+		}
+		return 0;
 	}
 
 	final static Color BLACK = new Color(25, 0, 0, 200);
