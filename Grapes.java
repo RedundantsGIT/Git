@@ -43,10 +43,11 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	private static final int ID_DOOR = 2712, ID_GRAPE = 1987;
 	private static int GRAPES_GAINED, GRAPE_PRICE, PROFIT_GAINED, TRIES;
 	
+	private boolean started;
+	
 	private static final Tile TILE_LOOT = new Tile(3144, 3450, 2);
 	
 	private final Component PLAY_NOW_WIDGET = ctx.widgets.component(906, 154);
-	private final Component CLOSE_MENU_WIDGET = ctx.widgets.component(1477, 27).component(1);
 
 	private static final Area AREA_IN_GUILD = new Area(new Tile[] {
 			new Tile(3147, 3446, 0), new Tile(3145, 3444, 0),
@@ -62,9 +63,11 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 
 	@Override
 	public void start() {
+		ctx.properties.put("login.disable", "true");
 		TIMER_SCRIPT = System.currentTimeMillis();
 		GRAPE_PRICE = getGuidePrice(ID_GRAPE);
 		log.info("G.E. Grape Price : " + GRAPE_PRICE);
+		started = true;
 	}
 
 	@Override
@@ -84,6 +87,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 
 	@Override
 	public void poll() {
+		breakHandler();
 		if (!ctx.game.loggedIn())
 			return;
 		switch (state()) {
@@ -332,19 +336,42 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		}
 	}
 
-	private void logOut() {
-		if (CLOSE_MENU_WIDGET.valid()) {
-			CLOSE_MENU_WIDGET.click(true);
-			Condition.sleep();
-		} else {
-			ctx.game.logout(true);
-			Condition.wait(new Callable<Boolean>() {
-				@Override
-				public Boolean call() throws Exception {
-					return !ctx.game.loggedIn();
+	
+	private void breakHandler() {
+		long millis = System.currentTimeMillis() - TIMER_SCRIPT;
+		long hours = millis / (1000 * 60 * 60);
+		millis -= hours * (1000 * 60 * 60);
+		long minutes = millis / (1000 * 60);
+		millis -= minutes * (1000 * 60);
+
+		if (started) {
+			if (ctx.game.loggedIn()) {
+				if (hours == 2 && minutes < 30) {
+					ctx.game.logout(true);
+					return;
+				} else if (hours == 4 && minutes < 30) {
+					ctx.game.logout(true);
+					return;
+				} else if (hours == 6 && minutes < 30) {
+					ctx.game.logout(true);
+					return;
+				} else if (hours == 8 && minutes == 30) {
+					ctx.controller.stop();
 				}
-			}, 250, 20);
+			} else {
+				if (hours == 2 && minutes > 30) {
+					logIn();
+					return;
+				} else if (hours == 4 && minutes > 30) {
+					logIn();
+					return;
+				} else if (hours == 6 && minutes > 30) {
+					logIn();
+					return;
+				}
+			}
 		}
+		return;
 	}
 
 	final static Color BLACK = new Color(25, 0, 0, 200);
@@ -379,43 +406,6 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		g.drawString("Profit ea: " + (GRAPE_PRICE), 10, 100);
 		g.drawString("Status: " + (STATUS), 10, 120);
 		drawTiles(g);
-		
-		/* Break handler */
-		if (ctx.game.loggedIn()) {
-			if (hours == 2 && minutes <= 30) {
-				log.info("log out ran @@ 2hrs");
-				logOut();
-			} else if (hours == 5 && minutes <= 30) {
-				log.info("log out ran @@ 5hrs");
-				logOut();
-			} else if (hours == 8 && minutes <= 30) {
-				log.info("log out ran @@ 8hrs");
-				logOut();
-			} else if (hours == 11 && minutes <= 30) {
-				log.info("log out ran @@ 11hrs");
-				logOut();
-			} else if (hours == 13 && minutes <= 30) {
-				log.info("log out ran @@ 13hrs");
-				logOut();
-			} else if (hours == 15) {
-				ctx.controller.stop();
-			}
-		} else {
-			if (hours == 2 && minutes >= 30) {
-				log.info("log in ran @@ 2hrs 30 mins");
-				logIn();
-			} else if (hours == 5 && minutes >= 30) {
-				log.info("log in ran @@ 5hrs 30 mins");
-				logIn();
-			} else if (hours == 8 && minutes >= 30) {
-				log.info("log in ran @@ 8hrs 30 mins");
-				logIn();
-			} else if (hours == 11 && minutes >= 30) {
-				logIn();
-			} else if (hours == 13 && minutes >= 30) {
-				logIn();
-			}
-		}
 	}
 	
 	private void drawTiles(Graphics2D g) {
