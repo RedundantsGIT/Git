@@ -43,7 +43,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	private static final int ID_DOOR = 2712, ID_GRAPE = 1987;
 	private static int GRAPES_GAINED, GRAPE_PRICE, PROFIT_GAINED, TRIES;
 	
-	private boolean started;
+	private boolean started = false;
 	
 	private static final Tile TILE_LOOT = new Tile(3144, 3450, 2);
 	
@@ -356,6 +356,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					ctx.game.logout(true);
 					return;
 				} else if (hours == 8 && minutes == 30) {
+					log.info("Reached 8 hrs 30 minutes running, stopping script..");
 					ctx.controller.stop();
 				}
 			} else {
