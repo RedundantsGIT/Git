@@ -185,11 +185,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 				if (ctx.players.local().tile().distanceTo(TILE_LOOT) > 2) {
 					STATUS = "Walk to grapes";
 					ctx.camera.turnTo(TILE_LOOT);
-					if (TILE_LOOT.matrix(ctx).inViewport()) {
-						TILE_LOOT.matrix(ctx).interact("Walk here");
-					} else {
-						ctx.movement.step(ctx.movement.closestOnMap(TILE_LOOT));
-					}
+					ctx.movement.step(ctx.movement.closestOnMap(TILE_LOOT));
 					Condition.sleep();
 					while (ctx.players.local().inMotion()) {
 						Condition.sleep();
@@ -360,19 +356,23 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					ctx.game.logout(true);
 					return;
 				} else if (hours == 11) {
-					log.info("Reached 8 hrs 30 minutes running, stopping script..");
+					ctx.game.logout(true);
+				} else if (hours == 14) {
 					ctx.controller.stop();
+					log.info("Running for 14 hours..stopping script.");
 				}
 			} else {
-				if (hours == 3) {
+				if (hours == 3 && minutes > 1) {
 					logIn();
 					return;
-				} else if (hours == 6) {
+				} else if (hours == 6 && minutes > 2) {
 					logIn();
 					return;
-				} else if (hours == 9) {
+				} else if (hours == 9 && minutes > 3) {
 					logIn();
 					return;
+				} else if (hours == 12 && minutes > 4) {
+					logIn();
 				}
 			}
 		}
@@ -380,7 +380,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	}
 	
 	private int antiBan() {
-		int antiban = Random.nextInt(1, 800);
+		int antiban = Random.nextInt(1, 1000);
 		switch (antiban) {
 		case 1:
 			ctx.camera.angle(Random.nextInt(21, 40));
