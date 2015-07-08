@@ -362,16 +362,16 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					log.info("Running for 14 hours..stopping script.");
 				}
 			} else {
-				if (hours == 3 && minutes > 1) {
+				if (hours == 3) {
 					logIn();
 					return;
-				} else if (hours == 6 && minutes > 2) {
+				} else if (hours == 6) {
 					logIn();
 					return;
-				} else if (hours == 9 && minutes > 3) {
+				} else if (hours == 9) {
 					logIn();
 					return;
-				} else if (hours == 12 && minutes > 4) {
+				} else if (hours == 12) {
 					logIn();
 				}
 			}
