@@ -34,33 +34,25 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	private static RenderingHints ANTIALIASING = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	
 	private static long TIMER_SCRIPT = 0;
-	
+	private boolean started = false;
 	private static String STATUS = "Starting...";
-	
 	private static final int ID_BANKER[] = { 553, 2759 };
 	private static final int ID_STAIRS_UP[] = { 24073, 24074, 24075 };
 	private static final int ID_STAIRS_DOWN[] = { 24074, 24075 };
 	private static final int ID_DOOR = 2712, ID_GRAPE = 1987;
 	private static int GRAPES_GAINED, GRAPE_PRICE, PROFIT_GAINED, TRIES;
-	
-	private boolean started = false;
-	
 	private static final Tile TILE_LOOT = new Tile(3144, 3450, 2);
-	
-	private final Component PLAY_NOW_WIDGET = ctx.widgets.component(906, 154);
-
 	private static final Area AREA_IN_GUILD = new Area(new Tile[] {
 			new Tile(3147, 3446, 0), new Tile(3145, 3444, 0),
 			new Tile(3141, 3444, 0), new Tile(3138, 3448, 0),
 			new Tile(3140, 3453, 0), new Tile(3148, 3451) });
-
 	private static final Tile[] PATH_GUILD = { new Tile(3182, 3443, 0),
 			new Tile(3183, 3450, 0), new Tile(3176, 3450, 0),
 			new Tile(3172, 3450, 0), new Tile(3166, 3451, 0),
 			new Tile(3160, 3450, 0), new Tile(3155, 3449, 0),
 			new Tile(3152, 3446, 0), new Tile(3148, 3443, 0),
 			new Tile(3143, 3443, 0) };
-
+	
 	@Override
 	public void start() {
 		ctx.properties.put("login.disable", "true");
@@ -203,7 +195,6 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 			} else {
 				if (ctx.bank.opened()) {
 					STATUS = "Bank close";
-					//ctx.bank.close();
 					ctx.input.send("{VK_ESCAPE down}");
 					Condition.sleep();
 					ctx.input.send("{VK_ESCAPE up}");
@@ -325,6 +316,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	}
 	
 	private void logIn() {
+		final Component PLAY_NOW_WIDGET = ctx.widgets.component(906, 154);
 		if (PLAY_NOW_WIDGET.valid()) {
 			PLAY_NOW_WIDGET.click(true);
 			Condition.wait(new Callable<Boolean>() {
@@ -346,33 +338,46 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 
 		if (started) {
 			if (ctx.game.loggedIn()) {
-				if (hours == 2) {
+				STATUS = "Taking a break...";
+				if (hours == 2 && minutes < 45) {
+					log.info("Break @ 2hrs");
 					ctx.game.logout(true);
 					return;
-				} else if (hours == 5) {
+				} else if (hours == 5 && minutes < 45) {
+					log.info("Break @ 5hrs");
 					ctx.game.logout(true);
 					return;
-				} else if (hours == 8) {
+				} else if (hours == 8 && minutes < 45) {
+					log.info("Break @ 8hrs");
 					ctx.game.logout(true);
 					return;
-				} else if (hours == 11) {
+				} else if (hours == 11 && minutes < 45) {
+					log.info("Break @ 11hrs");
 					ctx.game.logout(true);
+					return;
 				} else if (hours == 14) {
 					ctx.controller.stop();
 					log.info("Running for 14 hours..stopping script.");
+					return;
 				}
 			} else {
-				if (hours == 3) {
+				STATUS = "Logging in...";
+				if (hours == 2 && minutes > 45) {
+					log.info("Login @ 2hrs 45mins");
 					logIn();
 					return;
-				} else if (hours == 6) {
+				} else if (hours == 5 && minutes > 45) {
+					log.info("Login @ 5hrs 45mins");
 					logIn();
 					return;
-				} else if (hours == 9) {
+				} else if (hours == 8 && minutes > 45) {
+					log.info("Login @ 8hrs 45mins");
 					logIn();
 					return;
-				} else if (hours == 12) {
+				} else if (hours == 11 && minutes > 45) {
+					log.info("Login @ 11hrs 45mins");
 					logIn();
+					return;
 				}
 			}
 		}
@@ -429,7 +434,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		g.setColor(Color.MAGENTA);
 		g.drawRect(5, 5, 190, 125);
 		g.setFont(FONT);
-		g.drawString("rGrapeGrabber v0.1", 60, 20);
+		g.drawString("rGrapeGrabber", 60, 20);
 		g.setColor(Color.WHITE);
 		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 10, 40);
 		g.drawString("Grapes Picked: " + NF.format(GRAPES_GAINED) + "(" + PerHour(GRAPES_GAINED) + "/h)", 10, 60);
