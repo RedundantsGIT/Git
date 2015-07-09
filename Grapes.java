@@ -338,58 +338,45 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 
 		if (started) {
 			if (ctx.game.loggedIn()) {
-				if (hours == 2 && minutes < 45) {
-					log.info("Break @ 2hrs");
+				if (hours == 2 && minutes < 30) {
 					ctx.game.logout(true);
 					return;
-				} else if (hours == 5 && minutes < 45) {
-					log.info("Break @ 5hrs");
+				} else if (hours == 5 && minutes < 30) {
 					ctx.game.logout(true);
 					return;
-				} else if (hours == 8 && minutes < 45) {
-					log.info("Break @ 8hrs");
+				} else if (hours == 8 && minutes < 30) {
 					ctx.game.logout(true);
 					return;
-				} else if (hours == 11 && minutes < 45) {
-					log.info("Break @ 11hrs");
+				} else if (hours == 11 && minutes < 30) {
 					ctx.game.logout(true);
 					return;
-				} else if (hours == 14 && minutes < 45) {
-					log.info("Break @ 14hrs");
+				} else if (hours == 14 && minutes < 30) {
 					ctx.game.logout(true);
 					return;
-				}else if (hours == 17 && minutes < 45){
-					log.info("Break @ 17hrs");
+				}else if (hours == 17 && minutes < 30){
 					ctx.game.logout(true);
 					return;
 				} else if (hours == 20){
-					log.info("Running for 20 hrs, stopping script..");
 					ctx.controller.stop();
 					return;
 				}
 			} else {
-				if (hours == 2 && minutes > 45) {
-					log.info("Login @ 2hrs 45mins");
+				if (hours == 2 && minutes > 30) {
 					logIn();
 					return;
-				} else if (hours == 5 && minutes > 45) {
-					log.info("Login @ 5hrs 45mins");
+				} else if (hours == 5 && minutes > 30) {
 					logIn();
 					return;
-				} else if (hours == 8 && minutes > 45) {
-					log.info("Login @ 8hrs 45mins");
+				} else if (hours == 8 && minutes > 30) {
 					logIn();
 					return;
-				} else if (hours == 11 && minutes > 45) {
-					log.info("Login @ 11hrs 45mins");
+				} else if (hours == 11 && minutes > 30) {
 					logIn();
 					return;
-				} else if (hours == 14 && minutes > 45){
-					log.info("Login @ 14hrs 45mins");
+				} else if (hours == 14 && minutes > 30){
 					logIn();
 					return;
-				} else if (hours == 17 && minutes > 45){
-					log.info("Login @ 17hrs 45mins");
+				} else if (hours == 17 && minutes > 30){
 					logIn();
 					return;
 				}
@@ -448,7 +435,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		g.setColor(Color.MAGENTA);
 		g.drawRect(5, 5, 190, 125);
 		g.setFont(FONT);
-		g.drawString("rGrapeGrabber v0.2", 55, 20);
+		g.drawString("rGrapeGrabber v0.3", 60, 20);
 		g.setColor(Color.WHITE);
 		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 10, 40);
 		g.drawString("Grapes Picked: " + NF.format(GRAPES_GAINED) + "(" + PerHour(GRAPES_GAINED) + "/h)", 10, 60);
