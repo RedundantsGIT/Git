@@ -243,7 +243,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 			}
 		} else {
 			if (TRIES > 2) {
-				ctx.camera.turnTo(g.tile());
+				ctx.camera.turnTo(g);
 			}
 			ctx.input.move(p);
 			TRIES++;
@@ -338,7 +338,6 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 
 		if (started) {
 			if (ctx.game.loggedIn()) {
-				STATUS = "Taking a break...";
 				if (hours == 2 && minutes < 45) {
 					log.info("Break @ 2hrs");
 					ctx.game.logout(true);
@@ -355,13 +354,20 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					log.info("Break @ 11hrs");
 					ctx.game.logout(true);
 					return;
-				} else if (hours == 14) {
+				} else if (hours == 14 && minutes < 45) {
+					log.info("Break @ 14hrs");
+					ctx.game.logout(true);
+					return;
+				}else if (hours == 17 && minutes < 45){
+					log.info("Break @ 17hrs");
+					ctx.game.logout(true);
+					return;
+				} else if (hours == 20){
+					log.info("Running for 20 hrs, stopping script..");
 					ctx.controller.stop();
-					log.info("Running for 14 hours..stopping script.");
 					return;
 				}
 			} else {
-				STATUS = "Logging in...";
 				if (hours == 2 && minutes > 45) {
 					log.info("Login @ 2hrs 45mins");
 					logIn();
@@ -376,6 +382,14 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					return;
 				} else if (hours == 11 && minutes > 45) {
 					log.info("Login @ 11hrs 45mins");
+					logIn();
+					return;
+				} else if (hours == 14 && minutes > 45){
+					log.info("Login @ 14hrs 45mins");
+					logIn();
+					return;
+				} else if (hours == 17 && minutes > 45){
+					log.info("Login @ 17hrs 45mins");
 					logIn();
 					return;
 				}
@@ -403,7 +417,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 			ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
 			break;
 		case 6:
-			ctx.camera.pitch(Random.nextInt(52, 60));
+			ctx.camera.pitch(Random.nextInt(55, 65));
 			ctx.camera.angle(Random.nextInt(0, 300));
 			break;
 		}
@@ -434,7 +448,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		g.setColor(Color.MAGENTA);
 		g.drawRect(5, 5, 190, 125);
 		g.setFont(FONT);
-		g.drawString("rGrapeGrabber", 60, 20);
+		g.drawString("rGrapeGrabber v0.2", 55, 20);
 		g.setColor(Color.WHITE);
 		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 10, 40);
 		g.drawString("Grapes Picked: " + NF.format(GRAPES_GAINED) + "(" + PerHour(GRAPES_GAINED) + "/h)", 10, 60);
