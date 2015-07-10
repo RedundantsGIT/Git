@@ -38,7 +38,6 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	private static String STATUS = "Starting...";
 	private static final int ID_BANKER[] = { 553, 2759 };
 	private static final int ID_STAIRS_UP[] = { 24073, 24074, 24075 };
-	private static final int ID_STAIRS_DOWN[] = { 24074, 24075 };
 	private static final int ID_DOOR = 2712, ID_GRAPE = 1987;
 	private static int GRAPES_GAINED, GRAPE_PRICE, PROFIT_GAINED, TRIES;
 	private static final Tile TILE_LOOT = new Tile(3144, 3450, 2);
@@ -52,6 +51,10 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 			new Tile(3160, 3450, 0), new Tile(3155, 3449, 0),
 			new Tile(3152, 3446, 0), new Tile(3148, 3443, 0),
 			new Tile(3143, 3443, 0) };
+	private static final Tile[] PATH_BANK = { new Tile(3214, 3376, 0),
+		new Tile(3211, 3386, 0), new Tile(3211, 3397, 0),
+		new Tile(3208, 3407, 0), new Tile(3199, 3415, 0),
+		new Tile(3196, 3428, 0), new Tile(3186, 3435, 0) };
 	
 	@Override
 	public void start() {
@@ -88,34 +91,26 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 			break;
 		case BANKING:
 			if (atLevelThree()) {
-				goDown();
-				if (didInteract()) {
-					Condition.wait(new Callable<Boolean>() {
-						@Override
-						public Boolean call() throws Exception {
-							return atLevelTwo();
-						}
-					}, 250, 20);
-				}
-			} else if (atLevelTwo()) {
-					goDown();
-					if(didInteract()) {
-					Condition.wait(new Callable<Boolean>() {
-						@Override
-						public Boolean call() throws Exception {
-							return atLevelOne();
-						}
-					}, 250, 20);
-				}
-			} else if (atLevelOne()) {
-				openDoor();
-				if (didInteract()) {
-					Condition.wait(new Callable<Boolean>() {
-						@Override
-						public Boolean call() throws Exception {
-							return !atLevelOne();
-						}
-					}, 250, 20);
+				final Component TELEPORT_WIDGET = ctx.widgets.component(1465, 50);
+				final Component VARROCK_WIDGET = ctx.widgets.component(1092, 21);
+				if (ctx.players.local().animation() == -1) {
+					if (VARROCK_WIDGET.valid()) {
+						VARROCK_WIDGET.click(true);
+						Condition.wait(new Callable<Boolean>() {
+							@Override
+							public Boolean call() throws Exception {
+								return !atLevelThree();
+							}
+						}, 325, 20);
+					} else {
+						TELEPORT_WIDGET.click(true);
+						Condition.wait(new Callable<Boolean>() {
+							@Override
+							public Boolean call() throws Exception {
+								return VARROCK_WIDGET.valid();
+							}
+						}, 250, 20);
+					}
 				}
 			} else {
 				final Npc Banker = ctx.npcs.select().id(ID_BANKER).nearest().poll();
@@ -135,7 +130,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					}
 				} else {
 					STATUS = "Walk to bank";
-					ctx.movement.newTilePath(PATH_GUILD).reverse().traverse();
+					ctx.movement.newTilePath(PATH_BANK).traverse();
 					if (Random.nextInt(1, 20) == 10) {
 						ctx.camera.turnTo(ctx.bank.nearest());
 					}
@@ -269,19 +264,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 			ctx.movement.step(ctx.movement.closestOnMap(Door));
 		}
 	}
-
-	private void goDown() {
-		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS_DOWN).nearest().poll();
-		if (Stairs.inViewport() && ctx.players.local().tile().distanceTo(Stairs.tile()) < 5) {
-			STATUS = "Climb-down";
-			Stairs.interact("Climb-down");
-		} else {
-			STATUS = "Walk to stairs";
-			ctx.movement.step(ctx.movement.closestOnMap(Stairs.tile()));
-			ctx.camera.turnTo(Stairs);
-		}
-	}
-
+	
 	private void goUp() {
 		final GameObject Stairs = ctx.objects.select().id(ID_STAIRS_UP).nearest().poll();
 		if (Stairs.inViewport() && ctx.players.local().tile().distanceTo(Stairs.tile()) < 4) {
@@ -435,7 +418,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		g.setColor(Color.MAGENTA);
 		g.drawRect(5, 5, 190, 125);
 		g.setFont(FONT);
-		g.drawString("rGrapeGrabber v0.3", 60, 20);
+		g.drawString("rGrapeGrabber v0.1", 60, 20);
 		g.setColor(Color.WHITE);
 		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 10, 40);
 		g.drawString("Grapes Picked: " + NF.format(GRAPES_GAINED) + "(" + PerHour(GRAPES_GAINED) + "/h)", 10, 60);
