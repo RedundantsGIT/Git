@@ -185,7 +185,6 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					if (Grapes.valid()) {
 						STATUS = "Take grapes";
 						if(Random.nextInt(1, 40) == 20){
-							log.info("1");
 							Condition.sleep();
 						}
 						take(Grapes);
@@ -327,6 +326,15 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					ctx.game.logout(true);
 					return;
 				} else if (hours == 10) {
+					ctx.game.logout(true);
+					return;
+				} else if (hours == 12) {
+					ctx.game.logout(true);
+					return;
+				} else if (hours == 13) {
+					ctx.game.logout(true);
+					return;
+				} else if (hours == 15) {
 					ctx.controller.stop();
 					return;
 				}
