@@ -78,7 +78,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 
 	@Override
 	public void poll() {
-		breakHandler();
+		antiPatternBreak();
 		if (!ctx.game.loggedIn())
 			return;
 		switch (state()) {
@@ -298,7 +298,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	}
 
 	
-	private void breakHandler() {
+	private void antiPatternBreak() {
 		long millis = System.currentTimeMillis() - TIMER_SCRIPT;
 		long hours = millis / (1000 * 60 * 60);
 		millis -= hours * (1000 * 60 * 60);
@@ -306,41 +306,22 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		millis -= minutes * (1000 * 60);
 
 		if (ctx.game.loggedIn()) {
-			if (minutes < 20) {
-				if (hours == 1) {
+			if (minutes < 15) {
+				if (hours == 1 || hours == 3 || hours == 4 || hours == 6
+						|| hours == 7 || hours == 9 || hours == 10
+						|| hours == 12 || hours == 13 || hours == 15
+						|| hours == 16 || hours == 18 || hours == 19
+						|| hours == 21 || hours == 22) {
 					ctx.game.logout(true);
 					return;
-				} else if (hours == 3) {
-					ctx.game.logout(true);
-					return;
-				} else if (hours == 4) {
-					ctx.game.logout(true);
-					return;
-				} else if (hours == 6) {
-					ctx.game.logout(true);
-					return;
-				} else if (hours == 7) {
-					ctx.game.logout(true);
-					return;
-				} else if (hours == 9) {
-					ctx.game.logout(true);
-					return;
-				} else if (hours == 10) {
-					ctx.game.logout(true);
-					return;
-				} else if (hours == 12) {
-					ctx.game.logout(true);
-					return;
-				} else if (hours == 13) {
-					ctx.game.logout(true);
-					return;
-				} else if (hours == 15) {
+				} else if (hours == 24) {
+					log.info("Stopping script, running for 24 hrs.");
 					ctx.controller.stop();
 					return;
 				}
 			}
 		} else {
-			if (minutes > Random.nextInt(20, 30)) {
+			if (minutes > 15) {
 				logIn();
 				return;
 			}
