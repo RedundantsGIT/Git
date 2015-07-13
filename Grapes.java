@@ -36,7 +36,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	private static final int ID_BANKER[] = { 553, 2759 };
 	private static final int ID_STAIRS_UP[] = { 24073, 24074, 24075 };
 	private static final int ID_DOOR = 2712, ID_GRAPE = 1987;
-	private static int GRAPES_GAINED, GRAPE_PRICE, PROFIT_GAINED;
+	private static int GRAPES_GAINED, GRAPES_STORED, GRAPE_PRICE, PROFIT_GAINED;
 	private static final Tile TILE_LOOT = new Tile(3144, 3450, 2);
 	private static final Area AREA_IN_GUILD = new Area(new Tile[] {
 			new Tile(3147, 3446, 0), new Tile(3145, 3444, 0),
@@ -195,6 +195,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 				}
 			} else {
 				if (ctx.bank.opened()) {
+					GRAPES_STORED = ctx.bank.select().id(ID_GRAPE).count(true);
 					STATUS = "Bank close";
 					ctx.bank.close();
 					Condition.sleep();
@@ -383,17 +384,18 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		
 		g.setRenderingHints(ANTIALIASING);
 		g.setColor(BLACK);
-		g.fillRect(5, 5, 190, 125);
+		g.fillRect(5, 5, 190, 145);
 		g.setColor(Color.MAGENTA);
-		g.drawRect(5, 5, 190, 125);
+		g.drawRect(5, 5, 190, 145);
 		g.setFont(FONT);
 		g.drawString("rGrapes", 70, 20);
 		g.setColor(Color.WHITE);
 		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 10, 40);
 		g.drawString("Grapes Picked: " + NF.format(GRAPES_GAINED) + "(" + PerHour(GRAPES_GAINED) + "/h)", 10, 60);
-		g.drawString("Profit: " + NF.format(PROFIT_GAINED) + "(" + PerHour(PROFIT_GAINED) + "/h)", 10, 80);
-		g.drawString("Profit ea: " + (GRAPE_PRICE), 10, 100);
-		g.drawString("Status: " + (STATUS), 10, 120);
+		g.drawString("Grapes in Bank: " + NF.format(GRAPES_STORED), 10, 80);
+		g.drawString("Profit: " + NF.format(PROFIT_GAINED) + "(" + PerHour(PROFIT_GAINED) + "/h)", 10, 100);
+		g.drawString("Profit ea: " + (GRAPE_PRICE), 10, 120);
+		g.drawString("Status: " + (STATUS), 10, 140);
 		drawMouse(g);
 	}
 	
