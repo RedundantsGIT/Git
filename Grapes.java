@@ -308,11 +308,12 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 
 		if (ctx.game.loggedIn()) {
 			if (minutes < 10) {
-				if (hours == 1 || hours == 3 || hours == 4 || hours == 6
-						|| hours == 7 || hours == 9 || hours == 10
-						|| hours == 12 || hours == 13 || hours == 15
-						|| hours == 16 || hours == 18 || hours == 19
-						|| hours == 21 || hours == 22) {
+				if (hours == 1 || hours == 2 || hours == 4 || hours == 5
+						|| hours == 7 || hours == 8 || hours == 9
+						|| hours == 11 || hours == 12 || hours == 13
+						|| hours == 15 || hours == 16 || hours == 18
+						|| hours == 19 || hours == 21 || hours == 22
+						|| hours == 23) {
 					ctx.game.logout(true);
 					return;
 				} else if (hours == 24) {
@@ -322,7 +323,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 				}
 			}
 		} else {
-			if (minutes > 10) {
+			if (minutes > 5) {
 				logIn();
 				return;
 			}
