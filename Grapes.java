@@ -307,7 +307,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		millis -= minutes * (1000 * 60);
 
 		if (ctx.game.loggedIn()) {
-			if (minutes < 10) {
+			if (minutes < 5){
 				if (hours == 1 || hours == 2 || hours == 4 || hours == 5
 						|| hours == 7 || hours == 8 || hours == 9
 						|| hours == 11 || hours == 12 || hours == 13
