@@ -42,12 +42,12 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 			new Tile(3147, 3446, 0), new Tile(3145, 3444, 0),
 			new Tile(3141, 3444, 0), new Tile(3138, 3448, 0),
 			new Tile(3140, 3453, 0), new Tile(3148, 3451) });
-	private static final Tile[] PATH_GUILD = { new Tile(3189, 3435, 0),
+	private static final Tile[] PATH_TO_GUILD = { new Tile(3189, 3435, 0),
 			new Tile(3186, 3443, 0), new Tile(3179, 3450, 0),
 			new Tile(3172, 3451, 0), new Tile(3164, 3452, 0),
 			new Tile(3154, 3448, 0), new Tile(3149, 3444, 0),
 			new Tile(3142, 3442, 0)};
-	private static final Tile[] PATH_BANK = { new Tile(3214, 3376, 0),
+	private static final Tile[] PATH_TO_BANK = { new Tile(3214, 3376, 0),
 		new Tile(3211, 3386, 0), new Tile(3211, 3397, 0),
 		new Tile(3208, 3407, 0), new Tile(3199, 3415, 0),
 		new Tile(3196, 3428, 0), new Tile(3189, 3435, 0) };
@@ -126,7 +126,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					}
 				} else {
 					STATUS = "Walk to bank";
-					ctx.movement.newTilePath(PATH_BANK).traverse();
+					ctx.movement.newTilePath(PATH_TO_BANK).traverse();
 				}
 			}
 			break;
@@ -184,9 +184,6 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					final GroundItem Grapes = ctx.groundItems.select().id(ID_GRAPE).nearest().poll();
 					if (Grapes.valid()) {
 						STATUS = "Take grapes";
-						if(Random.nextInt(1, 40) == 20){
-							Condition.sleep();
-						}
 						take(Grapes);
 					} else {
 						STATUS = "Waiting for spawn..";
@@ -198,10 +195,9 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					GRAPES_STORED = ctx.bank.select().id(ID_GRAPE).count(true);
 					STATUS = "Bank close";
 					ctx.bank.close();
-					Condition.sleep();
 				} else {
 					STATUS = "Walk to guild";
-					ctx.movement.newTilePath(PATH_GUILD).traverse();
+					ctx.movement.newTilePath(PATH_TO_GUILD).traverse();
 				}
 			}
 			break;
@@ -298,7 +294,6 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		}
 	}
 
-	
 	private void antiPatternBreak() {
 		long millis = System.currentTimeMillis() - TIMER_SCRIPT;
 		long hours = millis / (1000 * 60 * 60);
@@ -307,23 +302,12 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		millis -= minutes * (1000 * 60);
 
 		if (ctx.game.loggedIn()) {
-			if (minutes < 5){
-				if (hours == 1 || hours == 2 || hours == 4 || hours == 5
-						|| hours == 7 || hours == 8 || hours == 9
-						|| hours == 11 || hours == 12 || hours == 13
-						|| hours == 15 || hours == 16 || hours == 18
-						|| hours == 19 || hours == 21 || hours == 22
-						|| hours == 23) {
-					ctx.game.logout(true);
-					return;
-				} else if (hours == 24) {
-					log.info("Stopping script, running for 24 hrs.");
-					ctx.controller.stop();
-					return;
-				}
+			if (hours > 1 && minutes < 3) {
+				ctx.game.logout(true);
+				return;
 			}
 		} else {
-			if (minutes > 5) {
+			if (minutes > 3) {
 				logIn();
 				return;
 			}
@@ -350,12 +334,9 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 			ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
 			break;
 		case 6:
-			ctx.camera.angle(Random.nextInt(0, 300));
-			break;
-		case 7:
 			ctx.camera.turnTo(TILE_LOOT);
 			break;
-		case 8:
+		case 7:
 			final Component REST_WIDGET = ctx.widgets.component(1465, 40);
 			if(ctx.players.local().animation() == -1){
 			  REST_WIDGET.interact("Rest");
