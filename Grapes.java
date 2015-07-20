@@ -135,7 +135,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 				final int[] DoorBounds = { -216, 232, -876, -108, 148, 204 };
 				final GameObject Stairs = ctx.objects.select().id(ID_STAIRS_UP).nearest().poll();
 				final GameObject Door = ctx.objects.select().id(ID_DOOR).each(Interactive.doSetBounds(DoorBounds)).nearest().poll();
-				if (Door.inViewport() && ctx.players.local().tile().distanceTo(Door.tile()) < 5) {
+				if (Door.inViewport() && ctx.players.local().tile().distanceTo(Door) < 5) {
 					STATUS = "Open door";
 					ctx.camera.turnTo(Stairs);
 					Door.interact("Open", "Door");
@@ -384,7 +384,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	private void drawMouse(Graphics2D g) {
 		int mouseY = (int) ctx.input.getLocation().getY();
 		int mouseX = (int) ctx.input.getLocation().getX();
-		g.setColor(Color.GREEN);
+		g.setColor(Color.MAGENTA);
 		g.drawLine(mouseX - 5, mouseY + 5, mouseX + 5, mouseY - 5);
 		g.drawLine(mouseX + 5, mouseY + 5, mouseX - 5, mouseY - 5);
 		while (!mousePath.isEmpty() && mousePath.peek().isUp()) mousePath.remove();
