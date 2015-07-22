@@ -114,12 +114,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					if (ctx.bank.opened()) {
 						STATUS = "Deposit backpack";
 						ctx.bank.depositInventory();
-						Condition.wait(new Callable<Boolean>() {
-							@Override
-							public Boolean call() throws Exception {
-								return ctx.backpack.select().count() != 28;
-							}
-						}, 250, 20);
+						Condition.sleep();
 					} else {
 						STATUS = "Bank open";
 						ctx.bank.open();
@@ -316,27 +311,21 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	}
 	
 	private int antiBan() {
-		int antiban = Random.nextInt(1, 3000);
+		int antiban = Random.nextInt(1, 3500);
 		switch (antiban) {
 		case 1:
 			ctx.camera.angle(Random.nextInt(21, 40));
 			break;
 		case 2:
-			ctx.camera.angle(Random.nextInt(25, 75));
-			break;
-		case 3:
-			ctx.camera.angle(Random.nextInt(0, 200));
-			break;
-		case 4:
 			ctx.camera.angle(Random.nextInt(0, 300));
 			break;
-		case 5:
+		case 3:
 			ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
 			break;
-		case 6:
+		case 4:
 			ctx.camera.turnTo(TILE_LOOT);
 			break;
-		case 7:
+		case 5:
 			final Component REST_WIDGET = ctx.widgets.component(1465, 40);
 			if(ctx.players.local().animation() == -1){
 			  REST_WIDGET.interact("Rest");
@@ -389,7 +378,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		g.drawLine(mouseX + 5, mouseY + 5, mouseX - 5, mouseY - 5);
 		while (!mousePath.isEmpty() && mousePath.peek().isUp()) mousePath.remove();
 		Point clientCursor = ctx.input.getLocation();
-		MousePathPoint mpp = new MousePathPoint(clientCursor.x, clientCursor.y, 600); // 1000 = lasting time/MS
+		MousePathPoint mpp = new MousePathPoint(clientCursor.x, clientCursor.y, 600);
 		if (mousePath.isEmpty() || !mousePath.getLast().equals(mpp)) mousePath.add(mpp);
 		MousePathPoint lastPoint = null;
 		for (MousePathPoint a : mousePath) {
