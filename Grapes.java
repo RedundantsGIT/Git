@@ -56,7 +56,6 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	@Override
 	public void start() {
 		TIMER_SCRIPT = System.currentTimeMillis();
-		ctx.properties.put("login.disable", "true");
 		GRAPE_PRICE = getGuidePrice(ID_GRAPE);
 		log.info("G.E. Grape Price : " + GRAPE_PRICE);
 	}
