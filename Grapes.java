@@ -1,6 +1,5 @@
 package rGrapes;
 
-
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -56,6 +55,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	@Override
 	public void start() {
 		TIMER_SCRIPT = System.currentTimeMillis();
+		ctx.properties.put("login.disable", "true");
 		GRAPE_PRICE = getGuidePrice(ID_GRAPE);
 		log.info("G.E. Grape Price : " + GRAPE_PRICE);
 	}
@@ -78,6 +78,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 
 	@Override
 	public void poll() {
+		antiPatternBreak();
 		if (!ctx.game.loggedIn())
 			return;
 		switch (state()) {
@@ -274,7 +275,41 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	private boolean didInteract() {
 		return ctx.game.crosshair() == Crosshair.ACTION;
 	}
+	
+	private void logIn() {
+		final Component PLAY_NOW_WIDGET = ctx.widgets.component(906, 154);
+		if (PLAY_NOW_WIDGET.valid()) {
+			PLAY_NOW_WIDGET.click(true);
+			Condition.wait(new Callable<Boolean>() {
+				@Override
+				public Boolean call() throws Exception {
+					return ctx.game.loggedIn();
+				}
+			}, 250, 20);
+		}
+	}
 
+	private void antiPatternBreak() {
+		long millis = System.currentTimeMillis() - TIMER_SCRIPT;
+		long hours = millis / (1000 * 60 * 60);
+		millis -= hours * (1000 * 60 * 60);
+		long minutes = millis / (1000 * 60);
+		millis -= minutes * (1000 * 60);
+
+		if (ctx.game.loggedIn()) {
+			if (hours == 1 && minutes < 4 || hours > 1 && minutes < 4) {
+				ctx.game.logout(true);
+				return;
+			}
+		} else {
+			if (minutes > 4) {
+				logIn();
+				return;
+			}
+		}
+		return;
+	}
+	
 	private int antiBan() {
 		int antiban = Random.nextInt(1, 3500);
 		switch (antiban) {
