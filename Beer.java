@@ -19,6 +19,7 @@ import org.powerbot.script.PollingScript;
 import org.powerbot.script.Random;
 import org.powerbot.script.Script.Manifest;
 import org.powerbot.script.Tile;
+import org.powerbot.script.rt6.Component;
 import org.powerbot.script.rt6.GameObject;
 import org.powerbot.script.rt6.GeItem;
 import org.powerbot.script.rt6.Interactive;
@@ -45,6 +46,7 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	
 	@Override
 	public void start() {
+		ctx.properties.put("login.disable", "true");
 		SCRIPT_TIMER = System.currentTimeMillis();
 		STATUS = "Get prices..";
 		BEER_PRICE = getGuidePrice(BEER_ID);
@@ -67,6 +69,7 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 
 	@Override
 	public void poll() {
+		antiPatternBreak();
 		if (!ctx.game.loggedIn())
 			return;
 		switch (state()) {
@@ -218,7 +221,7 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			return State.CAMERA;
 		}
 		
-		if(ctx.backpack.moneyPouchCount() < 2){
+		if(ctx.widgets.component(1191, 6).text().contains("I'm sorry but I don't have enough money!")){
 			return State.STOP;
 		}
 		
@@ -245,6 +248,40 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		return ctx.game.floor() == 1;
 	}
 	
+	private void logIn() {
+		final Component PLAY_NOW_WIDGET = ctx.widgets.component(906, 154);
+		if (PLAY_NOW_WIDGET.valid()) {
+			PLAY_NOW_WIDGET.click(true);
+			Condition.wait(new Callable<Boolean>() {
+				@Override
+				public Boolean call() throws Exception {
+					return ctx.game.loggedIn();
+				}
+			}, 250, 20);
+		}
+	}
+
+	private void antiPatternBreak() {
+		long millis = System.currentTimeMillis() - SCRIPT_TIMER;
+		long hours = millis / (1000 * 60 * 60);
+		millis -= hours * (1000 * 60 * 60);
+		long minutes = millis / (1000 * 60);
+		millis -= minutes * (1000 * 60);
+
+		if (ctx.game.loggedIn()) {
+			if (hours == 1 && minutes < 3 || hours > 1 && minutes < 3) {
+				ctx.game.logout(true);
+				return;
+			}
+		} else {
+			if (minutes > 3) {
+				logIn();
+				return;
+			}
+		}
+		return;
+	}
+	
 	@Override
 	public void messaged(MessageEvent msg) {
 		String message = msg.text();
@@ -252,7 +289,7 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			BEER_BOUGHT++;
 		}
 	}
-
+	
 	final static Color BLACK = new Color(25, 0, 0, 200);
 	final static Font FONT = new Font("Comic Sans MS", 1, 12);
 	final Font FONT_TWO = new Font("Comic Sans MS", 1, 9);
@@ -269,11 +306,6 @@ public class Beer extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		long minutes = millis / (1000 * 60);
 		millis -= minutes * (1000 * 60);
 		long seconds = millis / 1000;
-		
-		if(hours == 2){
-			ctx.controller.stop();
-			log.info("Timer reached stopping script....");
-		}
 
 		g.setRenderingHints(ANTIALIASING);
 		g.setColor(BLACK);
