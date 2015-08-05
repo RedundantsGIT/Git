@@ -138,6 +138,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 				}
 			} else if (atLevelOne()) {
 				goUp();
+				Condition.sleep();
 				if (didInteract()) {
 					Condition.wait(new Callable<Boolean>() {
 						@Override
@@ -148,6 +149,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 				}
 			} else if (atLevelTwo()) {
 				goUp();
+				Condition.sleep();
 				if (didInteract()) {
 					Condition.wait(new Callable<Boolean>() {
 						@Override
@@ -157,27 +159,24 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					}, 250, 20);
 				}
 			} else if (atLevelThree()) {
-				if (ctx.players.local().tile().distanceTo(TILE_LOOT) > 2) {
-					STATUS = "Walk to grapes";
-					ctx.movement.step(ctx.movement.closestOnMap(TILE_LOOT));
-					Condition.sleep();
-					while (ctx.players.local().inMotion()) {
+				final GroundItem Grapes = ctx.groundItems.select().id(ID_GRAPE).nearest().poll();
+				if (Grapes.valid()) {
+					if (ctx.players.local().tile().distanceTo(Grapes) > 2) {
+						STATUS = "Path to grapes";
+						ctx.movement.step(ctx.movement.closestOnMap(Grapes));
+						Condition.sleep();
+					} else {
+						if (Random.nextInt(1, 40) == 20) {
+							Condition.sleep();
+						}
+						STATUS = "Take grapes";
+						take(Grapes);
 						Condition.sleep();
 					}
 				} else {
-					final GroundItem Grapes = ctx.groundItems.select().id(ID_GRAPE).nearest().poll();
-					if (Grapes.valid()) {
-						if (ctx.players.local().tile().distanceTo(Grapes) > 2) {
-							STATUS = "Path to grapes";
-							ctx.movement.step(ctx.movement.closestOnMap(Grapes));
-							Condition.sleep();
-						} else {
-							STATUS = "Take grapes";
-							take(Grapes);
-						}
-					} else {
-						antiBan();
-					}
+					STATUS = "Waiting for spawn";
+					antiBan();
+					Condition.sleep();
 				}
 			} else {
 				if (ctx.bank.opened()) {
@@ -280,7 +279,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 				public Boolean call() throws Exception {
 					return ctx.game.loggedIn();
 				}
-			}, 250, 20);
+			}, 450, 20);
 		}
 	}
 
@@ -292,12 +291,12 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		millis -= minutes * (1000 * 60);
 
 		if (ctx.game.loggedIn()) {
-			if (hours == 1 && minutes < 3 || hours > 1 && minutes < 3) {
+			if (hours == 1 && minutes < 4 || hours > 1 && minutes < 4) {
 				ctx.game.logout(true);
 				return;
 			}
 		} else {
-			if (minutes > 3) {
+			if (minutes > 4) {
 				logIn();
 				return;
 			}
