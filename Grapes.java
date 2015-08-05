@@ -128,13 +128,8 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					STATUS = "Open door";
 					ctx.camera.turnTo(Stairs);
 					Door.interact("Open", "Door");
-					if (didInteract()) {
-						Condition.wait(new Callable<Boolean>() {
-							@Override
-							public Boolean call() throws Exception {
-								return atLevelOne();
-							}
-						}, 250, 20);
+					if (didInteract()){
+						Condition.sleep(Random.nextInt(3500, 6000));
 					}
 				} else {
 					STATUS = "Walk to door";
