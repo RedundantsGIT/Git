@@ -171,7 +171,9 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 						}
 						STATUS = "Take grapes";
 						take(Grapes);
-						Condition.sleep();
+						if (Random.nextInt(1, 50) == 25) {
+							Condition.sleep();
+						}
 					}
 				} else {
 					STATUS = "Waiting for spawn";
