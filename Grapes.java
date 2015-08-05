@@ -92,20 +92,14 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 				if (ctx.players.local().animation() == -1) {
 					if (VARROCK_WIDGET.valid()) {
 						VARROCK_WIDGET.click(true);
-						Condition.wait(new Callable<Boolean>() {
-							@Override
-							public Boolean call() throws Exception {
-								return ctx.players.local().animation() != -1;
-							}
-						}, 325, 20);
+						Condition.sleep(Random.nextInt(1000, 3200));
+						while(ctx.players.local().animation() != -1){
+							Condition.sleep(Random.nextInt(1000, 3200));
+						}
 					} else {
 						TELEPORT_WIDGET.click(true);
-						Condition.wait(new Callable<Boolean>() {
-							@Override
-							public Boolean call() throws Exception {
-								return VARROCK_WIDGET.valid();
-							}
-						}, 250, 20);
+						Condition.sleep();
+						Condition.sleep(Random.nextInt(2500, 4000));
 					}
 				}
 			} else {
@@ -178,10 +172,15 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 				} else {
 					final GroundItem Grapes = ctx.groundItems.select().id(ID_GRAPE).nearest().poll();
 					if (Grapes.valid()) {
-						STATUS = "Take grapes";
-						take(Grapes);
+						if (ctx.players.local().tile().distanceTo(Grapes) > 2) {
+							STATUS = "Path to grapes";
+							ctx.movement.step(ctx.movement.closestOnMap(Grapes));
+							Condition.sleep();
+						} else {
+							STATUS = "Take grapes";
+							take(Grapes);
+						}
 					} else {
-						STATUS = "Waiting for spawn..";
 						antiBan();
 					}
 				}
@@ -190,6 +189,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					GRAPES_STORED = ctx.bank.select().id(ID_GRAPE).count(true);
 					STATUS = "Bank close";
 					ctx.bank.close();
+					Condition.sleep();
 				} else {
 					STATUS = "Walk to guild";
 					ctx.movement.newTilePath(PATH_TO_GUILD).traverse();
