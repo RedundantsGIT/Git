@@ -92,14 +92,23 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 				if (ctx.players.local().animation() == -1) {
 					if (VARROCK_WIDGET.valid()) {
 						VARROCK_WIDGET.click(true);
-						Condition.sleep(Random.nextInt(1000, 3200));
+						Condition.wait(new Callable<Boolean>() {
+							@Override
+							public Boolean call() throws Exception {
+								return ctx.players.local().animation() != -1;
+							}
+						}, 325, 20);
 						while(ctx.players.local().animation() != -1){
-							Condition.sleep(Random.nextInt(1000, 3200));
+							Condition.sleep(Random.nextInt(1000, 2500));
 						}
 					} else {
 						TELEPORT_WIDGET.click(true);
-						Condition.sleep();
-						Condition.sleep(Random.nextInt(2500, 4000));
+						Condition.wait(new Callable<Boolean>() {
+							@Override
+							public Boolean call() throws Exception {
+								return VARROCK_WIDGET.valid();
+							}
+						}, 250, 20);
 					}
 				}
 			} else {
@@ -128,8 +137,13 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					STATUS = "Open door";
 					ctx.camera.turnTo(Stairs);
 					Door.interact("Open", "Door");
-					if (didInteract()){
-						Condition.sleep(Random.nextInt(3500, 6000));
+					if (didInteract()) {
+						Condition.wait(new Callable<Boolean>() {
+							@Override
+							public Boolean call() throws Exception {
+								return atLevelOne();
+							}
+						}, 250, 20);
 					}
 				} else {
 					STATUS = "Walk to door";
@@ -138,7 +152,6 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 				}
 			} else if (atLevelOne()) {
 				goUp();
-				Condition.sleep();
 				if (didInteract()) {
 					Condition.wait(new Callable<Boolean>() {
 						@Override
@@ -149,7 +162,6 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 				}
 			} else if (atLevelTwo()) {
 				goUp();
-				Condition.sleep();
 				if (didInteract()) {
 					Condition.wait(new Callable<Boolean>() {
 						@Override
@@ -159,33 +171,31 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					}, 250, 20);
 				}
 			} else if (atLevelThree()) {
-				final GroundItem Grapes = ctx.groundItems.select().id(ID_GRAPE).nearest().poll();
-				if (Grapes.valid()) {
-					if (ctx.players.local().tile().distanceTo(Grapes) > 2) {
-						STATUS = "Path to grapes";
-						ctx.movement.step(ctx.movement.closestOnMap(Grapes));
+				if (ctx.players.local().tile().distanceTo(TILE_LOOT) > 2) {
+					STATUS = "Walk to grapes";
+					ctx.movement.step(ctx.movement.closestOnMap(TILE_LOOT));
+					Condition.sleep();
+					while (ctx.players.local().inMotion()) {
 						Condition.sleep();
-					} else {
-						if (Random.nextInt(1, 40) == 20) {
-							Condition.sleep();
-						}
+					}
+				} else {
+					final GroundItem Grapes = ctx.groundItems.select().id(ID_GRAPE).nearest().poll();
+					if (Grapes.valid()) {
 						STATUS = "Take grapes";
-						take(Grapes);
 						if (Random.nextInt(1, 50) == 25) {
 							Condition.sleep();
 						}
+						take(Grapes);
+					} else {
+						STATUS = "Waiting for spawn..";
+						antiBan();
 					}
-				} else {
-					STATUS = "Waiting for spawn";
-					antiBan();
-					Condition.sleep();
 				}
 			} else {
 				if (ctx.bank.opened()) {
-					GRAPES_STORED = ctx.bank.select().id(ID_GRAPE).count(true);
 					STATUS = "Bank close";
+					GRAPES_STORED = ctx.bank.select().id(ID_GRAPE).count(true);
 					ctx.bank.close();
-					Condition.sleep();
 				} else {
 					STATUS = "Walk to guild";
 					ctx.movement.newTilePath(PATH_TO_GUILD).traverse();
@@ -281,7 +291,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 				public Boolean call() throws Exception {
 					return ctx.game.loggedIn();
 				}
-			}, 450, 20);
+			}, 300, 20);
 		}
 	}
 
@@ -291,19 +301,15 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		millis -= hours * (1000 * 60 * 60);
 		long minutes = millis / (1000 * 60);
 		millis -= minutes * (1000 * 60);
-
 		if (ctx.game.loggedIn()) {
-			if (hours == 1 && minutes < 4 || hours > 1 && minutes < 4) {
+			if (hours == 1 && minutes < 3 || hours > 1 && minutes < 3) {
 				ctx.game.logout(true);
-				return;
 			}
 		} else {
-			if (minutes > 4) {
+			if (minutes > 3) {
 				logIn();
-				return;
 			}
 		}
-		return;
 	}
 	
 	private int antiBan() {
