@@ -55,7 +55,6 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	@Override
 	public void start() {
 		TIMER_SCRIPT = System.currentTimeMillis();
-		ctx.properties.put("login.disable", "true");
 		GRAPE_PRICE = getGuidePrice(ID_GRAPE);
 		log.info("G.E. Grape Price : " + GRAPE_PRICE);
 	}
@@ -78,7 +77,6 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 
 	@Override
 	public void poll() {
-		antiPatternBreak();
 		if (!ctx.game.loggedIn())
 			return;
 		switch (state()) {
@@ -182,9 +180,6 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					final GroundItem Grapes = ctx.groundItems.select().id(ID_GRAPE).nearest().poll();
 					if (Grapes.valid()) {
 						STATUS = "Take grapes";
-						if (Random.nextInt(1, 50) == 25) {
-							Condition.sleep();
-						}
 						take(Grapes);
 					} else {
 						STATUS = "Waiting for spawn..";
@@ -280,36 +275,6 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 
 	private boolean didInteract() {
 		return ctx.game.crosshair() == Crosshair.ACTION;
-	}
-	
-	private void logIn() {
-		final Component PLAY_NOW_WIDGET = ctx.widgets.component(906, 154);
-		if (PLAY_NOW_WIDGET.valid()) {
-			PLAY_NOW_WIDGET.click(true);
-			Condition.wait(new Callable<Boolean>() {
-				@Override
-				public Boolean call() throws Exception {
-					return ctx.game.loggedIn();
-				}
-			}, 300, 20);
-		}
-	}
-
-	private void antiPatternBreak() {
-		long millis = System.currentTimeMillis() - TIMER_SCRIPT;
-		long hours = millis / (1000 * 60 * 60);
-		millis -= hours * (1000 * 60 * 60);
-		long minutes = millis / (1000 * 60);
-		millis -= minutes * (1000 * 60);
-		if (ctx.game.loggedIn()) {
-			if (hours == 1 && minutes < 3 || hours > 1 && minutes < 3) {
-				ctx.game.logout(true);
-			}
-		} else {
-			if (minutes > 3) {
-				logIn();
-			}
-		}
 	}
 	
 	private int antiBan() {
