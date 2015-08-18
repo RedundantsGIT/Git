@@ -8,7 +8,6 @@ import java.awt.Point;
 import java.awt.RenderingHints;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.LinkedList;
 import java.util.concurrent.Callable;
 
 import org.powerbot.script.Area;
@@ -55,6 +54,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	@Override
 	public void start() {
 		TIMER_SCRIPT = System.currentTimeMillis();
+		ctx.properties.put("login.disable", "true");
 		GRAPE_PRICE = getGuidePrice(ID_GRAPE);
 		log.info("G.E. Grape Price : " + GRAPE_PRICE);
 	}
@@ -77,6 +77,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 
 	@Override
 	public void poll() {
+		antiPatternBreak();
 		if (!ctx.game.loggedIn())
 			return;
 		switch (state()) {
@@ -97,7 +98,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 							}
 						}, 325, 20);
 						while(ctx.players.local().animation() != -1){
-							Condition.sleep(Random.nextInt(1000, 2500));
+							Condition.sleep(Random.nextInt(1000, 3000));
 						}
 					} else {
 						TELEPORT_WIDGET.click(true);
@@ -107,6 +108,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 								return VARROCK_WIDGET.valid();
 							}
 						}, 250, 20);
+						Condition.sleep();
 					}
 				}
 			} else {
@@ -157,6 +159,7 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 							return atLevelTwo();
 						}
 					}, 250, 20);
+					Condition.sleep();
 				}
 			} else if (atLevelTwo()) {
 				goUp();
@@ -167,30 +170,36 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 							return atLevelThree();
 						}
 					}, 250, 20);
+					Condition.sleep();
 				}
 			} else if (atLevelThree()) {
-				if (ctx.players.local().tile().distanceTo(TILE_LOOT) > 2) {
-					STATUS = "Walk to grapes";
-					ctx.movement.step(ctx.movement.closestOnMap(TILE_LOOT));
-					Condition.sleep();
-					while (ctx.players.local().inMotion()) {
+				final GroundItem Grapes = ctx.groundItems.select().id(ID_GRAPE).nearest().poll();
+				if (Grapes.valid()) {
+					if (ctx.players.local().tile().distanceTo(Grapes) < 2) {
+						STATUS = "Take grapes";
+						if (Random.nextInt(1, 50) == 25) {
+							Condition.sleep();
+						}
+						take(Grapes);
+						if (Random.nextInt(1, 40) == 20) {
+							Condition.sleep();
+						}
+					} else {
+						STATUS = "Walk to Grapes";
+						ctx.movement.step(ctx.movement.closestOnMap(Grapes).tile());
 						Condition.sleep();
 					}
 				} else {
-					final GroundItem Grapes = ctx.groundItems.select().id(ID_GRAPE).nearest().poll();
-					if (Grapes.valid()) {
-						STATUS = "Take grapes";
-						take(Grapes);
-					} else {
-						STATUS = "Waiting for spawn..";
-						antiBan();
-					}
+					STATUS = "Waiting for spawn..";
+					antiBan();
+					Condition.sleep();
 				}
 			} else {
 				if (ctx.bank.opened()) {
 					STATUS = "Bank close";
 					GRAPES_STORED = ctx.bank.select().id(ID_GRAPE).count(true);
 					ctx.bank.close();
+					Condition.sleep();
 				} else {
 					STATUS = "Walk to guild";
 					ctx.movement.newTilePath(PATH_TO_GUILD).traverse();
@@ -277,6 +286,36 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		return ctx.game.crosshair() == Crosshair.ACTION;
 	}
 	
+	private void logIn() {
+		final Component PLAY_NOW_WIDGET = ctx.widgets.component(906, 154);
+		if (PLAY_NOW_WIDGET.valid()) {
+			PLAY_NOW_WIDGET.click(true);
+			Condition.wait(new Callable<Boolean>() {
+				@Override
+				public Boolean call() throws Exception {
+					return ctx.game.loggedIn();
+				}
+			}, 300, 20);
+		}
+	}
+
+	private void antiPatternBreak() {
+		long millis = System.currentTimeMillis() - TIMER_SCRIPT;
+		long hours = millis / (1000 * 60 * 60);
+		millis -= hours * (1000 * 60 * 60);
+		long minutes = millis / (1000 * 60);
+		millis -= minutes * (1000 * 60);
+		if (ctx.game.loggedIn()) {
+			if (hours == 1 && minutes < 4 || hours > 1 && minutes < 4) {
+				ctx.game.logout(true);
+			}
+		} else {
+			if (minutes > 4) {
+				logIn();
+			}
+		}
+	}
+	
 	private int antiBan() {
 		int antiban = Random.nextInt(1, 3500);
 		switch (antiban) {
@@ -343,32 +382,8 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		g.setColor(Color.MAGENTA);
 		g.drawLine(mouseX - 5, mouseY + 5, mouseX + 5, mouseY - 5);
 		g.drawLine(mouseX + 5, mouseY + 5, mouseX - 5, mouseY - 5);
-		while (!mousePath.isEmpty() && mousePath.peek().isUp()) mousePath.remove();
-		Point clientCursor = ctx.input.getLocation();
-		MousePathPoint mpp = new MousePathPoint(clientCursor.x, clientCursor.y, 600);
-		if (mousePath.isEmpty() || !mousePath.getLast().equals(mpp)) mousePath.add(mpp);
-		MousePathPoint lastPoint = null;
-		for (MousePathPoint a : mousePath) {
-			if (lastPoint != null) {
-				g.drawLine(a.x, a.y, lastPoint.x, lastPoint.y);
-			}
-			lastPoint = a;
-		}
 	}
 	
-	private final LinkedList<MousePathPoint> mousePath = new LinkedList<MousePathPoint>();
-	@SuppressWarnings("serial")
-	private class MousePathPoint extends Point {
-		private long finishTime;
-		public MousePathPoint(int x, int y, int lastingTime) {
-			super(x, y);
-			finishTime = System.currentTimeMillis() + lastingTime;
-		}
-		public boolean isUp() {
-			return System.currentTimeMillis() > finishTime;
-		}
-	}
-
 	public String PerHour(int gained) {
 		return formatNumber((int) ((gained) * 3600000D / (System.currentTimeMillis() - TIMER_SCRIPT)));
 	}
