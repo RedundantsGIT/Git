@@ -144,6 +144,8 @@ public class Grapes extends PollingScript<org.powerbot.script.rt6.ClientContext>
 								return atLevelOne();
 							}
 						}, 250, 20);
+						Condition.sleep();
+						Condition.sleep();
 					}
 				} else {
 					STATUS = "Walk to door";
