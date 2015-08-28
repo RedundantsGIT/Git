@@ -31,21 +31,16 @@ import org.powerbot.script.rt6.Game.Crosshair;
 public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
 	private static long TIMER_SCRIPT = 0;
 	private static RenderingHints ANTIALIASING = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-	//private static String STATUS = "Starting...";
-
+	private static String STATUS = "Starting...";
 	private static final int ID_WINE = 245;
-	private static final int ID_LAW = 563;
-	
-	private static int WINE_GAINED;
+	private static int WINE_GAINED, WINE_STORED;
 	private static final Tile TILE_LOOT = new Tile(2952, 3474, 0);
-	
 	private final Tile[] PATH_BANK = new Tile[] { new Tile(2967, 3403, 0),
 			new Tile(2966, 3399, 0), new Tile(2965, 3396, 0),
 			new Tile(2965, 3391, 0), new Tile(2964, 3386, 0),
 			new Tile(2962, 3382, 0), new Tile(2958, 3381, 0),
 			new Tile(2954, 3381, 0), new Tile(2952, 3379, 0),
 			new Tile(2949, 3376, 0), new Tile(2945, 3368, 0) };
-	
 	private final Tile[] PATH_TEMPLE = new Tile[] { new Tile(2945, 3371, 0),
 			new Tile(2945, 3374, 0), new Tile(2950, 3376, 0),
 			new Tile(2952, 3378, 0), new Tile(2956, 3381, 0),
@@ -59,7 +54,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			new Tile(2948, 3448, 0), new Tile(2948, 3455, 0),
 			new Tile(2949, 3460, 0), new Tile(2951, 3465, 0),
 			new Tile(2953, 3468, 0), new Tile(2952, 3474, 0)};
-	
 	private final Area AREA_TEMPLE = new Area(new Tile(2944, 3482, 0),
 			new Tile(2944, 3471, 0), new Tile(2958, 3471, 0), new Tile(2958, 3481, 0));
 	
@@ -91,14 +85,17 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			return;
 		switch (state()) {
 		case CAMERA:
+			STATUS = "Set pitch";
 			ctx.camera.pitch(Random.nextInt(55, 65));
 			break;
 		case BANKING:
 			if (ctx.bank.inViewport()) {
 				if (ctx.bank.opened()) {
-					ctx.bank.depositInventory();
+					STATUS = "Deposit";
+					ctx.bank.deposit(ID_WINE, Amount.ALL);
 					Condition.sleep();
 				} else {
+					STATUS = "Open bank";
 					ctx.bank.open();
 				}
 			} else {
@@ -106,6 +103,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 					final Component TELEPORT_WIDGET = ctx.widgets.component(1465, 50);
 					final Component VARROCK_WIDGET = ctx.widgets.component(1092, 16);
 					if (ctx.players.local().animation() == -1) {
+						STATUS = "Teleporting";
 						if (VARROCK_WIDGET.valid()) {
 							VARROCK_WIDGET.click(true);
 							Condition.wait(new Callable<Boolean>() {
@@ -129,6 +127,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 						}
 					}
 				} else {
+					STATUS = "Walk to bank";
 					ctx.movement.newTilePath(PATH_BANK).traverse();
 				}
 			}
@@ -137,21 +136,25 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			final GroundItem Wine = ctx.groundItems.select().id(ID_WINE).nearest().poll();
 				if (AREA_TEMPLE.contains(ctx.players.local().tile())) {
 					if(ctx.players.local().tile().distanceTo(TILE_LOOT) > 0){
+						STATUS = "Walk to tile";
 						TILE_LOOT.matrix(ctx).interact("Walk here");
 						Condition.sleep();
-						ctx.camera.angle(Random.nextInt(0, 300));
+						ctx.camera.angle(Random.nextInt(0, 350));
 						while(ctx.players.local().inMotion()){
 							Condition.sleep();
 						}
 					}else{
 					if (!ctx.client().isSpellSelected()) {
+						STATUS = "Set spell";
 						Condition.sleep();
 						ctx.input.send("2");
 						Condition.sleep();
 					} else {
 						if (Wine.valid()) {
+							STATUS = "Take wine";
 							take(Wine);
 						} else {
+							STATUS = "Waiting";
 							antiBan();
 							if(Random.nextInt(1, 100) == 50){
 								Condition.sleep();
@@ -161,25 +164,19 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 				}
 			} else {
 				if (ctx.bank.opened()) {
-					if (!ctx.backpack.select().id(ID_LAW).isEmpty()) {
+					STATUS = "Close bank";
+					WINE_STORED = ctx.bank.select().id(ID_WINE).count(true);
 						ctx.bank.close();
 						Condition.sleep();
-					} else {
-						if (ctx.bank.select().id(ID_LAW).isEmpty() && ctx.backpack.select().id(ID_LAW).isEmpty()) {
-							ctx.controller.stop();
-						} else {
-							ctx.bank.withdraw(ID_LAW, Amount.ALL);
-							Condition.sleep();
-						}
-					}
 				} else {
+					STATUS = "Walk to temple";
 					ctx.movement.newTilePath(PATH_TEMPLE).traverse();
 				}
 			}
 			break;
 		}
 	}
-
+	
 	private State state() {
 		
 		if(ctx.camera.pitch() < 52){
@@ -203,7 +200,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		final Filter<Menu.Command> filter = new Filter<Menu.Command>() {
 			@Override
 			public boolean accept(Menu.Command arg0) {
-				return arg0.action.equalsIgnoreCase("Cast");
+				return arg0.action.equalsIgnoreCase("Cast") && arg0.option.equalsIgnoreCase("Telekinetic Grab -> Wine of Zamorak");
 			}
 
 		};
@@ -267,7 +264,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			ctx.camera.angle(Random.nextInt(21, 40));
 			break;
 		case 2:
-			ctx.camera.angle(Random.nextInt(0, 300));
+			ctx.camera.angle(Random.nextInt(0, 325));
 			break;
 		case 3:
 			ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
@@ -276,6 +273,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			final Component REST_WIDGET = ctx.widgets.component(1465, 40);
 			if(ctx.players.local().animation() == -1){
 			  REST_WIDGET.interact("Rest");
+			  Condition.sleep();
 			}
 			break;
 		}
@@ -285,11 +283,11 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	@Override
 	public void messaged(MessageEvent msg) {
 		String message = msg.text();
-		if (message.contains("You can only attack") || message.contains("You can't use") || message.contains("Nothing")) {
-			ctx.camera.angle(Random.nextInt(0, 300));
+		if (message.contains("You can only attack") || message.contains("You can't") || message.contains("Nothing")) {
+			ctx.camera.angle(Random.nextInt(0, 180));
 		}
 		
-		if (message.contains("You don't have enough")) {
+		if (message.contains("You do not")) {
 			ctx.controller.stop();
 		}
 	}
@@ -317,10 +315,12 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		g.setColor(Color.MAGENTA);
 		g.drawRect(5, 5, 190, 145);
 		g.setFont(FONT);
-		g.drawString("rWine", 70, 20);
+		g.drawString("rWine", 75, 20);
 		g.setColor(Color.WHITE);
 		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 10, 40);
 		g.drawString("Gained: " + NF.format(WINE_GAINED) + "(" + PerHour(WINE_GAINED) + "/h)", 10, 60);
+		g.drawString("Stored: " + NF.format(WINE_STORED), 10, 80);
+		g.drawString("Status: " + (STATUS), 10, 100);
 		drawMouse(g);
 	}
 	
