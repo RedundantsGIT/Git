@@ -137,6 +137,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 				if (AREA_TEMPLE.contains(ctx.players.local().tile())) {
 					if(ctx.players.local().tile().distanceTo(TILE_LOOT) > 0){
 						STATUS = "Walk to tile";
+						Condition.sleep();
 						TILE_LOOT.matrix(ctx).interact("Walk here");
 						Condition.sleep();
 						ctx.camera.angle(Random.nextInt(0, 350));
@@ -152,7 +153,13 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 					} else {
 						if (Wine.valid()) {
 							STATUS = "Take wine";
+							if (Random.nextInt(1, 50) == 25) {
+								Condition.sleep();
+							}
 							take(Wine);
+							if (Random.nextInt(1, 40) == 20) {
+								Condition.sleep();
+							}
 						} else {
 							STATUS = "Waiting";
 							antiBan();
