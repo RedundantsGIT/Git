@@ -163,9 +163,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 						} else {
 							STATUS = "Waiting";
 							antiBan();
-							if(Random.nextInt(1, 100) == 50){
-								Condition.sleep();
-							}
+							Condition.sleep();
 						}
 					}
 				}
@@ -290,10 +288,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	@Override
 	public void messaged(MessageEvent msg) {
 		String message = msg.text();
-		if (message.contains("You can only attack") || message.contains("You can't") || message.contains("Nothing")) {
-			ctx.camera.angle(Random.nextInt(0, 180));
-		}
-		
 		if (message.contains("You do not")) {
 			ctx.controller.stop();
 		}
