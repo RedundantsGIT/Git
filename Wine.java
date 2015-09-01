@@ -163,7 +163,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 						} else {
 							STATUS = "Waiting";
 							antiBan();
-							Condition.sleep();
 						}
 					}
 				}
