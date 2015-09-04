@@ -34,7 +34,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	private static String STATUS = "Starting...";
 	private static final int ID_WINE = 245;
 	private static int WINE_GAINED, WINE_STORED;
-	private static final Tile TILE_LOOT = new Tile(2952, 3474, 0);
+	private static final Tile TILE_LOOT = new Tile(2951, 3473, 0);
 	private final Tile[] PATH_BANK = new Tile[] { new Tile(2967, 3403, 0),
 			new Tile(2966, 3399, 0), new Tile(2965, 3396, 0),
 			new Tile(2965, 3391, 0), new Tile(2964, 3386, 0),
@@ -86,7 +86,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		switch (state()) {
 		case CAMERA:
 			STATUS = "Set pitch";
-			ctx.camera.pitch(Random.nextInt(55, 65));
+			ctx.camera.pitch(Random.nextInt(70, 75));
 			break;
 		case BANKING:
 			if (ctx.bank.inViewport()) {
@@ -136,15 +136,16 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			final GroundItem Wine = ctx.groundItems.select().id(ID_WINE).nearest().poll();
 				if (AREA_TEMPLE.contains(ctx.players.local().tile())) {
 					if(ctx.players.local().tile().distanceTo(TILE_LOOT) > 0){
-						STATUS = "Walk to tile";
+					STATUS = "Walk to tile";
+					Condition.sleep();
+					TILE_LOOT.matrix(ctx).interact("Walk here");
+					Condition.sleep();
+					ctx.camera.angle(Random.nextInt(0, 350));
+					while (ctx.players.local().inMotion()) {
 						Condition.sleep();
-						TILE_LOOT.matrix(ctx).interact("Walk here");
-						Condition.sleep();
-						ctx.camera.angle(Random.nextInt(0, 350));
-						while(ctx.players.local().inMotion()){
-							Condition.sleep();
-						}
-					}else{
+					}
+					moveToPoint();
+				} else {
 					if (!ctx.client().isSpellSelected()) {
 						STATUS = "Set spell";
 						Condition.sleep();
@@ -153,13 +154,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 					} else {
 						if (Wine.valid()) {
 							STATUS = "Take wine";
-							if (Random.nextInt(1, 50) == 25) {
-								Condition.sleep();
-							}
 							take(Wine);
-							if (Random.nextInt(1, 40) == 20) {
-								Condition.sleep();
-							}
 						} else {
 							STATUS = "Waiting";
 							antiBan();
@@ -181,9 +176,10 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		}
 	}
 	
+	
 	private State state() {
 		
-		if(ctx.camera.pitch() < 52){
+		if(ctx.camera.pitch() < 69){
 			return State.CAMERA;
 		}
 
@@ -266,22 +262,34 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		switch (antiban) {
 		case 1:
 			ctx.camera.angle(Random.nextInt(21, 40));
+			moveToPoint();
 			break;
 		case 2:
 			ctx.camera.angle(Random.nextInt(0, 325));
+			moveToPoint();
 			break;
 		case 3:
 			ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
+			Condition.sleep(Random.nextInt(25, 75));
+			moveToPoint();
 			break;
 		case 5:
 			final Component REST_WIDGET = ctx.widgets.component(1465, 40);
 			if(ctx.players.local().animation() == -1){
 			  REST_WIDGET.interact("Rest");
-			  Condition.sleep();
+			  Condition.sleep(Random.nextInt(25, 200));
+			  moveToPoint();
 			}
 			break;
 		}
 		return 0;
+	}
+	
+	private void moveToPoint() {
+		Tile LOOT_TILE = new Tile(2952, 3473, 0);
+		final Point p = LOOT_TILE.matrix(ctx).point(0.5, 0.5, -417);
+		ctx.input.move(p);
+		Condition.sleep(Random.nextInt(10, 100));
 	}
 	
 	@Override
