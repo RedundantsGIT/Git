@@ -34,7 +34,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	private static String STATUS = "Starting...";
 	private static final int ID_WINE = 245;
 	private static int WINE_GAINED, WINE_STORED;
-	private static final Tile TILE_LOOT = new Tile(2951, 3473, 0);
 	private final Tile[] PATH_BANK = new Tile[] { new Tile(2967, 3403, 0),
 			new Tile(2966, 3399, 0), new Tile(2965, 3396, 0),
 			new Tile(2965, 3391, 0), new Tile(2964, 3386, 0),
@@ -134,6 +133,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			break;
 		case GRAB:
 			final GroundItem Wine = ctx.groundItems.select().id(ID_WINE).nearest().poll();
+			final Tile TILE_LOOT = new Tile(2952, 3474, 0);
 				if (AREA_TEMPLE.contains(ctx.players.local().tile())) {
 					if(ctx.players.local().tile().distanceTo(TILE_LOOT) > 0){
 					STATUS = "Walk to tile";
