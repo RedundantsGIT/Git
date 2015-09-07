@@ -91,6 +91,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			if (ctx.bank.inViewport()) {
 				if (ctx.bank.opened()) {
 					STATUS = "Deposit";
+					Condition.sleep();
 					ctx.bank.deposit(ID_WINE, Amount.ALL);
 					Condition.sleep();
 				} else {
@@ -104,6 +105,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 					if (ctx.players.local().animation() == -1) {
 						STATUS = "Teleporting";
 						if (VARROCK_WIDGET.valid()) {
+							Condition.sleep();
 							VARROCK_WIDGET.click(true);
 							Condition.wait(new Callable<Boolean>() {
 								@Override
@@ -115,6 +117,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 								Condition.sleep(Random.nextInt(1000, 3200));
 							}
 						} else {
+							Condition.sleep();
 							TELEPORT_WIDGET.click(true);
 							Condition.wait(new Callable<Boolean>() {
 								@Override
@@ -133,43 +136,33 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			break;
 		case GRAB:
 			final GroundItem Wine = ctx.groundItems.select().id(ID_WINE).nearest().poll();
-			final Tile TILE_LOOT = new Tile(2952, 3474, 0);
-				if (AREA_TEMPLE.contains(ctx.players.local().tile())) {
-					if(ctx.players.local().tile().distanceTo(TILE_LOOT) > 0){
-					STATUS = "Walk to tile";
+			if (AREA_TEMPLE.contains(ctx.players.local().tile())) {
+				if (!ctx.client().isSpellSelected()) {
+					STATUS = "Set spell";
 					Condition.sleep();
-					TILE_LOOT.matrix(ctx).interact("Walk here");
+					ctx.input.send("2");
 					Condition.sleep();
-					ctx.camera.angle(Random.nextInt(0, 350));
-					while (ctx.players.local().inMotion()) {
-						Condition.sleep();
-					}
 				} else {
-					if (!ctx.client().isSpellSelected()) {
-						STATUS = "Set spell";
-						Condition.sleep();
-						ctx.input.send("2");
-						Condition.sleep();
-					} else {
-						if (Wine.valid()) {
-							STATUS = "Take wine";
-							if (Random.nextInt(1, 50) == 25) {
-								Condition.sleep();
-							}
-							take(Wine);
-							if (Random.nextInt(1, 40) == 20) {
-								Condition.sleep();
-							}
-						} else {
-							STATUS = "Waiting";
-							antiBan();
+					if (Wine.valid()) {
+						STATUS = "Take wine";
+						if (Random.nextInt(1, 50) == 25) {
+							Condition.sleep();
 						}
+						take(Wine);
+						if (Random.nextInt(1, 40) == 20) {
+							Condition.sleep();
+						}
+					} else {
+						STATUS = "Waiting";
+						antiBan();
+						Condition.sleep();
 					}
 				}
 			} else {
 				if (ctx.bank.opened()) {
 					STATUS = "Close bank";
 					WINE_STORED = ctx.bank.select().id(ID_WINE).count(true);
+					Condition.sleep();
 						ctx.bank.close();
 						Condition.sleep();
 				} else {
