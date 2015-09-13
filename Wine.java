@@ -8,7 +8,6 @@ import java.awt.Point;
 import java.awt.RenderingHints;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.util.LinkedList;
 import java.util.concurrent.Callable;
 
 import org.powerbot.script.Area;
@@ -79,7 +78,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 
 	@Override
 	public void poll() {
-		antiPatternBreak();
+		breakHandler();
 		if (!ctx.game.loggedIn())
 			return;
 		switch (state()) {
@@ -91,9 +90,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			if (ctx.bank.inViewport()) {
 				if (ctx.bank.opened()) {
 					STATUS = "Deposit";
-					Condition.sleep();
 					ctx.bank.deposit(ID_WINE, Amount.ALL);
-					Condition.sleep();
 				} else {
 					STATUS = "Open bank";
 					ctx.bank.open();
@@ -105,7 +102,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 					if (ctx.players.local().animation() == -1) {
 						STATUS = "Teleporting";
 						if (VARROCK_WIDGET.valid()) {
-							Condition.sleep();
 							VARROCK_WIDGET.click(true);
 							Condition.wait(new Callable<Boolean>() {
 								@Override
@@ -114,10 +110,9 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 								}
 							}, 325, 20);
 							while(ctx.players.local().animation() != -1){
-								Condition.sleep(Random.nextInt(1000, 3200));
+								Condition.sleep(Random.nextInt(1000, 3500));
 							}
 						} else {
-							Condition.sleep();
 							TELEPORT_WIDGET.click(true);
 							Condition.wait(new Callable<Boolean>() {
 								@Override
@@ -125,7 +120,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 									return VARROCK_WIDGET.valid();
 								}
 							}, 250, 20);
-							Condition.sleep();
 						}
 					}
 				} else {
@@ -139,19 +133,11 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			if (AREA_TEMPLE.contains(ctx.players.local().tile())) {
 				if (!ctx.client().isSpellSelected()) {
 					STATUS = "Set spell";
-					Condition.sleep();
 					ctx.input.send("2");
-					Condition.sleep();
 				} else {
 					if (Wine.valid()) {
 						STATUS = "Take wine";
-						if (Random.nextInt(1, 50) == 25) {
-							Condition.sleep();
-						}
 						take(Wine);
-						if (Random.nextInt(1, 40) == 20) {
-							Condition.sleep();
-						}
 					} else {
 						STATUS = "Waiting";
 						antiBan();
@@ -161,9 +147,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 				if (ctx.bank.opened()) {
 					STATUS = "Close bank";
 					WINE_STORED = ctx.bank.select().id(ID_WINE).count(true);
-					Condition.sleep();
-						ctx.bank.close();
-						Condition.sleep();
+					ctx.bank.close();
 				} else {
 					STATUS = "Walk to temple";
 					ctx.movement.newTilePath(PATH_TEMPLE).traverse();
@@ -215,7 +199,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		}
 		if (ctx.backpack.select().id(ID_WINE).count() == count + 1) {
 			WINE_GAINED++;
-			Condition.sleep(Random.nextInt(25, 200));
+			Condition.sleep(Random.nextInt(25, 550));
 			return true;
 		}
 		return false;
@@ -225,20 +209,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		return ctx.game.crosshair() == Crosshair.ACTION;
 	}
 	
-	private void logIn() {
-		final Component PLAY_NOW_WIDGET = ctx.widgets.component(906, 154);
-		if (PLAY_NOW_WIDGET.valid()) {
-			PLAY_NOW_WIDGET.click(true);
-			Condition.wait(new Callable<Boolean>() {
-				@Override
-				public Boolean call() throws Exception {
-					return ctx.game.loggedIn();
-				}
-			}, 300, 20);
-		}
-	}
-
-	private void antiPatternBreak() {
+	private void breakHandler() {
 		long millis = System.currentTimeMillis() - TIMER_SCRIPT;
 		long hours = millis / (1000 * 60 * 60);
 		millis -= hours * (1000 * 60 * 60);
@@ -250,13 +221,23 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			}
 		} else {
 			if (minutes > 3) {
-				logIn();
+				final Component PLAY_NOW_WIDGET = ctx.widgets.component(906, 154);
+				if (PLAY_NOW_WIDGET.valid()) {
+					PLAY_NOW_WIDGET.click(true);
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return ctx.game.loggedIn();
+						}
+					}, 300, 20);
+					Condition.sleep(Random.nextInt(3500, 8500));
+				}
 			}
 		}
 	}
 	
 	private int antiBan() {
-		int antiban = Random.nextInt(1, 3500);
+		int antiban = Random.nextInt(1, 4000);
 		switch (antiban) {
 		case 1:
 			ctx.camera.angle(Random.nextInt(21, 40));
@@ -266,13 +247,11 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			break;
 		case 3:
 			ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
-			Condition.sleep(Random.nextInt(25, 75));
 			break;
 		case 5:
 			final Component REST_WIDGET = ctx.widgets.component(1465, 40);
 			if(ctx.players.local().animation() == -1){
 			  REST_WIDGET.interact("Rest");
-			  Condition.sleep(Random.nextInt(50, 350));
 			}
 			break;
 		}
@@ -287,23 +266,19 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		}
 	}
 
-	
 	final static Color BLACK = new Color(25, 0, 0, 200);
 	final static Font FONT = new Font("Comic Sans MS", 1, 12);
 	final static NumberFormat NF = new DecimalFormat("###,###,###,###");
 
 	@Override
 	public void repaint(Graphics g1) {
-
 		final Graphics2D g = (Graphics2D) g1;
-
 		long millis = System.currentTimeMillis() - TIMER_SCRIPT;
 		long hours = millis / (1000 * 60 * 60);
 		millis -= hours * (1000 * 60 * 60);
 		long minutes = millis / (1000 * 60);
 		millis -= minutes * (1000 * 60);
 		long seconds = millis / 1000;
-		
 		g.setRenderingHints(ANTIALIASING);
 		g.setColor(BLACK);
 		g.fillRect(5, 5, 190, 145);
@@ -325,30 +300,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		g.setColor(Color.MAGENTA);
 		g.drawLine(mouseX - 5, mouseY + 5, mouseX + 5, mouseY - 5);
 		g.drawLine(mouseX + 5, mouseY + 5, mouseX - 5, mouseY - 5);
-		while (!mousePath.isEmpty() && mousePath.peek().isUp()) mousePath.remove();
-		Point clientCursor = ctx.input.getLocation();
-		MousePathPoint mpp = new MousePathPoint(clientCursor.x, clientCursor.y, 600);
-		if (mousePath.isEmpty() || !mousePath.getLast().equals(mpp)) mousePath.add(mpp);
-		MousePathPoint lastPoint = null;
-		for (MousePathPoint a : mousePath) {
-			if (lastPoint != null) {
-				g.drawLine(a.x, a.y, lastPoint.x, lastPoint.y);
-			}
-			lastPoint = a;
-		}
-	}
-	
-	private final LinkedList<MousePathPoint> mousePath = new LinkedList<MousePathPoint>();
-	@SuppressWarnings("serial")
-	private class MousePathPoint extends Point {
-		private long finishTime;
-		public MousePathPoint(int x, int y, int lastingTime) {
-			super(x, y);
-			finishTime = System.currentTimeMillis() + lastingTime;
-		}
-		public boolean isUp() {
-			return System.currentTimeMillis() > finishTime;
-		}
 	}
 
 	public String PerHour(int gained) {
