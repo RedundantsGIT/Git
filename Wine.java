@@ -137,14 +137,23 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 					if (!ctx.client().isSpellSelected()) {
 						STATUS = "Set spell";
 						ctx.input.send("2");
+						Condition.wait(new Callable<Boolean>() {
+							@Override
+							public Boolean call() throws Exception {
+								return ctx.client().isSpellSelected();
+							}
+						}, 250, 6);
 					} else {
 						if (Wine.valid()) {
 							STATUS = "Take wine";
 							take(Wine);
 						} else {
+							int rand = Random.nextInt(97, 106);
+							if(ctx.input.getLocation().distance(HOVER_TILE.matrix(ctx).point(rand)) > 10) {
+								STATUS = "Hover";
+							     ctx.input.move(HOVER_TILE.matrix(ctx).point(rand));
+							}
 							STATUS = "Waiting";
-							final Point p = HOVER_TILE.matrix(ctx).point(0.5,0.5, -410);
-							ctx.input.move(p);
 							antiPattern();
 						}
 					}
@@ -183,7 +192,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	
 	private boolean take(GroundItem g) {
 		final int count = ctx.backpack.select().id(ID_WINE).count();
-		final Point p = g.tile().matrix(ctx).point(0.5, 0.5, -410);
+		final Point p = g.tile().matrix(ctx).point(0.5, 0.5, -405);
 		if(ctx.input.click(true)){
 			if (didInteract()) {
 				Condition.wait(new Callable<Boolean>() {
@@ -266,6 +275,10 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		String message = msg.text();
 		if (message.contains("You do not")) {
 			ctx.controller.stop();
+		}
+		
+		if(message.contains("You can't use Telekinetic")){
+			ctx.camera.angle(Random.nextInt(0, 325));
 		}
 	}
 
