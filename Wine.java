@@ -12,7 +12,6 @@ import java.util.concurrent.Callable;
 
 import org.powerbot.script.Area;
 import org.powerbot.script.Condition;
-import org.powerbot.script.Filter;
 import org.powerbot.script.MessageEvent;
 import org.powerbot.script.MessageListener;
 import org.powerbot.script.PaintListener;
@@ -22,7 +21,6 @@ import org.powerbot.script.Tile;
 import org.powerbot.script.Script.Manifest;
 import org.powerbot.script.rt6.Component;
 import org.powerbot.script.rt6.GroundItem;
-import org.powerbot.script.rt6.Menu;
 import org.powerbot.script.rt6.Bank.Amount;
 import org.powerbot.script.rt6.Game.Crosshair;
 
@@ -84,7 +82,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		switch (state()) {
 		case CAMERA:
 			STATUS = "Set pitch";
-			ctx.camera.pitch(Random.nextInt(62, 68));
+			ctx.camera.pitch(Random.nextInt(72, 78));
 			break;
 		case BANKING:
 			if (ctx.bank.inViewport()) {
@@ -133,7 +131,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			final Tile HOVER_TILE = new Tile(2952, 3473, 0);
 			if (AREA_TEMPLE.contains(ctx.players.local().tile())) {
 				if (LOOT_TILE.matrix(ctx).inViewport() && ctx.players.local().tile().distanceTo(LOOT_TILE) > 0) {
-					LOOT_TILE.matrix(ctx).interact("Walk here");
+					LOOT_TILE.matrix(ctx).click(true);
 					Condition.sleep(Random.nextInt(2500, 4000));
 				} else {
 					if (!ctx.client().isSpellSelected()) {
@@ -168,7 +166,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	
 	private State state() {
 		
-		if(ctx.camera.pitch() < 60){
+		if(ctx.camera.pitch() < 69){
 			return State.CAMERA;
 		}
 
@@ -186,14 +184,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	private boolean take(GroundItem g) {
 		final int count = ctx.backpack.select().id(ID_WINE).count();
 		final Point p = g.tile().matrix(ctx).point(0.5, 0.5, -417);
-		final Filter<Menu.Command> filter = new Filter<Menu.Command>() {
-			@Override
-			public boolean accept(Menu.Command arg0) {
-				return arg0.action.equalsIgnoreCase("Cast") && arg0.option.equalsIgnoreCase("Telekinetic Grab -> Wine of Zamorak");
-			}
-
-		};
-		if (ctx.menu.click(filter)) {
+		if(ctx.input.click(true)){
 			if (didInteract()) {
 				Condition.wait(new Callable<Boolean>() {
 					@Override
