@@ -150,7 +150,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 						} else {
 							int rand = Random.nextInt(97, 106);
 							if(ctx.input.getLocation().distance(HOVER_TILE.matrix(ctx).point(rand)) > 10) {
-								STATUS = "Hover";
+								STATUS = "HOVER";
 							     ctx.input.move(HOVER_TILE.matrix(ctx).point(rand));
 							}
 							STATUS = "Waiting";
@@ -192,8 +192,8 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	
 	private boolean take(GroundItem g) {
 		final int count = ctx.backpack.select().id(ID_WINE).count();
-		final Point p = g.tile().matrix(ctx).point(0.5, 0.5, -405);
-		if(ctx.input.click(true)){
+		final Point p = g.tile().matrix(ctx).point(0.5, 0.5, -400);
+		if (ctx.input.click(p, true)){
 			if (didInteract()) {
 				Condition.wait(new Callable<Boolean>() {
 					@Override
@@ -202,9 +202,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 					}
 				}, 250, 20);
 			}
-		} else {
-			ctx.input.move(p);
-		}
+		} 
 		if (ctx.backpack.select().id(ID_WINE).count() == count + 1) {
 			WINE_GAINED++;
 			Condition.sleep(Random.nextInt(25, 550));
