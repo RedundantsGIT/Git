@@ -132,8 +132,8 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			final Tile LOOT_TILE = new Tile(2952, 3474, 0);
 			final Tile HOVER_TILE = new Tile(2952, 3473, 0);
 			if (AREA_TEMPLE.contains(ctx.players.local().tile())) {
-				if (ctx.players.local().tile().distanceTo(LOOT_TILE) > 0) {
-					LOOT_TILE.matrix(ctx).click(true);
+				if (LOOT_TILE.matrix(ctx).inViewport() && ctx.players.local().tile().distanceTo(LOOT_TILE) > 0) {
+					LOOT_TILE.matrix(ctx).interact("Walk here");
 					Condition.sleep(Random.nextInt(2500, 4000));
 				} else {
 					if (!ctx.client().isSpellSelected()) {
