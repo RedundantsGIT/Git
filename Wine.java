@@ -30,7 +30,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	private static RenderingHints ANTIALIASING = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	private static String STATUS = "Starting...";
 	private static final int ID_WINE = 245;
-	private static int WINE_GAINED, WINE_STORED;
+	private static int WINE_GAINED, WINE_STORED, TRIES;
 	private final Tile[] PATH_BANK = new Tile[] { new Tile(2967, 3403, 0),
 			new Tile(2966, 3399, 0), new Tile(2965, 3396, 0),
 			new Tile(2965, 3391, 0), new Tile(2964, 3386, 0),
@@ -126,15 +126,16 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			}
 			break;
 		case GRAB:
-			final GroundItem Wine = ctx.groundItems.select().id(ID_WINE).nearest().poll();
 			final Tile LOOT_TILE = new Tile(2952, 3474, 0);
 			final Tile HOVER_TILE = new Tile(2952, 3473, 0);
+			final GroundItem Wine = ctx.groundItems.select().id(ID_WINE).nearest().poll();
+			if(TRIES < 3){
 			if (AREA_TEMPLE.contains(ctx.players.local().tile())) {
 				if (LOOT_TILE.matrix(ctx).inViewport() && ctx.players.local().tile().distanceTo(LOOT_TILE) > 0) {
 					LOOT_TILE.matrix(ctx).click(true);
 					Condition.sleep(Random.nextInt(2500, 4000));
 				} else {
-					if (!ctx.client().isSpellSelected()) {
+					if (!ctx.client().isSpellSelected() && ctx.players.local().tile().distanceTo(LOOT_TILE) == 0) {
 						STATUS = "Set spell";
 						ctx.input.send("2");
 						Condition.wait(new Callable<Boolean>() {
@@ -147,6 +148,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 						if (Wine.valid()) {
 							STATUS = "Take wine";
 							take(Wine);
+							TRIES ++;
 						} else {
 							int rand = Random.nextInt(97, 106);
 							if(ctx.input.getLocation().distance(HOVER_TILE.matrix(ctx).point(rand)) > 10) {
@@ -156,16 +158,17 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 							STATUS = "Waiting";
 							antiPattern();
 						}
+						}
 					}
-				}
-			} else {
-				if (ctx.bank.opened()) {
-					STATUS = "Close bank";
-					WINE_STORED = ctx.bank.select().id(ID_WINE).count(true);
-					ctx.bank.close();
 				} else {
-					STATUS = "Walk to temple";
-					ctx.movement.newTilePath(PATH_TEMPLE).traverse();
+					if (ctx.bank.opened()) {
+						STATUS = "Close bank";
+						WINE_STORED = ctx.bank.select().id(ID_WINE).count(true);
+						ctx.bank.close();
+					} else {
+						STATUS = "Walk to temple";
+						ctx.movement.newTilePath(PATH_TEMPLE).traverse();
+					}
 				}
 			}
 			break;
@@ -174,13 +177,15 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	
 	
 	private State state() {
-		
-		if(ctx.camera.pitch() < 69){
-			return State.CAMERA;
-		}
 
-		if (ctx.backpack.select().count() == 28) {
-			return State.BANKING;
+		if (TRIES < 3) {
+			if (ctx.camera.pitch() < 69) {
+				return State.CAMERA;
+			}
+
+			if (ctx.backpack.select().count() == 28) {
+				return State.BANKING;
+			}
 		}
 
 		return State.GRAB;
@@ -205,7 +210,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		} 
 		if (ctx.backpack.select().id(ID_WINE).count() == count + 1) {
 			WINE_GAINED++;
-			Condition.sleep(Random.nextInt(25, 550));
 			return true;
 		}
 		return false;
@@ -216,18 +220,33 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	}
 	
 	private void breakHandler() {
-		long millis = System.currentTimeMillis() - TIMER_SCRIPT;
-		long hours = millis / (1000 * 60 * 60);
-		millis -= hours * (1000 * 60 * 60);
-		long minutes = millis / (1000 * 60);
-		millis -= minutes * (1000 * 60);
+		final Component LogoutMenu = ctx.widgets.component(1477,68).component(1);
+		final Component LobbyMenu = ctx.widgets.component(26, 14);
 		if (ctx.game.loggedIn()) {
-			if (hours == 1 && minutes < 3 || hours > 1 && minutes < 3) {
-				ctx.game.logout(true);
+			if (TRIES > 2) {
+				if (LobbyMenu.visible()) {
+					LobbyMenu.click(true);
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return !ctx.game.loggedIn();
+						}
+					}, 250, 20);
+				} else {
+					LogoutMenu.click(true);
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return LobbyMenu.visible();
+						}
+					}, 350, 20);
+				}
 			}
 		} else {
-			if (minutes > 3) {
-				final Component PLAY_NOW_WIDGET = ctx.widgets.component(906, 154);
+			if (TRIES > 0) {
+				TRIES = 0;
+			} else {
+				final Component PLAY_NOW_WIDGET = ctx.widgets.component(906,154);
 				if (PLAY_NOW_WIDGET.valid()) {
 					PLAY_NOW_WIDGET.click(true);
 					Condition.wait(new Callable<Boolean>() {
@@ -235,15 +254,14 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 						public Boolean call() throws Exception {
 							return ctx.game.loggedIn();
 						}
-					}, 300, 20);
-					Condition.sleep(Random.nextInt(3500, 8500));
+					}, 350, 20);
 				}
 			}
 		}
 	}
 	
 	private int antiPattern() {
-		int antiban = Random.nextInt(1, 4000);
+		int antiban = Random.nextInt(1, 3500);
 		switch (antiban) {
 		case 1:
 			ctx.camera.angle(Random.nextInt(21, 40));
@@ -276,6 +294,10 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		}
 		
 		if(message.contains("You can't use Telekinetic")){
+			ctx.camera.angle(Random.nextInt(0, 325));
+		}
+		
+		if(message.contains("You can only attack")){
 			ctx.camera.angle(Random.nextInt(0, 325));
 		}
 	}
