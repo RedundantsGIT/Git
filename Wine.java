@@ -150,7 +150,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 						if (Wine.valid()) {
 							STATUS = "Take wine";
 							take(Wine);
-							TRIES ++;
 						} else {
 							int rand = Random.nextInt(97, 106);
 							if(ctx.input.getLocation().distance(HOVER_TILE.matrix(ctx).point(rand)) > 10) {
@@ -209,6 +208,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		};
 		if (ctx.menu.click(filter)) {
 			if (didInteract()) {
+				TRIES++;
 				Condition.wait(new Callable<Boolean>() {
 					@Override
 					public Boolean call() throws Exception {
