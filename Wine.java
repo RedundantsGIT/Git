@@ -12,6 +12,7 @@ import java.util.concurrent.Callable;
 
 import org.powerbot.script.Area;
 import org.powerbot.script.Condition;
+import org.powerbot.script.Filter;
 import org.powerbot.script.MessageEvent;
 import org.powerbot.script.MessageListener;
 import org.powerbot.script.PaintListener;
@@ -23,6 +24,7 @@ import org.powerbot.script.rt6.Component;
 import org.powerbot.script.rt6.GroundItem;
 import org.powerbot.script.rt6.Bank.Amount;
 import org.powerbot.script.rt6.Game.Crosshair;
+import org.powerbot.script.rt6.Menu;
 
 @Manifest(name = "rWine", description = "Loots wine from falador", properties = "hidden=true")
 public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
@@ -157,7 +159,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 							}
 							STATUS = "Waiting";
 							antiPattern();
-						}
+							}
 						}
 					}
 				} else {
@@ -197,8 +199,15 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	
 	private boolean take(GroundItem g) {
 		final int count = ctx.backpack.select().id(ID_WINE).count();
-		final Point p = g.tile().matrix(ctx).point(0.5, 0.5, -400);
-		if (ctx.input.click(p, true)){
+		final Point p = g.tile().matrix(ctx).point(0.5, 0.5, -417);
+		final Filter<Menu.Command> filter = new Filter<Menu.Command>() {
+			@Override
+			public boolean accept(Menu.Command arg0) {
+				return arg0.action.equalsIgnoreCase("Cast") && arg0.option.equalsIgnoreCase("Telekinetic Grab -> Wine of Zamorak");
+			}
+
+		};
+		if (ctx.menu.click(filter)) {
 			if (didInteract()) {
 				Condition.wait(new Callable<Boolean>() {
 					@Override
@@ -207,9 +216,12 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 					}
 				}, 250, 20);
 			}
-		} 
+		} else {
+			ctx.input.move(p);
+		}
 		if (ctx.backpack.select().id(ID_WINE).count() == count + 1) {
 			WINE_GAINED++;
+			Condition.sleep(Random.nextInt(25, 300));
 			return true;
 		}
 		return false;
@@ -294,10 +306,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		}
 		
 		if(message.contains("You can't use Telekinetic")){
-			ctx.camera.angle(Random.nextInt(0, 325));
-		}
-		
-		if(message.contains("You can only attack")){
 			ctx.camera.angle(Random.nextInt(0, 325));
 		}
 	}
