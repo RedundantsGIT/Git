@@ -277,21 +277,21 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		switch (antiban) {
 		case 1:
 			ctx.camera.angle(Random.nextInt(21, 40));
-			Condition.sleep(Random.nextInt(25, 600));
+			Condition.sleep(Random.nextInt(25, 750));
 			break;
 		case 2:
 			ctx.camera.angle(Random.nextInt(0, 325));
-			Condition.sleep(Random.nextInt(50, 800));
+			Condition.sleep(Random.nextInt(50, 900));
 			break;
 		case 3:
 			ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
-			Condition.sleep(Random.nextInt(50, 400));
+			Condition.sleep(Random.nextInt(50, 900));
 			break;
 		case 5:
 			final Component REST_WIDGET = ctx.widgets.component(1465, 40);
 			if(ctx.players.local().animation() == -1){
 			  REST_WIDGET.interact("Rest");
-			  Condition.sleep(Random.nextInt(50, 500));
+			  Condition.sleep(Random.nextInt(50, 300));
 			}
 			break;
 		}
