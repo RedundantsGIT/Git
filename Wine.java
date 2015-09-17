@@ -266,7 +266,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		switch (antiban) {
 		case 1:
 			ctx.camera.angle(Random.nextInt(21, 40));
-			Condition.sleep(Random.nextInt(25, 750));
+			Condition.sleep(Random.nextInt(25, 500));
 			break;
 		case 2:
 			ctx.camera.angle(Random.nextInt(0, 325));
