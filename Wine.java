@@ -126,14 +126,14 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			}
 			break;
 		case GRAB:
-			final Tile LOOT_TILE = new Tile(2952, 3474, 0);
+			final Tile LOOT_TILE = new Tile(2951, 3473, 0);
 			final Tile HOVER_TILE = new Tile(2952, 3473, 0);
 			final GroundItem Wine = ctx.groundItems.select().id(ID_WINE).nearest().poll();
 			if(TRIES < 3){
 			if (AREA_TEMPLE.contains(ctx.players.local().tile())) {
 				if (LOOT_TILE.matrix(ctx).inViewport() && ctx.players.local().tile().distanceTo(LOOT_TILE) > 0) {
 					LOOT_TILE.matrix(ctx).click(true);
-					Condition.sleep(Random.nextInt(2500, 4000));
+					Condition.sleep(Random.nextInt(2500, 3500));
 				} else {
 					if (!ctx.client().isSpellSelected() && ctx.players.local().tile().distanceTo(LOOT_TILE) == 0) {
 						STATUS = "Set spell";
@@ -266,7 +266,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		switch (antiban) {
 		case 1:
 			ctx.camera.angle(Random.nextInt(21, 40));
-			Condition.sleep(Random.nextInt(25, 500));
+			Condition.sleep(Random.nextInt(25, 750));
 			break;
 		case 2:
 			ctx.camera.angle(Random.nextInt(0, 325));
