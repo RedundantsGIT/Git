@@ -126,7 +126,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			}
 			break;
 		case GRAB:
-			final Tile LOOT_TILE = new Tile(2951, 3473, 0);
+			final Tile LOOT_TILE = new Tile(2952, 3474, 0);
 			final Tile HOVER_TILE = new Tile(2952, 3473, 0);
 			final GroundItem Wine = ctx.groundItems.select().id(ID_WINE).nearest().poll();
 			if(TRIES < 3){
