@@ -75,8 +75,10 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 
 	@Override
 	public void poll() {
-		if(!ctx.game.loggedIn())
-			return;
+		if(!ctx.game.loggedIn()){
+			if(TRIES > 0)
+				TRIES = 0;
+		}else{
 			switch (state()) {
 			case CAMERA:
 			STATUS = "Set pitch";
@@ -182,20 +184,21 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 							}
 							STATUS = "Waiting";
 							antiPattern();
+							}
 						}
 					}
-				}
-			} else {
-				if (ctx.bank.opened()) {
-					STATUS = "Close bank";
-					WINE_STORED = ctx.bank.select().id(ID_WINE).count(true);
-					ctx.bank.close();
 				} else {
-					STATUS = "Walk to temple";
-					ctx.movement.newTilePath(PATH_TEMPLE).traverse();
+					if (ctx.bank.opened()) {
+						STATUS = "Close bank";
+						WINE_STORED = ctx.bank.select().id(ID_WINE).count(true);
+						ctx.bank.close();
+					} else {
+						STATUS = "Walk to temple";
+						ctx.movement.newTilePath(PATH_TEMPLE).traverse();
+					}
 				}
+				break;
 			}
-			break;
 		}
 	}
 	
