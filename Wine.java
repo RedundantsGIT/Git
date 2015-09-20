@@ -151,17 +151,16 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			final Tile HOVER_TILE = new Tile(2952, 3473, 0);
 			final GroundItem Wine = ctx.groundItems.select().id(ID_WINE).nearest().poll();
 			if (AREA_TEMPLE.contains(ctx.players.local().tile())) {
-				if (LOOT_TILE.matrix(ctx).inViewport()
-						&& ctx.players.local().tile() != LOOT_TILE) {
+				if (LOOT_TILE.matrix(ctx).inViewport() && ctx.players.local().tile().distanceTo(LOOT_TILE) > 0) {
 					LOOT_TILE.matrix(ctx).click(true);
 					Condition.wait(new Callable<Boolean>() {
 						@Override
 						public Boolean call() throws Exception {
-							return ctx.players.local().tile() == LOOT_TILE;
+							return ctx.players.local().tile().distanceTo(LOOT_TILE) < 1;
 						}
-					}, 250, 6);
+					}, 250, 12);
 				} else {
-					if (!ctx.client().isSpellSelected() && ctx.players.local().tile().distanceTo(LOOT_TILE) == 0) {
+					if (!ctx.client().isSpellSelected()) {
 						STATUS = "Set spell";
 						ctx.input.send("2");
 						Condition.wait(new Callable<Boolean>() {
