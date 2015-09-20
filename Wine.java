@@ -75,11 +75,10 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 
 	@Override
 	public void poll() {
-		if(!ctx.game.loggedIn()){
-			if(TRIES > 0)
-				TRIES = 0;
-		}else{
-			switch (state()) {
+		if(!ctx.game.loggedIn())
+			return;
+			
+		switch (state()) {
 			case CAMERA:
 			STATUS = "Set pitch";
 				ctx.camera.pitch(Random.nextInt(72, 78));
@@ -98,6 +97,10 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 						return !ctx.game.loggedIn();
 					}
 				}, 250, 20);
+				if(!ctx.game.loggedIn()){
+					log.info("reset tries");
+					TRIES = 0;
+				}
 			} else {
 				LogoutMenu.click(true);
 				Condition.wait(new Callable<Boolean>() {
@@ -196,11 +199,11 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 						STATUS = "Walk to temple";
 						ctx.movement.newTilePath(PATH_TEMPLE).traverse();
 					}
-				}
-				break;
 			}
+			break;
 		}
 	}
+
 	
 	private State state() {
 
