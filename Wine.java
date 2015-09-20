@@ -76,11 +76,11 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 
 	@Override
 	public void poll() {
-		logIn();
-		if (!ctx.game.loggedIn())
-			return;
-		switch (state()) {
-		case CAMERA:
+		if (!ctx.game.loggedIn()) {
+			logIn();
+		} else {
+			switch (state()) {
+			case CAMERA:
 			STATUS = "Set pitch";
 			ctx.camera.pitch(Random.nextInt(72, 78));
 			break;
@@ -160,7 +160,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 						}
 					}, 250, 12);
 				} else {
-					if (!ctx.client().isSpellSelected()) {
+					if (!ctx.client().isSpellSelected() && ctx.players.local().tile().distanceTo(LOOT_TILE) < 1) {
 						STATUS = "Set spell";
 						ctx.input.send("2");
 						Condition.wait(new Callable<Boolean>() {
@@ -194,10 +194,10 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 					ctx.movement.newTilePath(PATH_TEMPLE).traverse();
 				}
 			}
-			break;
+				break;
+			}
 		}
 	}
-	
 	
 	private State state() {
 
