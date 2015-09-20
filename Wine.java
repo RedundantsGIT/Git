@@ -76,13 +76,34 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 
 	@Override
 	public void poll() {
-		breakHandler();
+		logIn();
 		if (!ctx.game.loggedIn())
 			return;
 		switch (state()) {
 		case CAMERA:
 			STATUS = "Set pitch";
 			ctx.camera.pitch(Random.nextInt(72, 78));
+			break;
+		case LOGOUT:
+			final Component LogoutMenu = ctx.widgets.component(1477, 68).component(1);
+			final Component LobbyMenu = ctx.widgets.component(26, 14);
+			if (LobbyMenu.visible()) {
+				LobbyMenu.click(true);
+				Condition.wait(new Callable<Boolean>() {
+					@Override
+					public Boolean call() throws Exception {
+						return !ctx.game.loggedIn();
+					}
+				}, 250, 20);
+			} else {
+				LogoutMenu.click(true);
+				Condition.wait(new Callable<Boolean>() {
+					@Override
+					public Boolean call() throws Exception {
+						return LobbyMenu.visible();
+					}
+				}, 350, 20);
+			}
 			break;
 		case BANKING:
 			if (ctx.bank.inViewport()) {
@@ -126,14 +147,19 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			}
 			break;
 		case GRAB:
-			final Tile LOOT_TILE = new Tile(2952, 3474, 0);
+			final Tile LOOT_TILE = new Tile(2951, 3473, 0);
 			final Tile HOVER_TILE = new Tile(2952, 3473, 0);
 			final GroundItem Wine = ctx.groundItems.select().id(ID_WINE).nearest().poll();
-			if(TRIES < 3){
 			if (AREA_TEMPLE.contains(ctx.players.local().tile())) {
-				if (LOOT_TILE.matrix(ctx).inViewport() && ctx.players.local().tile().distanceTo(LOOT_TILE) > 0) {
+				if (LOOT_TILE.matrix(ctx).inViewport()
+						&& ctx.players.local().tile() != LOOT_TILE) {
 					LOOT_TILE.matrix(ctx).click(true);
-					Condition.sleep(Random.nextInt(2500, 3500));
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return ctx.players.local().tile() == LOOT_TILE;
+						}
+					}, 250, 6);
 				} else {
 					if (!ctx.client().isSpellSelected() && ctx.players.local().tile().distanceTo(LOOT_TILE) == 0) {
 						STATUS = "Set spell";
@@ -150,24 +176,23 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 							take(Wine);
 						} else {
 							int rand = Random.nextInt(97, 106);
-							if(ctx.input.getLocation().distance(HOVER_TILE.matrix(ctx).point(rand)) > 10) {
+							if (ctx.input.getLocation().distance(HOVER_TILE.matrix(ctx).point(rand)) > 10) {
 								STATUS = "HOVER";
-							     ctx.input.move(HOVER_TILE.matrix(ctx).point(rand));
+								ctx.input.move(HOVER_TILE.matrix(ctx).point(rand));
 							}
 							STATUS = "Waiting";
 							antiPattern();
-							}
 						}
 					}
+				}
+			} else {
+				if (ctx.bank.opened()) {
+					STATUS = "Close bank";
+					WINE_STORED = ctx.bank.select().id(ID_WINE).count(true);
+					ctx.bank.close();
 				} else {
-					if (ctx.bank.opened()) {
-						STATUS = "Close bank";
-						WINE_STORED = ctx.bank.select().id(ID_WINE).count(true);
-						ctx.bank.close();
-					} else {
-						STATUS = "Walk to temple";
-						ctx.movement.newTilePath(PATH_TEMPLE).traverse();
-					}
+					STATUS = "Walk to temple";
+					ctx.movement.newTilePath(PATH_TEMPLE).traverse();
 				}
 			}
 			break;
@@ -177,21 +202,23 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	
 	private State state() {
 
-		if (TRIES < 3) {
 			if (ctx.camera.pitch() < 69) {
 				return State.CAMERA;
+			}
+			
+			if(TRIES > 2){
+				return State.LOGOUT;
 			}
 
 			if (ctx.backpack.select().count() == 28) {
 				return State.BANKING;
-			}
 		}
 
 		return State.GRAB;
 	}
 
 	private enum State {
-		CAMERA, BANKING, GRAB
+		CAMERA, LOGOUT, BANKING, GRAB
 	}
 	
 	private boolean take(GroundItem g) {
@@ -220,43 +247,19 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		return ctx.game.crosshair() == Crosshair.ACTION;
 	}
 	
-	private void breakHandler() {
-		final Component LogoutMenu = ctx.widgets.component(1477,68).component(1);
-		final Component LobbyMenu = ctx.widgets.component(26, 14);
-		if (ctx.game.loggedIn()) {
-			if (TRIES > 2) {
-				if (LobbyMenu.visible()) {
-					LobbyMenu.click(true);
-					Condition.wait(new Callable<Boolean>() {
-						@Override
-						public Boolean call() throws Exception {
-							return !ctx.game.loggedIn();
-						}
-					}, 250, 20);
-				} else {
-					LogoutMenu.click(true);
-					Condition.wait(new Callable<Boolean>() {
-						@Override
-						public Boolean call() throws Exception {
-							return LobbyMenu.visible();
-						}
-					}, 350, 20);
-				}
-			}
+	private void logIn() {
+		if (TRIES > 0) {
+			TRIES = 0;
 		} else {
-			if (TRIES > 0) {
-				TRIES = 0;
-			} else {
-				final Component PLAY_NOW_WIDGET = ctx.widgets.component(906,154);
-				if (PLAY_NOW_WIDGET.valid()) {
-					PLAY_NOW_WIDGET.click(true);
-					Condition.wait(new Callable<Boolean>() {
-						@Override
-						public Boolean call() throws Exception {
-							return ctx.game.loggedIn();
-						}
-					}, 350, 20);
-				}
+			final Component PLAY_NOW_WIDGET = ctx.widgets.component(906, 154);
+			if (PLAY_NOW_WIDGET.valid()) {
+				PLAY_NOW_WIDGET.click(true);
+				Condition.wait(new Callable<Boolean>() {
+					@Override
+					public Boolean call() throws Exception {
+						return ctx.game.loggedIn();
+					}
+				}, 350, 20);
 			}
 		}
 	}
