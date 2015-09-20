@@ -31,6 +31,12 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	private static String STATUS = "Starting...";
 	private static final int ID_WINE = 245;
 	private static int WINE_GAINED, WINE_STORED, TRIES;
+	private final Tile[] PATH_BANK = new Tile[] { new Tile(2967, 3403, 0),
+			new Tile(2966, 3399, 0), new Tile(2965, 3396, 0),
+			new Tile(2965, 3391, 0), new Tile(2964, 3386, 0),
+			new Tile(2962, 3382, 0), new Tile(2958, 3381, 0),
+			new Tile(2954, 3381, 0), new Tile(2952, 3379, 0),
+			new Tile(2949, 3376, 0), new Tile(2945, 3368, 0) };
 	private final Tile[] PATH_TEMPLE = new Tile[] { new Tile(2945, 3371, 0),
 			new Tile(2945, 3374, 0), new Tile(2950, 3376, 0),
 			new Tile(2952, 3378, 0), new Tile(2956, 3381, 0),
@@ -71,11 +77,14 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	public void poll() {
 		if(!ctx.game.loggedIn())
 			return;
-		
+			
 		switch (state()) {
 			case CAMERA:
 			STATUS = "Set pitch";
 				ctx.camera.pitch(Random.nextInt(72, 78));
+				break;
+			case FAILSAFE:
+				ctx.movement.newTilePath(PATH_TEMPLE).reverse().traverse();
 				break;
 			case LOGOUT:
 			final Component LogoutMenu = ctx.widgets.component(1477, 68).component(1);
@@ -112,8 +121,35 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 					ctx.bank.open();
 				}
 			} else {
-				STATUS = "Walk to bank";
-				ctx.movement.newTilePath(PATH_TEMPLE).reverse().traverse();
+				final Component VARROCK_WIDGET = ctx.widgets.component(1092, 16);
+				if (AREA_TEMPLE.contains(ctx.players.local().tile())) {
+					if (ctx.players.local().animation() == -1) {
+						STATUS = "Teleporting";
+						if (VARROCK_WIDGET.valid()) {
+							VARROCK_WIDGET.click(true);
+							Condition.wait(new Callable<Boolean>() {
+								@Override
+								public Boolean call() throws Exception {
+									return ctx.players.local().animation() != -1;
+								}
+							}, 325, 20);
+							while(ctx.players.local().animation() != -1){
+								Condition.sleep(Random.nextInt(1200, 3200));
+							}
+						} else {
+							ctx.input.send("1");
+							Condition.wait(new Callable<Boolean>() {
+								@Override
+								public Boolean call() throws Exception {
+									return VARROCK_WIDGET.valid();
+								}
+							}, 250, 20);
+						}
+					}
+				} else {
+					STATUS = "Walk to bank";
+					ctx.movement.newTilePath(PATH_BANK).traverse();
+				}
 			}
 			break;
 		case GRAB:
@@ -175,6 +211,10 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 				return State.CAMERA;
 			}
 			
+			if(ctx.players.local().inCombat()){
+				return State.FAILSAFE;
+			}
+			
 			if(TRIES > 2){
 				return State.LOGOUT;
 			}
@@ -187,7 +227,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	}
 
 	private enum State {
-		CAMERA, LOGOUT, BANKING, GRAB
+		CAMERA, FAILSAFE, LOGOUT, BANKING, GRAB
 	}
 	
 	private boolean take(GroundItem g) {
@@ -201,7 +241,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 					public Boolean call() throws Exception {
 						return ctx.backpack.select().id(ID_WINE).count() != count;
 					}
-				}, 250, 12);
+				}, 250, 20);
 			}
 		}
 		if (ctx.backpack.select().id(ID_WINE).count() == count + 1) {
