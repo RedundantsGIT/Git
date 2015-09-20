@@ -56,7 +56,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	@Override
 	public void start() {
 		TIMER_SCRIPT = System.currentTimeMillis();
-		ctx.properties.put("login.disable", "true");
 	}
 
 	@Override
@@ -76,9 +75,8 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 
 	@Override
 	public void poll() {
-		if (!ctx.game.loggedIn()) {
-			logIn();
-		} else {
+		if(!ctx.game.loggedIn())
+			return;
 			switch (state()) {
 			case CAMERA:
 			STATUS = "Set pitch";
@@ -197,8 +195,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 					ctx.movement.newTilePath(PATH_TEMPLE).traverse();
 				}
 			}
-				break;
-			}
+			break;
 		}
 	}
 	
@@ -252,26 +249,9 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	private boolean didInteract() {
 		return ctx.game.crosshair() == Crosshair.ACTION;
 	}
-	
-	private void logIn() {
-		if (TRIES > 0) {
-			TRIES = 0;
-		} else {
-			final Component PLAY_NOW_WIDGET = ctx.widgets.component(906, 154);
-			if (PLAY_NOW_WIDGET.valid()) {
-				PLAY_NOW_WIDGET.click(true);
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return ctx.game.loggedIn();
-					}
-				}, 350, 20);
-			}
-		}
-	}
-	
+
 	private int antiPattern() {
-		int antiban = Random.nextInt(1, 3500);
+		int antiban = Random.nextInt(1, 3600);
 		switch (antiban) {
 		case 1:
 			ctx.camera.angle(Random.nextInt(21, 40));
@@ -279,11 +259,11 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			break;
 		case 2:
 			ctx.camera.angle(Random.nextInt(0, 325));
-			Condition.sleep(Random.nextInt(50, 900));
+			Condition.sleep(Random.nextInt(50, 750));
 			break;
 		case 3:
 			ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
-			Condition.sleep(Random.nextInt(50, 900));
+			Condition.sleep(Random.nextInt(50, 550));
 			break;
 		case 5:
 			final Component REST_WIDGET = ctx.widgets.component(1465, 40);
