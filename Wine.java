@@ -82,9 +82,12 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			switch (state()) {
 			case CAMERA:
 			STATUS = "Set pitch";
-			ctx.camera.pitch(Random.nextInt(72, 78));
-			break;
-		case LOGOUT:
+				ctx.camera.pitch(Random.nextInt(72, 78));
+				break;
+			case FAILSAFE:
+				ctx.movement.newTilePath(PATH_TEMPLE).reverse().traverse();
+				break;
+			case LOGOUT:
 			final Component LogoutMenu = ctx.widgets.component(1477, 68).component(1);
 			final Component LobbyMenu = ctx.widgets.component(26, 14);
 			if (LobbyMenu.visible()) {
@@ -205,6 +208,10 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 				return State.CAMERA;
 			}
 			
+			if(ctx.players.local().inCombat()){
+				return State.FAILSAFE;
+			}
+			
 			if(TRIES > 2){
 				return State.LOGOUT;
 			}
@@ -217,7 +224,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	}
 
 	private enum State {
-		CAMERA, LOGOUT, BANKING, GRAB
+		CAMERA, FAILSAFE, LOGOUT, BANKING, GRAB
 	}
 	
 	private boolean take(GroundItem g) {
