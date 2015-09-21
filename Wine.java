@@ -129,7 +129,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 								public Boolean call() throws Exception {
 									return ctx.players.local().animation() != -1;
 								}
-							}, 325, 20);
+							}, 325, Random.nextInt(12, 20));
 							while(ctx.players.local().animation() != -1){
 								Condition.sleep(Random.nextInt(1200, 3200));
 							}
@@ -140,7 +140,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 								public Boolean call() throws Exception {
 									return VARROCK_WIDGET.valid();
 								}
-							}, 250, 20);
+							}, 250, Random.nextInt(12, 20));
 						}
 					}
 				} else {
@@ -159,7 +159,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 						public Boolean call() throws Exception {
 							return ctx.players.local().tile().distanceTo(LOOT_TILE) < 1;
 						}
-					}, 250, 12);
+					}, 250, Random.nextInt(10, 20));
 				} else {
 					if (!ctx.client().isSpellSelected() && ctx.players.local().tile().distanceTo(LOOT_TILE) < 1) {
 						STATUS = "Set spell";
@@ -169,7 +169,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 							public Boolean call() throws Exception {
 								return ctx.client().isSpellSelected();
 							}
-						}, 250, 6);
+						}, 250,  Random.nextInt(5, 10));
 					} else {
 						if (Wine.valid()) {
 							STATUS = "Take wine";
@@ -237,6 +237,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		}
 		if (ctx.backpack.select().id(ID_WINE).count() == count + 1) {
 			WINE_GAINED++;
+			Condition.sleep(Random.nextInt(25, 500));
 			return true;
 		}
 		return false;
