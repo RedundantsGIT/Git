@@ -35,11 +35,8 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	static final Tile HOVER_TILE = new Tile(2952, 3473, 0);
 	final Component LogoutMenu = ctx.widgets.component(1477, 68).component(1);
 	final Component LobbyMenu = ctx.widgets.component(26, 14);
+	static final Tile BANK_TILE = new Tile(2946, 3368, 0);
 	final Component VARROCK_WIDGET = ctx.widgets.component(1092, 16);
-	private final Tile[] PATH_BANK = new Tile[] { new Tile(2967, 3403, 0),
-			new Tile(2966, 3395, 0), new Tile(2964, 3387, 0),
-			new Tile(2956, 3381, 0), new Tile(2950, 3377, 0),
-			new Tile(2946, 3368, 0) };
 	private final Tile[] PATH_TEMPLE = new Tile[] { new Tile(2945, 3371, 0),
 			new Tile(2945, 3374, 0), new Tile(2950, 3376, 0),
 			new Tile(2952, 3378, 0), new Tile(2956, 3381, 0),
@@ -145,7 +142,9 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 					}
 				} else {
 					STATUS = "Walk to bank";
-					ctx.movement.newTilePath(PATH_BANK).traverse();
+					if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < 6){
+						ctx.movement.step(ctx.movement.closestOnMap(BANK_TILE));
+					}
 				}
 			}
 			break;
