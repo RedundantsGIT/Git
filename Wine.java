@@ -110,16 +110,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			}
 			break;
 		case BANKING:
-			if (ctx.bank.inViewport()) {
-				if (ctx.bank.opened()) {
-					STATUS = "Deposit";
-					ctx.bank.deposit(ID_WINE, Amount.ALL);
-				} else {
-					STATUS = "Open bank";
-					ctx.bank.open();
-				}
-			} else {
-				if (AREA_TEMPLE.contains(ctx.players.local().tile())) {
+				if (atTemple()) {
 					if (ctx.players.local().animation() == -1) {
 						STATUS = "Teleporting";
 						if (VARROCK_WIDGET.valid()) {
@@ -140,8 +131,17 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 								public Boolean call() throws Exception {
 									return VARROCK_WIDGET.valid();
 								}
-							}, 250, Random.nextInt(12, 20));
-						}
+						}, 250, Random.nextInt(12, 20));
+					}
+				}
+			} else {
+				if (ctx.bank.inViewport()) {
+					if (ctx.bank.opened()) {
+						STATUS = "Deposit";
+						ctx.bank.deposit(ID_WINE, Amount.ALL);
+					} else {
+						STATUS = "Open bank";
+						ctx.bank.open();
 					}
 				} else {
 					STATUS = "Walk to bank";
@@ -151,7 +151,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			break;
 		case GRAB:
 			final GroundItem Wine = ctx.groundItems.select().id(ID_WINE).nearest().poll();
-			if (AREA_TEMPLE.contains(ctx.players.local().tile())) {
+			if (atTemple()) {
 				if (LOOT_TILE.matrix(ctx).inViewport() && ctx.players.local().tile().distanceTo(LOOT_TILE) > 0) {
 					LOOT_TILE.matrix(ctx).click(true);
 					Condition.wait(new Callable<Boolean>() {
@@ -219,6 +219,10 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 
 	private enum State {
 		CAMERA, LOGOUT, BANKING, GRAB
+	}
+	
+	private boolean atTemple(){
+		return AREA_TEMPLE.contains(ctx.players.local().tile());
 	}
 	
 	private boolean take(GroundItem g) {
