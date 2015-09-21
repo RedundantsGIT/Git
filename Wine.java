@@ -261,13 +261,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
 			Condition.sleep(Random.nextInt(50, 550));
 			break;
-		case 5:
-			final Component REST_WIDGET = ctx.widgets.component(1465, 40);
-			if(ctx.players.local().animation() == -1){
-			  REST_WIDGET.interact("Rest");
-			  Condition.sleep(Random.nextInt(50, 300));
-			}
-			break;
 		}
 		return 0;
 	}
