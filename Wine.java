@@ -31,7 +31,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	private static String STATUS = "Starting...";
 	private static final int ID_WINE = 245;
 	private static int WINE_GAINED, WINE_STORED, TRIES;
-	static final Tile LOOT_TILE = new Tile(2952, 3474, 0);
+	static final Tile LOOT_TILE = new Tile(2951, 3473, 0);
 	static final Tile HOVER_TILE = new Tile(2952, 3473, 0);
 	final Component LogoutMenu = ctx.widgets.component(1477, 68).component(1);
 	final Component LobbyMenu = ctx.widgets.component(26, 14);
