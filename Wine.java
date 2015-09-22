@@ -81,7 +81,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		switch (state()) {
 			case CAMERA:
 			STATUS = "Set pitch";
-				ctx.camera.pitch(Random.nextInt(72, 78));
+				ctx.camera.pitch(Random.nextInt(72, 82));
 				break;
 			case LOGOUT:
 			if (LobbyMenu.visible()) {
@@ -117,7 +117,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 								public Boolean call() throws Exception {
 									return ctx.players.local().animation() != -1;
 								}
-							}, 325, Random.nextInt(12, 20));
+							}, 325, 20);
 							while(ctx.players.local().animation() != -1){
 								Condition.sleep(Random.nextInt(1200, 3200));
 							}
@@ -128,7 +128,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 								public Boolean call() throws Exception {
 									return VARROCK_WIDGET.valid();
 								}
-						}, 250, Random.nextInt(12, 20));
+						}, 250, 15);
 					}
 				}
 			} else {
@@ -158,7 +158,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 						public Boolean call() throws Exception {
 							return ctx.players.local().tile().distanceTo(LOOT_TILE) < 1;
 						}
-					}, 250, Random.nextInt(10, 20));
+					}, 250, 15);
 				} else {
 					if (!ctx.client().isSpellSelected() && ctx.players.local().tile().distanceTo(LOOT_TILE) < 1) {
 						STATUS = "Set spell";
@@ -168,7 +168,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 							public Boolean call() throws Exception {
 								return ctx.client().isSpellSelected();
 							}
-						}, 250,  Random.nextInt(5, 10));
+						}, 250,  10);
 					} else {
 						if (Wine.valid()) {
 							STATUS = "Take wine";
@@ -255,15 +255,12 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		switch (antiban) {
 		case 1:
 			ctx.camera.angle(Random.nextInt(21, 40));
-			Condition.sleep(Random.nextInt(25, 750));
 			break;
 		case 2:
 			ctx.camera.angle(Random.nextInt(0, 325));
-			Condition.sleep(Random.nextInt(50, 750));
 			break;
 		case 3:
 			ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
-			Condition.sleep(Random.nextInt(50, 550));
 			break;
 		}
 		return 0;
@@ -274,14 +271,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		String message = msg.text();
 		if (message.contains("You do not")) {
 			ctx.controller.stop();
-		}
-		
-		if(message.contains("You can't use Telekinetic")){
-			ctx.camera.angle(Random.nextInt(0, 325));
-		}
-		
-		if(message.contains("You can only attack")){
-			ctx.camera.angle(Random.nextInt(0, 325));
 		}
 	}
 
