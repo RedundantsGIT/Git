@@ -154,12 +154,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 				final GroundItem Wine = ctx.groundItems.select().id(WINE_ID).nearest().poll();
 				if (LOOT_TILE.matrix(ctx).inViewport() && ctx.players.local().tile().distanceTo(LOOT_TILE) > 0) {
 					LOOT_TILE.matrix(ctx).click(true);
-					Condition.wait(new Callable<Boolean>() {
-						@Override
-						public Boolean call() throws Exception {
-							return ctx.players.local().tile().distanceTo(LOOT_TILE) < 1;
-						}
-					}, 250, 15);
+					Condition.sleep(Random.nextInt(2500, 4200));
 				} else {
 					if (!ctx.client().isSpellSelected() && ctx.players.local().tile().distanceTo(LOOT_TILE) < 1) {
 						STATUS = "Set spell";
@@ -272,10 +267,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		String message = msg.text();
 		if (message.contains("You do not")) {
 			ctx.controller.stop();
-		}
-		
-		if (message.contains("You can only attack")) {
-			ctx.camera.angle(Random.nextInt(72, 96));
 		}
 	}
 
