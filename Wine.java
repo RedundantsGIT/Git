@@ -97,7 +97,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 				}
 			} else {
 				ctx.input.send("{VK_ESCAPE down}");
-				Condition.sleep(Random.nextInt(50, 150));
+				Condition.sleep(50);
 				ctx.input.send("{VK_ESCAPE up}");
 				Condition.wait(new Callable<Boolean>() {
 					@Override
@@ -105,6 +105,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 						return LOBBY_WIDGET.visible();
 					}
 				}, 350, 20);
+				delay();
 			}
 			break;
 		case BANKING:
@@ -112,6 +113,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 				if (ctx.players.local().animation() == -1) {
 					STATUS = "Teleporting";
 					if (FALADOR_WIDGET.valid()) {
+						delay();
 						ctx.input.send("f");
 						Condition.wait(new Callable<Boolean>() {
 							@Override
@@ -122,7 +124,9 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 						while (ctx.players.local().animation() != -1) {
 							Condition.sleep(Random.nextInt(1200, 3200));
 						}
+						delay();
 					} else {
+						delay();
 						ctx.input.send("1");
 						Condition.wait(new Callable<Boolean>() {
 							@Override
@@ -130,16 +134,21 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 								return FALADOR_WIDGET.valid();
 							}
 						}, 250, 15);
+						delay();
 					}
 				}
 			} else {
 				if (ctx.bank.inViewport()) {
 					if (ctx.bank.opened()) {
 						STATUS = "Deposit";
+						delay();
 						ctx.bank.deposit(WINE_ID, Amount.ALL);
+						delay();
 					} else {
 						STATUS = "Open bank";
+						delay();
 						ctx.bank.open();
+						delay();
 					}
 				} else {
 					STATUS = "Walk to bank";
@@ -153,11 +162,13 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			if (atTemple()) {
 				final GroundItem Wine = ctx.groundItems.select().id(WINE_ID).nearest().poll();
 				if (LOOT_TILE.matrix(ctx).inViewport() && ctx.players.local().tile().distanceTo(LOOT_TILE) > 0) {
+					delay();
 					LOOT_TILE.matrix(ctx).click(true);
 					Condition.sleep(Random.nextInt(2500, 4200));
 				} else {
 					if (!ctx.client().isSpellSelected() && ctx.players.local().tile().distanceTo(LOOT_TILE) < 1) {
 						STATUS = "Set spell";
+						delay();
 						ctx.input.send("2");
 						Condition.wait(new Callable<Boolean>() {
 							@Override
@@ -165,6 +176,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 								return ctx.client().isSpellSelected();
 							}
 						}, 250, 10);
+						delay();
 					} else {
 						if (Wine.valid()) {
 							STATUS = "Take wine";
@@ -173,7 +185,9 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 							int rand = Random.nextInt(97, 106);
 							if (ctx.input.getLocation().distance(HOVER_TILE.matrix(ctx).point(rand)) > 10) {
 								STATUS = "Hover";
+								delay();
 								ctx.input.move(HOVER_TILE.matrix(ctx).point(rand));
+								delay();
 							} else {
 								STATUS = "Waiting";
 								antiPattern();
@@ -184,8 +198,10 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			} else {
 				if (ctx.bank.opened()) {
 					STATUS = "Close bank";
+					delay();
 					WINE_STORED = ctx.bank.select().id(WINE_ID).count(true);
 					ctx.bank.close();
+					delay();
 				} else {
 					STATUS = "Walk to temple";
 					ctx.movement.newTilePath(PATH_TEMPLE).traverse();
@@ -240,6 +256,10 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			return true;
 		}
 		return false;
+	}
+	
+	private int delay(){
+		return Condition.sleep(Random.nextInt(50, 1000));
 	}
 
 	private boolean didInteract() {
