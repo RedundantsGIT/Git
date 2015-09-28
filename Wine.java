@@ -96,9 +96,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 					TRIES = 0;
 				}
 			} else {
-				ctx.input.send("{VK_ESCAPE down}");
-				Condition.sleep(50);
-				ctx.input.send("{VK_ESCAPE up}");
+				close();
 				Condition.wait(new Callable<Boolean>() {
 					@Override
 					public Boolean call() throws Exception {
@@ -200,7 +198,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 					STATUS = "Close bank";
 					delay();
 					WINE_STORED = ctx.bank.select().id(WINE_ID).count(true);
-					ctx.bank.close();
+					close();
 					delay();
 				} else {
 					STATUS = "Walk to temple";
@@ -258,6 +256,12 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		return false;
 	}
 	
+	private void close(){
+		ctx.input.send("{VK_ESCAPE down}");
+		Condition.sleep(50);
+		ctx.input.send("{VK_ESCAPE up}");
+		delay();
+	}
 	private int delay(){
 		return Condition.sleep(Random.nextInt(50, 1000));
 	}
