@@ -256,7 +256,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		delay();
 	}
 	private int delay(){
-		return Condition.sleep(Random.nextInt(50, 500));
+		return Condition.sleep(Random.nextInt(50, 300));
 	}
 
 	private boolean didInteract() {
