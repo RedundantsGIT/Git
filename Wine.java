@@ -29,29 +29,20 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	private static RenderingHints ANTIALIASING = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	private static long TIMER_SCRIPT = 0;
 	private static String STATUS = "Starting...";
-	private static final int WINE_ID = 245;
 	private static int WINE_GAINED, WINE_STORED, TRIES;
-	static final Tile BANK_TILE = new Tile(2946, 3368, 0);
-	static final Tile LOOT_TILE = new Tile(2951, 3473, 0);
-	static final Tile HOVER_TILE = new Tile(2952, 3473, 0);
-	final Component LOBBY_WIDGET = ctx.widgets.component(1433, 9);
-	final Component FALADOR_WIDGET = ctx.widgets.component(1092, 16);
-	private final Tile[] PATH_TEMPLE = new Tile[] { new Tile(2945, 3371, 0),
-			new Tile(2945, 3374, 0), new Tile(2950, 3376, 0),
-			new Tile(2952, 3378, 0), new Tile(2956, 3381, 0),
-			new Tile(2961, 3383, 0), new Tile(2964, 3387, 0),
-			new Tile(2964, 3392, 0), new Tile(2965, 3398, 0),
-			new Tile(2965, 3402, 0), new Tile(2963, 3408, 0),
-			new Tile(2961, 3411, 0), new Tile(2958, 3416, 0),
-			new Tile(2956, 3419, 0), new Tile(2954, 3424, 0),
-			new Tile(2952, 3428, 0), new Tile(2951, 3433, 0),
-			new Tile(2950, 3438, 0), new Tile(2950, 3443, 0),
-			new Tile(2948, 3448, 0), new Tile(2948, 3455, 0),
-			new Tile(2949, 3460, 0), new Tile(2951, 3465, 0),
-			new Tile(2953, 3468, 0), new Tile(2952, 3474, 0) };
+	private static final int WINE_ID = 245;
+	static final Tile BANK_TILE = new Tile(2946, 3368, 0), LOOT_TILE = new Tile(2952, 3474, 0), HOVER_TILE = new Tile(2952, 3473, 0);
+	final Component LOBBY_WIDGET = ctx.widgets.component(1433, 9), FALADOR_WIDGET = ctx.widgets.component(1092, 16);
 	private final Area AREA_TEMPLE = new Area(new Tile(2944, 3482, 0),
 			new Tile(2944, 3471, 0), new Tile(2958, 3471, 0), new Tile(2958,3481, 0));
-
+	private final Tile[] PATH_TEMPLE = new Tile[] { new Tile(2945, 3371, 0),
+			new Tile(2945, 3374, 0), new Tile(2950, 3376, 0), new Tile(2952, 3378, 0), new Tile(2956, 3381, 0),
+			new Tile(2961, 3383, 0), new Tile(2964, 3387, 0), new Tile(2964, 3392, 0), new Tile(2965, 3398, 0),
+			new Tile(2965, 3402, 0), new Tile(2963, 3408, 0), new Tile(2961, 3411, 0), new Tile(2958, 3416, 0),
+			new Tile(2956, 3419, 0), new Tile(2954, 3424, 0), new Tile(2952, 3428, 0), new Tile(2951, 3433, 0),
+			new Tile(2950, 3438, 0), new Tile(2950, 3443, 0), new Tile(2948, 3448, 0), new Tile(2948, 3455, 0),
+			new Tile(2949, 3460, 0), new Tile(2951, 3465, 0), new Tile(2953, 3468, 0), new Tile(2952, 3474, 0) };
+	
 	@Override
 	public void start() {
 		TIMER_SCRIPT = System.currentTimeMillis();
@@ -150,7 +141,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 					}
 				} else {
 					STATUS = "Walk to bank";
-					if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(6, 8)) {
+					if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(5, 8)) {
 						ctx.movement.step(ctx.movement.closestOnMap(BANK_TILE));
 					}
 				}
@@ -237,15 +228,17 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	private boolean take(GroundItem g) {
 		final int count = ctx.backpack.select().id(WINE_ID).count();
 		final Point p = g.tile().matrix(ctx).point(0.5, 0.5, -417);
-		if (ctx.input.click(p, true)) {
-			if (didInteract()) {
-				TRIES++;
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return ctx.backpack.select().id(WINE_ID).count() != count;
-					}
-				}, 250, 12);
+		if (LOOT_TILE.matrix(ctx).inViewport()) {
+			if (ctx.input.click(p, true)) {
+				if (didInteract()) {
+					TRIES++;
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return ctx.backpack.select().id(WINE_ID).count() != count;
+						}
+					}, 250, 12);
+				}
 			}
 		}
 		if (ctx.backpack.select().id(WINE_ID).count() == count + 1) {
