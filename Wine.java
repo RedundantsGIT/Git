@@ -177,6 +177,8 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 								delay();
 								ctx.input.move(HOVER_TILE.matrix(ctx).point(rand));
 								delay();
+								ctx.camera.angle(Random.nextInt(69, 92));
+                                                                delay();
 							} else {
 								STATUS = "Waiting";
 								antiPattern();
