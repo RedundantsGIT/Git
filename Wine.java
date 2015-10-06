@@ -149,7 +149,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			break;
 		case GRAB:
 			if (atTemple()) {
-				final GroundItem Wine = ctx.groundItems.select().id(WINE_ID).nearest().poll();
 				if (LOOT_TILE.matrix(ctx).inViewport() && ctx.players.local().tile().distanceTo(LOOT_TILE) > 0) {
 					delay();
 					LOOT_TILE.matrix(ctx).click(true);
@@ -167,18 +166,17 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 						}, 250, 10);
 						delay();
 					} else {
-						if (Wine.valid()) {
+						if (!ctx.groundItems.select().id(WINE_ID).isEmpty()) {
 							STATUS = "Take wine";
-							take(Wine);
+							take(ctx.groundItems.id(WINE_ID).poll());
 						} else {
 							int rand = Random.nextInt(97, 106);
 							if (ctx.input.getLocation().distance(HOVER_TILE.matrix(ctx).point(rand)) > 10) {
 								STATUS = "Hover";
 								delay();
-								ctx.input.move(HOVER_TILE.matrix(ctx).point(rand));
-								delay();
 								ctx.camera.angle(Random.nextInt(69, 92));
-                                                                delay();
+								delay();
+								ctx.input.move(HOVER_TILE.matrix(ctx).point(rand));
 							} else {
 								STATUS = "Waiting";
 								antiPattern();
@@ -230,7 +228,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	private boolean take(GroundItem g) {
 		final int count = ctx.backpack.select().id(WINE_ID).count();
 		final Point p = g.tile().matrix(ctx).point(0.5, 0.5, -417);
-		if (LOOT_TILE.matrix(ctx).inViewport()) {
 			if (ctx.input.click(p, true)) {
 				if (didInteract()) {
 					TRIES++;
@@ -238,9 +235,8 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 						@Override
 						public Boolean call() throws Exception {
 							return ctx.backpack.select().id(WINE_ID).count() != count;
-						}
-					}, 250, 12);
-				}
+					}
+				}, 250, 12);
 			}
 		}
 		if (ctx.backpack.select().id(WINE_ID).count() == count + 1) {
@@ -258,7 +254,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		delay();
 	}
 	private int delay(){
-		return Condition.sleep(Random.nextInt(50, 300));
+		return Condition.sleep(Random.nextInt(30, 250));
 	}
 
 	private boolean didInteract() {
