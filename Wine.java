@@ -5,7 +5,6 @@ import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.RenderingHints;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.concurrent.Callable;
@@ -26,7 +25,6 @@ import org.powerbot.script.rt6.Game.Crosshair;
 
 @Manifest(name = "rWine", description = "Loots wine from falador", properties = "hidden=true")
 public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
-	private static RenderingHints ANTIALIASING = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	private static long TIMER_SCRIPT = 0;
 	private static String STATUS = "Starting...";
 	private static int WINE_GAINED, WINE_STORED, TRIES;
@@ -297,11 +295,10 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		long minutes = millis / (1000 * 60);
 		millis -= minutes * (1000 * 60);
 		long seconds = millis / 1000;
-		g.setRenderingHints(ANTIALIASING);
 		g.setColor(BLACK);
-		g.fillRect(5, 5, 190, 145);
+		g.fillRect(5, 5, 190, 105);
 		g.setColor(Color.MAGENTA);
-		g.drawRect(5, 5, 190, 145);
+		g.drawRect(5, 5, 190, 105);
 		g.setFont(FONT);
 		g.drawString("rWine", 75, 20);
 		g.setColor(Color.WHITE);
