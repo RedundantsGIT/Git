@@ -240,27 +240,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		}
 	}
 	
-	private void logOut() {
-		if (LOBBY_WIDGET.visible()) {
-			LOBBY_WIDGET.click(true);
-			Condition.wait(new Callable<Boolean>() {
-				@Override
-				public Boolean call() throws Exception {
-					return !ctx.game.loggedIn();
-				}
-			}, 250, 20);
-		} else {
-			close();
-			Condition.wait(new Callable<Boolean>() {
-				@Override
-				public Boolean call() throws Exception {
-					return LOBBY_WIDGET.visible();
-				}
-			}, 350, 20);
-			delay();
-		}
-	}
-
 	private void antiPatternBreak() {
 		long millis = System.currentTimeMillis() - TIMER_SCRIPT;
 		long hours = millis / (1000 * 60 * 60);
@@ -268,11 +247,12 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		long minutes = millis / (1000 * 60);
 		millis -= minutes * (1000 * 60);
 		if (ctx.game.loggedIn()) {
-			if (hours == 1 && minutes < 2 || hours > 1 && minutes < 2) {
-				logOut();
+			if (hours == 1 && minutes < 3 || hours > 1 && minutes < 3) {
+				STATUS = "Logout";
+				ctx.game.logout(true);
 			}
 		} else {
-			if (minutes > 2) {
+			if (minutes > 3) {
 				logIn();
 			}
 		}
