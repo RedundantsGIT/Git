@@ -27,7 +27,7 @@ import org.powerbot.script.rt6.Game.Crosshair;
 public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
 	private static long TIMER_SCRIPT = 0;
 	private static String STATUS = "Starting...";
-	private static int WINE_GAINED, WINE_STORED, TRIES;
+	private static int WINE_GAINED, WINE_STORED;
 	private static final int WINE_ID = 245;
 	static final Tile BANK_TILE = new Tile(2946, 3368, 0), LOOT_TILE = new Tile(2952, 3474, 0), HOVER_TILE = new Tile(2952, 3473, 0);
 	final Component LOBBY_WIDGET = ctx.widgets.component(1433, 9), FALADOR_WIDGET = ctx.widgets.component(1092, 16);
@@ -63,37 +63,13 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 
 	@Override
 	public void poll() {
-		if (!ctx.game.loggedIn())
+		antiPatternBreak();
+		if(!ctx.game.loggedIn())
 			return;
-
 		switch (state()) {
 		case CAMERA:
 			STATUS = "Set pitch";
 			ctx.camera.pitch(Random.nextInt(72, 82));
-			break;
-		case LOGOUT:
-			if (LOBBY_WIDGET.visible()) {
-				LOBBY_WIDGET.click(true);
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return !ctx.game.loggedIn();
-					}
-				}, 250, 20);
-				if (!ctx.game.loggedIn()) {
-					log.info("reset tries");
-					TRIES = 0;
-				}
-			} else {
-				close();
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return LOBBY_WIDGET.visible();
-					}
-				}, 350, 20);
-				delay();
-			}
 			break;
 		case BANKING:
 			if (atTemple()) {
@@ -204,10 +180,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			return State.CAMERA;
 		}
 
-		if (TRIES > 2) {
-			return State.LOGOUT;
-		}
-
 		if (ctx.backpack.select().count() == 28) {
 			return State.BANKING;
 		}
@@ -216,7 +188,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	}
 
 	private enum State {
-		CAMERA, LOGOUT, BANKING, GRAB
+		CAMERA, BANKING, GRAB
 	}
 
 	private boolean atTemple() {
@@ -228,7 +200,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		final Point p = g.tile().matrix(ctx).point(0.5, 0.5, -417);
 			if (ctx.input.click(p, true)) {
 				if (didInteract()) {
-					TRIES++;
 					Condition.wait(new Callable<Boolean>() {
 						@Override
 						public Boolean call() throws Exception {
@@ -252,9 +223,60 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		delay();
 	}
 	private int delay(){
-		return Condition.sleep(Random.nextInt(30, 250));
+		return Condition.sleep(Random.nextInt(30, 150));
+	}
+	
+	private void logIn() {
+		final Component PLAY_NOW_WIDGET = ctx.widgets.component(906, 154);
+		if (PLAY_NOW_WIDGET.valid()) {
+			PLAY_NOW_WIDGET.click(true);
+			Condition.wait(new Callable<Boolean>() {
+				@Override
+				public Boolean call() throws Exception {
+					return ctx.game.loggedIn();
+				}
+			}, 360, 20);
+		}
+	}
+	
+	private void logOut() {
+		if (LOBBY_WIDGET.visible()) {
+			LOBBY_WIDGET.click(true);
+			Condition.wait(new Callable<Boolean>() {
+				@Override
+				public Boolean call() throws Exception {
+					return !ctx.game.loggedIn();
+				}
+			}, 250, 20);
+		} else {
+			close();
+			Condition.wait(new Callable<Boolean>() {
+				@Override
+				public Boolean call() throws Exception {
+					return LOBBY_WIDGET.visible();
+				}
+			}, 350, 20);
+			delay();
+		}
 	}
 
+	private void antiPatternBreak() {
+		long millis = System.currentTimeMillis() - TIMER_SCRIPT;
+		long hours = millis / (1000 * 60 * 60);
+		millis -= hours * (1000 * 60 * 60);
+		long minutes = millis / (1000 * 60);
+		millis -= minutes * (1000 * 60);
+		if (ctx.game.loggedIn()) {
+			if (hours == 1 && minutes < 2 || hours > 1 && minutes < 2) {
+				logOut();
+			}
+		} else {
+			if (minutes > 2) {
+				logIn();
+			}
+		}
+	}
+	
 	private boolean didInteract() {
 		return ctx.game.crosshair() == Crosshair.ACTION;
 	}
