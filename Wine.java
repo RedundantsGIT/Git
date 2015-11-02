@@ -1,10 +1,12 @@
 package rWine;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.concurrent.Callable;
@@ -40,7 +42,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			new Tile(2956, 3419, 0), new Tile(2954, 3424, 0), new Tile(2952, 3428, 0), new Tile(2951, 3433, 0),
 			new Tile(2950, 3438, 0), new Tile(2950, 3443, 0), new Tile(2948, 3448, 0), new Tile(2948, 3455, 0),
 			new Tile(2949, 3460, 0), new Tile(2951, 3465, 0), new Tile(2953, 3468, 0), new Tile(2952, 3474, 0) };
-	
+
 	@Override
 	public void start() {
 		TIMER_SCRIPT = System.currentTimeMillis();
@@ -67,134 +69,120 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			return;
 
 		switch (state()) {
-		case CAMERA:
-			STATUS = "Set pitch";
-			ctx.camera.pitch(Random.nextInt(72, 82));
-			break;
-		case LOGOUT:
-			if (LOBBY_WIDGET.visible()) {
-				LOBBY_WIDGET.click(true);
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return !ctx.game.loggedIn();
-					}
-				}, 250, 20);
-				if (!ctx.game.loggedIn()) {
-					log.info("reset tries");
-					TRIES = 0;
-				}
-			} else {
-				close();
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return LOBBY_WIDGET.visible();
-					}
-				}, 350, 20);
-				delay();
-			}
-			break;
-		case BANKING:
-			if (atTemple()) {
-				if (ctx.players.local().animation() == -1) {
-					STATUS = "Teleporting";
-					if (FALADOR_WIDGET.valid()) {
-						delay();
-						ctx.input.send("f");
-						Condition.wait(new Callable<Boolean>() {
-							@Override
-							public Boolean call() throws Exception {
-								return ctx.players.local().animation() != -1;
-							}
-						}, 325, 20);
-						while (ctx.players.local().animation() != -1) {
-							Condition.sleep(Random.nextInt(1200, 3200));
+			case CAMERA:
+				STATUS = "Set pitch";
+				ctx.camera.pitch(Random.nextInt(72, 82));
+				break;
+			case LOGOUT:
+				if (LOBBY_WIDGET.visible()) {
+					LOBBY_WIDGET.click(true);
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return !ctx.game.loggedIn();
 						}
-						delay();
-					} else {
-						delay();
-						ctx.input.send("1");
-						Condition.wait(new Callable<Boolean>() {
-							@Override
-							public Boolean call() throws Exception {
-								return FALADOR_WIDGET.valid();
-							}
-						}, 250, 15);
-						delay();
-					}
-				}
-			} else {
-				if (ctx.bank.inViewport()) {
-					if (ctx.bank.opened()) {
-						STATUS = "Deposit";
-						delay();
-						ctx.bank.deposit(WINE_ID, Amount.ALL);
-						delay();
-					} else {
-						STATUS = "Open bank";
-						delay();
-						ctx.bank.open();
-						delay();
+					}, 250, 20);
+					if (!ctx.game.loggedIn()) {
+						log.info("reset tries");
+						TRIES = 0;
 					}
 				} else {
-					STATUS = "Walk to bank";
-					if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(5, 8)) {
-						ctx.movement.step(ctx.movement.closestOnMap(BANK_TILE));
-					}
-				}
-			}
-			break;
-		case GRAB:
-			if (atTemple()) {
-				if (LOOT_TILE.matrix(ctx).inViewport() && ctx.players.local().tile().distanceTo(LOOT_TILE) > 0) {
-					delay();
-					LOOT_TILE.matrix(ctx).click(true);
-					Condition.sleep(Random.nextInt(2500, 4200));
-				} else {
-					if (!ctx.client().isSpellSelected() && ctx.players.local().tile().distanceTo(LOOT_TILE) < 1) {
-						STATUS = "Set spell";
-						delay();
-						ctx.input.send("2");
-						Condition.wait(new Callable<Boolean>() {
-							@Override
-							public Boolean call() throws Exception {
-								return ctx.client().isSpellSelected();
-							}
-						}, 250, 10);
-						delay();
-					} else {
-						if (!ctx.groundItems.select().id(WINE_ID).isEmpty()) {
-							STATUS = "Take wine";
-							take(ctx.groundItems.id(WINE_ID).poll());
-						} else {
-							int rand = Random.nextInt(97, 106);
-							if (ctx.input.getLocation().distance(HOVER_TILE.matrix(ctx).point(rand)) > 10) {
-								STATUS = "Hover";
-								delay();
-								ctx.camera.angle(Random.nextInt(69, 92));
-								delay();
-								ctx.input.move(HOVER_TILE.matrix(ctx).point(rand));
-							} else {
-								STATUS = "Waiting";
-								antiPattern();
-							}
-						}
-					}
-				}
-			} else {
-				if (ctx.bank.opened()) {
-					STATUS = "Close bank";
-					delay();
-					WINE_STORED = ctx.bank.select().id(WINE_ID).count(true);
 					close();
-					delay();
-				} else {
-					STATUS = "Walk to temple";
-					ctx.movement.newTilePath(PATH_TEMPLE).traverse();
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return LOBBY_WIDGET.visible();
+						}
+					}, 350, 20);
 				}
-			}
-			break;
+				break;
+			case BANKING:
+				if (atTemple()) {
+					if (ctx.players.local().animation() == -1) {
+						STATUS = "Teleporting";
+						if (FALADOR_WIDGET.valid()) {
+							ctx.input.send("f");
+							Condition.wait(new Callable<Boolean>() {
+								@Override
+								public Boolean call() throws Exception {
+									return ctx.players.local().animation() != -1;
+								}
+							}, 325, 20);
+							while (ctx.players.local().animation() != -1) {
+								Condition.sleep(Random.nextInt(1200, 2500));
+							}
+						} else {
+							ctx.input.send("1");
+							Condition.wait(new Callable<Boolean>() {
+								@Override
+								public Boolean call() throws Exception {
+									return FALADOR_WIDGET.valid();
+								}
+							}, 250, 15);
+						}
+					}
+				} else {
+					if (ctx.bank.inViewport()) {
+						if (ctx.bank.opened()) {
+							STATUS = "Deposit";
+							ctx.bank.deposit(WINE_ID, Amount.ALL);
+						} else {
+							STATUS = "Open bank";
+							ctx.bank.open();
+						}
+					} else {
+						STATUS = "Walk to bank";
+						if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(5, 8)) {
+							ctx.movement.step(ctx.movement.closestOnMap(BANK_TILE));
+						}
+					}
+				}
+				break;
+			case GRAB:
+				if (atTemple()) {
+					if (LOOT_TILE.matrix(ctx).inViewport() && ctx.players.local().tile().distanceTo(LOOT_TILE) > 0) {
+						delay();
+						LOOT_TILE.matrix(ctx).click(true);
+						Condition.sleep(Random.nextInt(2300, 3800));
+					} else {
+						if (!ctx.client().isSpellSelected() && ctx.players.local().tile().distanceTo(LOOT_TILE) < 1) {
+							STATUS = "Set spell";
+							ctx.input.send("2");
+							Condition.wait(new Callable<Boolean>() {
+								@Override
+								public Boolean call() throws Exception {
+									return ctx.client().isSpellSelected();
+								}
+							}, 250, 10);
+						} else {
+							if (!ctx.groundItems.select().id(WINE_ID).isEmpty()) {
+								STATUS = "Take wine";
+								take(ctx.groundItems.id(WINE_ID).poll());
+							} else {
+								int rand = Random.nextInt(97, 106);
+								if (ctx.input.getLocation().distance(HOVER_TILE.matrix(ctx).point(rand)) > 10) {
+									STATUS = "Hover";
+									ctx.camera.angle(Random.nextInt(69, 92));
+									delay();
+									ctx.input.move(HOVER_TILE.matrix(ctx).point(rand));
+								} else {
+									STATUS = "Waiting";
+									antiPattern();
+								}
+							}
+						}
+					}
+				} else {
+					if (ctx.bank.opened()) {
+						STATUS = "Close bank";
+						WINE_STORED = ctx.bank.select().id(WINE_ID).count(true);
+						ctx.bank.close();
+					} else {
+						STATUS = "Walk to temple";
+						ctx.movement.newTilePath(PATH_TEMPLE).traverse();
+					}
+				}
+				break;
 		}
 	}
 
@@ -226,13 +214,13 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	private boolean take(GroundItem g) {
 		final int count = ctx.backpack.select().id(WINE_ID).count();
 		final Point p = g.tile().matrix(ctx).point(0.5, 0.5, -417);
-			if (ctx.input.click(p, true)) {
-				if (didInteract()) {
-					TRIES++;
-					Condition.wait(new Callable<Boolean>() {
-						@Override
-						public Boolean call() throws Exception {
-							return ctx.backpack.select().id(WINE_ID).count() != count;
+		if (ctx.input.click(p, true)) {
+			if (didInteract()) {
+				TRIES++;
+				Condition.wait(new Callable<Boolean>() {
+					@Override
+					public Boolean call() throws Exception {
+						return ctx.backpack.select().id(WINE_ID).count() != count;
 					}
 				}, 250, 12);
 			}
@@ -244,15 +232,15 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		}
 		return false;
 	}
-	
+
 	private void close(){
 		ctx.input.send("{VK_ESCAPE down}");
-		Condition.sleep(50);
+		delay();
 		ctx.input.send("{VK_ESCAPE up}");
 		delay();
 	}
 	private int delay(){
-		return Condition.sleep(Random.nextInt(30, 250));
+		return Condition.sleep(Random.nextInt(20, 75));
 	}
 
 	private boolean didInteract() {
@@ -262,15 +250,15 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	private int antiPattern() {
 		int antiban = Random.nextInt(1, 3600);
 		switch (antiban) {
-		case 1:
-			ctx.camera.angle(Random.nextInt(21, 40));
-			break;
-		case 2:
-			ctx.camera.angle(Random.nextInt(0, 325));
-			break;
-		case 3:
-			ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
-			break;
+			case 1:
+				ctx.camera.angle(Random.nextInt(21, 40));
+				break;
+			case 2:
+				ctx.camera.angle(Random.nextInt(0, 325));
+				break;
+			case 3:
+				ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
+				break;
 		}
 		return 0;
 	}
@@ -309,12 +297,12 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		drawMouse(g);
 	}
 
-	private void drawMouse(Graphics2D g) {
-		int mouseY = (int) ctx.input.getLocation().getY();
-		int mouseX = (int) ctx.input.getLocation().getX();
-		g.setColor(Color.MAGENTA);
-		g.drawLine(mouseX - 5, mouseY + 5, mouseX + 5, mouseY - 5);
-		g.drawLine(mouseX + 5, mouseY + 5, mouseX - 5, mouseY - 5);
+	public void drawMouse(Graphics2D g) {
+		Point p = ctx.input.getLocation();
+		g.setColor(Color.GREEN);
+		g.setStroke(new BasicStroke(2));
+		g.fill(new Rectangle(p.x + 1, p.y - 4, 2, 15));
+		g.fill(new Rectangle(p.x - 6, p.y + 2, 16, 2));
 	}
 
 	public String PerHour(int gained) {
