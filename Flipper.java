@@ -22,6 +22,7 @@ import org.powerbot.script.Script.Manifest;
 import org.powerbot.script.Tile;
 import org.powerbot.script.rt6.Component;
 import org.powerbot.script.rt6.Game.Crosshair;
+import org.powerbot.script.rt6.GeItem;
 import org.powerbot.script.rt6.Npc;
 
 @Manifest(name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for money", properties = "topic=1135335")
@@ -307,36 +308,8 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		g.fill(new Rectangle(p.x - 6, p.y + 2, 16, 2));
 	}
 	
-    private int getPrice(int itemId) {
-        final String content = downloadString("http://itemdb-rs.runescape.com/viewitem.ws?obj=" + itemId);
-        if (content == null) {
-            return -1;
-        }
-
-        final String[] lines = content.split("\n");
-        for (int i = 0; i < lines.length; i++) {
-            if (lines[i].contains("Current guide price:")) {
-                final String next = lines[i + 1];
-                String str = next.substring(4, next.indexOf("</td>"));
-                if (str.contains("k")) {
-                    str = str.replace(".", "");
-                    return Integer.parseInt(str.substring(0, str.indexOf("k"))) * 1000;
-                } else if (str.contains("m")) {
-                    str = str.replace(".", "");
-                    return Integer.parseInt(str.substring(0, str.indexOf("m"))) * 1000000;
-                } else if (str.contains("b")) {
-                    str = str.replace(".", "");
-                    return Integer.parseInt(str.substring(0, str.indexOf("b"))) * 1000000000;
-                } else {
-                    return Integer.parseInt(str.replace(",", ""));
-                }
-            }
-        }
-        return -1;
-    }
-
+	@SuppressWarnings("deprecation")
 	private int getGuidePrice(final int id) {
-		return getPrice(id);
+		return GeItem.price(id);
 	}
-
 }
