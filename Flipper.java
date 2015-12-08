@@ -336,7 +336,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
     }
 
 	private int getGuidePrice(final int id) {
-		return getPrice(ID_FUR);
+		return getPrice(id);
 	}
 
 }
