@@ -109,7 +109,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 							}
 						}, 325, 20);
 						while (ctx.players.local().animation() != -1) {
-							Condition.sleep(Random.nextInt(1200, 2500));
+							Condition.sleep(Random.nextInt(1200, 2200));
 						}
 					} else {
 						ctx.input.send("1");
@@ -118,7 +118,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 							public Boolean call() throws Exception {
 								return FALADOR_WIDGET.valid();
 							}
-						}, 250, 15);
+						}, 250, 16);
 					}
 				}
 			} else {
@@ -285,11 +285,11 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		long seconds = millis / 1000;
 		g.setColor(BLACK);
 		g.fillRect(5, 5, 190, 105);
-		g.setColor(Color.GREEN);
+		g.setColor(Color.RED);
 		g.drawRect(5, 5, 190, 105);
 		g.setFont(FONT);
 		g.drawString("rWine", 75, 20);
-		g.setColor(Color.RED);
+		g.setColor(Color.WHITE);
 		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 10, 40);
 		g.drawString("Gained: " + NF.format(WINE_GAINED) + "(" + PerHour(WINE_GAINED) + "/h)", 10, 60);
 		g.drawString("Stored: " + NF.format(WINE_STORED), 10, 80);
@@ -300,6 +300,8 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	public void drawMouse(Graphics2D g) {
 		Point p = ctx.input.getLocation();
 		g.setColor(Color.GREEN);
+		g.fillRect(LOOT_TILE.x() - 1, LOOT_TILE.y() - 1, 2, 2);
+		g.setColor(Color.RED);
 		g.setStroke(new BasicStroke(2));
 		g.fill(new Rectangle(p.x + 1, p.y - 4, 2, 15));
 		g.fill(new Rectangle(p.x - 6, p.y + 2, 16, 2));
