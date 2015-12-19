@@ -299,8 +299,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	
 	public void drawMouse(Graphics2D g) {
 		Point p = ctx.input.getLocation();
-		g.setColor(Color.GREEN);
-		g.fillRect(LOOT_TILE.x() - 1, LOOT_TILE.y() - 1, 2, 2);
 		g.setColor(Color.RED);
 		g.setStroke(new BasicStroke(2));
 		g.fill(new Rectangle(p.x + 1, p.y - 4, 2, 15));
