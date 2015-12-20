@@ -1,12 +1,10 @@
 package rWine;
 
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.concurrent.Callable;
@@ -30,7 +28,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	private static long TIMER_SCRIPT = 0;
 	private static String STATUS = "Starting...";
 	private static int WINE_GAINED, WINE_STORED, TRIES;
-	private static final int WINE_ID = 245;
+	private static final int ID_WINE = 245, ID_LAW = 563;
 	static final Tile BANK_TILE = new Tile(2946, 3368, 0), LOOT_TILE = new Tile(2952, 3474, 0), HOVER_TILE = new Tile(2952, 3473, 0);
 	final Component LOBBY_WIDGET = ctx.widgets.component(1433, 9), FALADOR_WIDGET = ctx.widgets.component(1092, 16);
 	private final Area AREA_TEMPLE = new Area(new Tile(2944, 3482, 0),
@@ -81,9 +79,8 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 					public Boolean call() throws Exception {
 						return !ctx.game.loggedIn();
 					}
-				}, 250, 20);
+				}, 280, 20);
 				if (!ctx.game.loggedIn()) {
-					log.info("reset tries");
 					TRIES = 0;
 				}
 			} else {
@@ -93,7 +90,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 					public Boolean call() throws Exception {
 						return LOBBY_WIDGET.visible();
 					}
-				}, 350, 20);
+				}, 250, 20);
 			}
 			break;
 		case BANKING:
@@ -107,7 +104,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 							public Boolean call() throws Exception {
 								return ctx.players.local().animation() != -1;
 							}
-						}, 325, 20);
+						}, 300, 20);
 						while (ctx.players.local().animation() != -1) {
 							Condition.sleep(Random.nextInt(1200, 2200));
 						}
@@ -125,7 +122,9 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 				if (ctx.bank.inViewport()) {
 					if (ctx.bank.opened()) {
 						STATUS = "Deposit";
-						ctx.bank.deposit(WINE_ID, Amount.ALL);
+						if (!ctx.backpack.select().id(ID_WINE).isEmpty()) {
+							ctx.bank.depositInventory();
+						}
 					} else {
 						STATUS = "Open bank";
 						ctx.bank.open();
@@ -143,7 +142,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 				if (LOOT_TILE.matrix(ctx).inViewport() && ctx.players.local().tile().distanceTo(LOOT_TILE) > 0) {
 					delay();
 					LOOT_TILE.matrix(ctx).click(true);
-					Condition.sleep(Random.nextInt(2300, 3800));
+					Condition.sleep(Random.nextInt(2300, 3500));
 				} else {
 					if (!ctx.client().isSpellSelected() && ctx.players.local().tile().distanceTo(LOOT_TILE) < 1) {
 						STATUS = "Set spell";
@@ -155,9 +154,9 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 							}
 						}, 250, 10);
 					} else {
-						if (!ctx.groundItems.select().id(WINE_ID).isEmpty()) {
+						if (!ctx.groundItems.select().id(ID_WINE).isEmpty()) {
 							STATUS = "Take wine";
-							take(ctx.groundItems.id(WINE_ID).poll());
+							take(ctx.groundItems.id(ID_WINE).poll());
 						} else {
 							int rand = Random.nextInt(97, 106);
 							if (ctx.input.getLocation().distance(HOVER_TILE.matrix(ctx).point(rand)) > 10) {
@@ -174,9 +173,18 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 				}
 			} else {
 				if (ctx.bank.opened()) {
-					STATUS = "Close bank";
-					WINE_STORED = ctx.bank.select().id(WINE_ID).count(true);
-					ctx.bank.close();
+					if(ctx.bank.select().id(ID_LAW).isEmpty()){
+					STATUS = "Ran out of Law Runes, stopping script.";
+					ctx.controller.stop();
+					}
+					if (ctx.backpack.select().id(ID_LAW).isEmpty() && !ctx.bank.select().id(ID_LAW).isEmpty()) {
+						STATUS = "Withdraw Law";
+						ctx.bank.withdraw(ID_LAW, Amount.ALL_BUT_ONE);
+					} else {
+						STATUS = "Close bank";
+						WINE_STORED = ctx.bank.select().id(ID_WINE).count(true);
+						ctx.bank.close();
+					}
 				} else {
 					STATUS = "Walk to temple";
 					ctx.movement.newTilePath(PATH_TEMPLE).traverse();
@@ -212,7 +220,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	}
 
 	private boolean take(GroundItem g) {
-		final int count = ctx.backpack.select().id(WINE_ID).count();
+		final int count = ctx.backpack.select().id(ID_WINE).count();
 		final Point p = g.tile().matrix(ctx).point(0.5, 0.5, -417);
 			if (ctx.input.click(p, true)) {
 				if (didInteract()) {
@@ -220,12 +228,12 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 					Condition.wait(new Callable<Boolean>() {
 						@Override
 						public Boolean call() throws Exception {
-							return ctx.backpack.select().id(WINE_ID).count() != count;
+							return ctx.backpack.select().id(ID_WINE).count() != count;
 					}
 				}, 250, 12);
 			}
 		}
-		if (ctx.backpack.select().id(WINE_ID).count() == count + 1) {
+		if (ctx.backpack.select().id(ID_WINE).count() == count + 1) {
 			WINE_GAINED++;
 			Condition.sleep(Random.nextInt(25, 500));
 			return true;
@@ -294,17 +302,62 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		g.drawString("Gained: " + NF.format(WINE_GAINED) + "(" + PerHour(WINE_GAINED) + "/h)", 10, 60);
 		g.drawString("Stored: " + NF.format(WINE_STORED), 10, 80);
 		g.drawString("Status: " + (STATUS), 10, 100);
+		g.drawString("v0.1", 165, 100);
 		drawMouse(g);
 	}
 	
-	public void drawMouse(Graphics2D g) {
+	/*public void drawMouse(Graphics2D g) {
 		Point p = ctx.input.getLocation();
 		g.setColor(Color.RED);
-		g.setStroke(new BasicStroke(2));
 		g.fill(new Rectangle(p.x + 1, p.y - 4, 2, 15));
 		g.fill(new Rectangle(p.x - 6, p.y + 2, 16, 2));
-	}
+	}*/
+	
+	Point p;
 
+	private void drawMouse(Graphics g1) {
+		Color[] gradient = new Color[] { new Color(255, 0, 0), new Color(255, 0, 255), new Color(0, 0, 255),
+				new Color(0, 255, 255), new Color(0, 255, 0), new Color(255, 255, 0), new Color(255, 0, 0) };
+		Color outerCircle = gradient[0];
+		g1.setColor(gradient[0]);
+		int circleRadius = 7;
+		int circleDiameter = circleRadius * 2;
+		g1.drawLine(p.x + circleRadius, p.y, p.x + 2000, p.y);
+		g1.drawLine(p.x - 2000, p.y, p.x - circleRadius, p.y);
+		// Vertical
+		g1.drawLine(p.x, p.y + circleRadius, p.x, p.y + 2000);
+		g1.drawLine(p.x, p.y - 2000, p.x, p.y - circleRadius);
+		for (int r = gradient.length - 1; r > 0; r--) {
+			int steps = 200 / ((gradient.length - 1) * 2);
+			for (int i = steps; i > 0; i--) {
+				float ratio = (float) i / (float) steps;
+				int red = (int) (gradient[r].getRed() * ratio + gradient[r - 1].getRed() * (1 - ratio));
+				int green = (int) (gradient[r].getGreen() * ratio + gradient[r - 1].getGreen() * (1 - ratio));
+				int blue = (int) (gradient[r].getBlue() * ratio + gradient[r - 1].getBlue() * (1 - ratio));
+				Color stepColor = new Color(red, green, blue);
+				g1.setColor(stepColor);
+				// Horizontal
+				g1.drawLine(p.x + circleRadius, p.y, p.x + ((i * 5) + (100 * r)), p.y);
+				g1.drawLine(p.x - ((i * 5) + (100 * r)), p.y, p.x - circleRadius, p.y);
+				// Vertical
+				g1.drawLine(p.x, p.y + circleRadius, p.x, p.y + ((i * 5) + (100 * r)));
+				g1.drawLine(p.x, p.y - ((i * 5) + (100 * r)), p.x, p.y - circleRadius);
+			}
+		}
+		g1.setColor(outerCircle);
+		final long mpt = System.currentTimeMillis() - ctx.input.getPressWhen();
+		if (ctx.input.getPressWhen() == -1 || mpt >= 200) {
+			g1.drawOval(p.x - circleRadius / 3, p.y - circleRadius / 3, circleDiameter / 3, circleDiameter / 3);
+		}
+		if (mpt < 200) {
+			g1.drawLine(p.x - circleRadius, p.y + circleRadius, p.x + circleRadius, p.y - circleRadius);
+			g1.drawLine(p.x - circleRadius, p.y - circleRadius, p.x + circleRadius, p.y + circleRadius);
+		}
+		g1.setColor(outerCircle);
+		g1.drawOval(p.x - circleRadius, p.y - circleRadius, circleDiameter, circleDiameter);
+	}
+	
+	
 	public String PerHour(int gained) {
 		return formatNumber((int) ((gained) * 3600000D / (System.currentTimeMillis() - TIMER_SCRIPT)));
 	}
