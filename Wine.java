@@ -316,17 +316,12 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	Point p;
 
 	private void drawMouse(Graphics g1) {
+		Point p = ctx.input.getLocation();
 		Color[] gradient = new Color[] { new Color(255, 0, 0), new Color(255, 0, 255), new Color(0, 0, 255),
 				new Color(0, 255, 255), new Color(0, 255, 0), new Color(255, 255, 0), new Color(255, 0, 0) };
-		Color outerCircle = gradient[0];
 		g1.setColor(gradient[0]);
-		int circleRadius = 7;
-		int circleDiameter = circleRadius * 2;
-		g1.drawLine(p.x + circleRadius, p.y, p.x + 2000, p.y);
-		g1.drawLine(p.x - 2000, p.y, p.x - circleRadius, p.y);
-		// Vertical
-		g1.drawLine(p.x, p.y + circleRadius, p.x, p.y + 2000);
-		g1.drawLine(p.x, p.y - 2000, p.x, p.y - circleRadius);
+		g1.drawLine(p.x - 2000, p.y, p.x + 2000, p.y);
+		g1.drawLine(p.x, p.y - 2000, p.x, p.y + 2000);
 		for (int r = gradient.length - 1; r > 0; r--) {
 			int steps = 200 / ((gradient.length - 1) * 2);
 			for (int i = steps; i > 0; i--) {
@@ -336,28 +331,12 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 				int blue = (int) (gradient[r].getBlue() * ratio + gradient[r - 1].getBlue() * (1 - ratio));
 				Color stepColor = new Color(red, green, blue);
 				g1.setColor(stepColor);
-				// Horizontal
-				g1.drawLine(p.x + circleRadius, p.y, p.x + ((i * 5) + (100 * r)), p.y);
-				g1.drawLine(p.x - ((i * 5) + (100 * r)), p.y, p.x - circleRadius, p.y);
-				// Vertical
-				g1.drawLine(p.x, p.y + circleRadius, p.x, p.y + ((i * 5) + (100 * r)));
-				g1.drawLine(p.x, p.y - ((i * 5) + (100 * r)), p.x, p.y - circleRadius);
+				g1.drawLine(p.x - ((i * 5) + (100 * r)), p.y, p.x + ((i * 5) + (100 * r)), p.y);
+				g1.drawLine(p.x, p.y - ((i * 5) + (100 * r)), p.x, p.y + ((i * 5) + (100 * r)));
 			}
 		}
-		g1.setColor(outerCircle);
-		final long mpt = System.currentTimeMillis() - ctx.input.getPressWhen();
-		if (ctx.input.getPressWhen() == -1 || mpt >= 200) {
-			g1.drawOval(p.x - circleRadius / 3, p.y - circleRadius / 3, circleDiameter / 3, circleDiameter / 3);
-		}
-		if (mpt < 200) {
-			g1.drawLine(p.x - circleRadius, p.y + circleRadius, p.x + circleRadius, p.y - circleRadius);
-			g1.drawLine(p.x - circleRadius, p.y - circleRadius, p.x + circleRadius, p.y + circleRadius);
-		}
-		g1.setColor(outerCircle);
-		g1.drawOval(p.x - circleRadius, p.y - circleRadius, circleDiameter, circleDiameter);
 	}
-	
-	
+
 	public String PerHour(int gained) {
 		return formatNumber((int) ((gained) * 3600000D / (System.currentTimeMillis() - TIMER_SCRIPT)));
 	}
