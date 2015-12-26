@@ -24,23 +24,23 @@ import org.powerbot.script.rt6.Bank.Amount;
 import org.powerbot.script.rt6.Game.Crosshair;
 
 @Manifest(name = "rWine", description = "Loots wine from falador", properties = "hidden=true")
-public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
+public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext>
+		implements PaintListener, MessageListener {
 	private static long TIMER_SCRIPT = 0;
 	private static String STATUS = "Starting...";
 	private static int WINE_GAINED, WINE_STORED, TRIES;
 	private static final int ID_WINE = 245, ID_LAW = 563;
-	static final Tile BANK_TILE = new Tile(2946, 3368, 0), LOOT_TILE = new Tile(2952, 3474, 0), HOVER_TILE = new Tile(2952, 3473, 0);
+	static final Tile LOOT_TILE = new Tile(2952, 3474, 0), HOVER_TILE = new Tile(2952, 3473, 0);
 	final Component LOBBY_WIDGET = ctx.widgets.component(1433, 9), FALADOR_WIDGET = ctx.widgets.component(1092, 16);
-	private final Area AREA_TEMPLE = new Area(new Tile(2944, 3482, 0),
-			new Tile(2944, 3471, 0), new Tile(2958, 3471, 0), new Tile(2958,3481, 0));
-	private final Tile[] PATH_TEMPLE = new Tile[] { new Tile(2945, 3371, 0),
-			new Tile(2945, 3374, 0), new Tile(2950, 3376, 0), new Tile(2952, 3378, 0), new Tile(2956, 3381, 0),
-			new Tile(2961, 3383, 0), new Tile(2964, 3387, 0), new Tile(2964, 3392, 0), new Tile(2965, 3398, 0),
-			new Tile(2965, 3402, 0), new Tile(2963, 3408, 0), new Tile(2961, 3411, 0), new Tile(2958, 3416, 0),
-			new Tile(2956, 3419, 0), new Tile(2954, 3424, 0), new Tile(2952, 3428, 0), new Tile(2951, 3433, 0),
-			new Tile(2950, 3438, 0), new Tile(2950, 3443, 0), new Tile(2948, 3448, 0), new Tile(2948, 3455, 0),
-			new Tile(2949, 3460, 0), new Tile(2951, 3465, 0), new Tile(2953, 3468, 0), new Tile(2952, 3474, 0) };
-	
+	private final Area AREA_TEMPLE = new Area(new Tile(2944, 3482, 0), new Tile(2944, 3471, 0), new Tile(2958, 3471, 0), new Tile(2958, 3481, 0));
+	private final Tile[] PATH_TEMPLE = new Tile[] { new Tile(2945, 3371, 0), new Tile(2945, 3374, 0),
+			new Tile(2950, 3376, 0), new Tile(2952, 3378, 0), new Tile(2956, 3381, 0), new Tile(2961, 3383, 0),
+			new Tile(2964, 3387, 0), new Tile(2964, 3392, 0), new Tile(2965, 3398, 0), new Tile(2965, 3402, 0),
+			new Tile(2963, 3408, 0), new Tile(2961, 3411, 0), new Tile(2958, 3416, 0), new Tile(2956, 3419, 0),
+			new Tile(2954, 3424, 0), new Tile(2952, 3428, 0), new Tile(2951, 3433, 0), new Tile(2950, 3438, 0),
+			new Tile(2950, 3443, 0), new Tile(2948, 3448, 0), new Tile(2948, 3455, 0), new Tile(2949, 3460, 0),
+			new Tile(2951, 3465, 0), new Tile(2953, 3468, 0), new Tile(2952, 3474, 0) };
+
 	@Override
 	public void start() {
 		TIMER_SCRIPT = System.currentTimeMillis();
@@ -126,13 +126,16 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 							ctx.bank.depositInventory();
 						}
 					} else {
-						STATUS = "Open bank";
-						ctx.bank.open();
+						if (ctx.bank.inViewport()) {
+							STATUS = "Open bank";
+							ctx.bank.open();
+						}
 					}
 				} else {
 					STATUS = "Walk to bank";
-					if (!ctx.players.local().inMotion() || ctx.players.local().tile().distanceTo(ctx.movement.destination()) < Random.nextInt(5, 8)) {
-						ctx.movement.step(ctx.movement.closestOnMap(BANK_TILE));
+					if (!ctx.players.local().inMotion() || ctx.players.local().tile()
+							.distanceTo(ctx.movement.destination()) < Random.nextInt(5, 8)) {
+						ctx.movement.newTilePath(PATH_TEMPLE).reverse().traverse();
 					}
 				}
 			}
@@ -140,9 +143,13 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		case GRAB:
 			if (atTemple()) {
 				if (LOOT_TILE.matrix(ctx).inViewport() && ctx.players.local().tile().distanceTo(LOOT_TILE) > 0) {
-					delay();
 					LOOT_TILE.matrix(ctx).click(true);
-					Condition.sleep(Random.nextInt(2300, 3500));
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return ctx.players.local().tile().distanceTo(LOOT_TILE) < 1;
+						}
+					}, 250, 16);
 				} else {
 					if (!ctx.client().isSpellSelected() && ctx.players.local().tile().distanceTo(LOOT_TILE) < 1) {
 						STATUS = "Set spell";
@@ -162,7 +169,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 							if (ctx.input.getLocation().distance(HOVER_TILE.matrix(ctx).point(rand)) > 10) {
 								STATUS = "Hover";
 								ctx.camera.angle(Random.nextInt(69, 92));
-	                            delay();
+								delay();
 								ctx.input.move(HOVER_TILE.matrix(ctx).point(rand));
 							} else {
 								STATUS = "Waiting";
@@ -173,17 +180,22 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 				}
 			} else {
 				if (ctx.bank.opened()) {
-					if(ctx.bank.select().id(ID_LAW).isEmpty()){
-					STATUS = "Ran out of Law Runes, stopping script.";
-					ctx.controller.stop();
-					}
-					if (ctx.backpack.select().id(ID_LAW).isEmpty() && !ctx.bank.select().id(ID_LAW).isEmpty()) {
-						STATUS = "Withdraw Law";
-						ctx.bank.withdraw(ID_LAW, Amount.ALL_BUT_ONE);
+					if (ctx.bank.select().id(ID_LAW).isEmpty()) {
+						STATUS = "Ran out of Law Runes, stopping script.";
+						ctx.controller.stop();
 					} else {
-						STATUS = "Close bank";
-						WINE_STORED = ctx.bank.select().id(ID_WINE).count(true);
-						ctx.bank.close();
+						if (ctx.backpack.select().id(ID_LAW).isEmpty() && !ctx.bank.select().id(ID_LAW).isEmpty()) {
+							STATUS = "Withdraw Law";
+							ctx.bank.withdraw(ID_LAW, Amount.ALL_BUT_ONE);
+						} else {
+							STATUS = "Close bank";
+							WINE_STORED = ctx.bank.select().id(ID_WINE).count(true);
+							if (Random.nextInt(1, 10) == 5) {
+								ctx.bank.close();
+							} else {
+								close();
+							}
+						}
 					}
 				} else {
 					STATUS = "Walk to temple";
@@ -222,13 +234,13 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	private boolean take(GroundItem g) {
 		final int count = ctx.backpack.select().id(ID_WINE).count();
 		final Point p = g.tile().matrix(ctx).point(0.5, 0.5, -417);
-			if (ctx.input.click(p, true)) {
-				if (didInteract()) {
-					TRIES++;
-					Condition.wait(new Callable<Boolean>() {
-						@Override
-						public Boolean call() throws Exception {
-							return ctx.backpack.select().id(ID_WINE).count() != count;
+		if (ctx.input.click(p, true)) {
+			if (didInteract()) {
+				TRIES++;
+				Condition.wait(new Callable<Boolean>() {
+					@Override
+					public Boolean call() throws Exception {
+						return ctx.backpack.select().id(ID_WINE).count() != count;
 					}
 				}, 250, 12);
 			}
@@ -240,14 +252,15 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		}
 		return false;
 	}
-	
-	private void close(){
+
+	private void close() {
 		ctx.input.send("{VK_ESCAPE down}");
 		delay();
 		ctx.input.send("{VK_ESCAPE up}");
 		delay();
 	}
-	private int delay(){
+
+	private int delay() {
 		return Condition.sleep(Random.nextInt(25, 80));
 	}
 
@@ -282,6 +295,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	final static Color BLACK = new Color(35, 0, 0, 250);
 	final static Font FONT = new Font("Comic Sans MS", 0, 13);
 	final static NumberFormat NF = new DecimalFormat("###,###,###,###");
+
 	@Override
 	public void repaint(Graphics g1) {
 		final Graphics2D g = (Graphics2D) g1;
@@ -293,61 +307,38 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		long seconds = millis / 1000;
 		g.setColor(BLACK);
 		g.fillRect(5, 5, 190, 105);
-		g.setColor(Color.WHITE);
+		g.setColor(Color.RED);
 		g.drawRect(5, 5, 190, 105);
 		g.setFont(FONT);
 		g.drawString("rWine", 75, 20);
+		g.setColor(Color.WHITE);
 		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 10, 40);
 		g.drawString("Gained: " + NF.format(WINE_GAINED) + "(" + PerHour(WINE_GAINED) + "/h)", 10, 60);
 		g.drawString("Stored: " + NF.format(WINE_STORED), 10, 80);
 		g.drawString("Status: " + (STATUS), 10, 100);
+		g.setColor(Color.GREEN);
 		g.drawString("v0.1", 165, 100);
 		drawMouse(g);
 	}
 
 	Point p;
 
-	private void drawMouse(Graphics g1) {
+	private void drawMouse(Graphics g) {
 		Point p = ctx.input.getLocation();
-		Color[] gradient = new Color[] { new Color(255, 0, 0), new Color(255, 0, 255), new Color(0, 0, 255),
-				new Color(0, 255, 255), new Color(0, 255, 0), new Color(255, 255, 0), new Color(255, 0, 0) };
-		Color outerCircle = gradient[0];
-		g1.setColor(gradient[0]);
 		int circleRadius = 7;
 		int circleDiameter = circleRadius * 2;
-		g1.drawLine(p.x + circleRadius, p.y, p.x + 2000, p.y);
-		g1.drawLine(p.x - 2000, p.y, p.x - circleRadius, p.y);
-		// Vertical
-		g1.drawLine(p.x, p.y + circleRadius, p.x, p.y + 2000);
-		g1.drawLine(p.x, p.y - 2000, p.x, p.y - circleRadius);
-		for (int r = gradient.length - 1; r > 0; r--) {
-			int steps = 200 / ((gradient.length - 1) * 2);
-			for (int i = steps; i > 0; i--) {
-				float ratio = (float) i / (float) steps;
-				int red = (int) (gradient[r].getRed() * ratio + gradient[r - 1].getRed() * (1 - ratio));
-				int green = (int) (gradient[r].getGreen() * ratio + gradient[r - 1].getGreen() * (1 - ratio));
-				int blue = (int) (gradient[r].getBlue() * ratio + gradient[r - 1].getBlue() * (1 - ratio));
-				Color stepColor = new Color(red, green, blue);
-				g1.setColor(stepColor);
-				// Horizontal
-				g1.drawLine(p.x + circleRadius, p.y, p.x + ((i * 5) + (100 * r)), p.y);
-				g1.drawLine(p.x - ((i * 5) + (100 * r)), p.y, p.x - circleRadius, p.y);
-				// Vertical
-				g1.drawLine(p.x, p.y + circleRadius, p.x, p.y + ((i * 5) + (100 * r)));
-				g1.drawLine(p.x, p.y - ((i * 5) + (100 * r)), p.x, p.y - circleRadius);
-			}
-		}
-		g1.setColor(outerCircle);
 		final long mpt = System.currentTimeMillis() - ctx.input.getPressWhen();
-		if (ctx.input.getPressWhen() == -1 || mpt >= 200) {
-			g1.drawOval(p.x - circleRadius / 3, p.y - circleRadius / 3, circleDiameter / 3, circleDiameter / 3);
+		g.setColor(Color.GREEN);
+		if (ctx.input.getPressWhen() == -1 || mpt >= 400) {
+			g.drawOval(p.x - circleRadius / 3, p.y - circleRadius / 3, circleDiameter / 3, circleDiameter / 3);
 		}
-		if (mpt < 200) {
-			g1.drawLine(p.x - circleRadius, p.y + circleRadius, p.x + circleRadius, p.y - circleRadius);
-			g1.drawLine(p.x - circleRadius, p.y - circleRadius, p.x + circleRadius, p.y + circleRadius);
+		if (mpt < 400) {
+			g.setColor(Color.RED);
+			g.drawLine(p.x - circleRadius, p.y + circleRadius, p.x + circleRadius, p.y - circleRadius);
+			g.drawLine(p.x - circleRadius, p.y - circleRadius, p.x + circleRadius, p.y + circleRadius);
 		}
-		g1.setColor(outerCircle);
-		g1.drawOval(p.x - circleRadius, p.y - circleRadius, circleDiameter, circleDiameter);
+
+		g.drawOval(p.x - circleRadius, p.y - circleRadius, circleDiameter, circleDiameter);
 	}
 
 	public String PerHour(int gained) {
