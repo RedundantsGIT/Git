@@ -91,7 +91,6 @@ public class Tanner extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	@Override
 	public void start() {
 		elapsedTime = System.currentTimeMillis();
-		log.info("start()");
 		ctx.camera.pitch(false);
 		g.setVisible(true);
 		while (guiWait){
@@ -228,13 +227,17 @@ public class Tanner extends PollingScript<org.powerbot.script.rt6.ClientContext>
 				} else {
 					if (ctx.bank.opened()) {
 						status = "Close Bank";
-						if (Random.nextInt(1, 15) == 10)
+						if (Random.nextInt(1, 15) == 10) {
 							ctx.bank.close();
-						else
+						} else {
 							close();
+						}
 					} else {
 						status = "Walking to Tanner";
-							ctx.movement.newTilePath(tilePath).traverse();
+						ctx.movement.newTilePath(tilePath).traverse();
+						if (Random.nextInt(1, 20) == 10) {
+							ctx.camera.turnTo(Tanner.tile());
+						}
 					}
 				}
 			}
@@ -275,15 +278,19 @@ public class Tanner extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					}
 				} else {
 					status = "Opening Bank";
-					if (!ctx.players.local().inMotion())
-						ctx.camera.turnTo(ctx.bank.nearest());
-					ctx.bank.open();
+					if (ctx.bank.inViewport()) {
+						ctx.bank.open();
+						if (!ctx.players.local().inMotion()) {
+							ctx.camera.turnTo(ctx.bank.nearest());
+						}
+					}
 				}
 			} else {
 				status = "Walking to Bank";
 				ctx.movement.newTilePath(tilePath).reverse().traverse();
-				if (Random.nextInt(1, 10) == 5)
+				if (Random.nextInt(1, 20) == 10) {
 					ctx.camera.turnTo(ctx.bank.nearest());
+				}
 			}
 			break;
 
@@ -343,7 +350,7 @@ public class Tanner extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	}
 
 	private boolean tileContainsDoor() {
-		final GameObject Door = ctx.objects.select().select().id(doorID).at(doorTile).poll();
+		final GameObject Door = ctx.objects.select().id(doorID).at(doorTile).poll();
 		return Door.valid() && ctx.players.local().tile().distanceTo(Door.tile()) < 14;
 	}
 
@@ -354,20 +361,18 @@ public class Tanner extends PollingScript<org.powerbot.script.rt6.ClientContext>
 
 	private void close() {
 		ctx.input.send("{VK_ESCAPE down}");
-		Condition.sleep(50);
+		Condition.sleep(Random.nextInt(30, 75));
 		ctx.input.send("{VK_ESCAPE up}");
 	}
 
-	private boolean logOut() {
+	private void logOut() {
 		status = "Logout";
 		if (ctx.bank.opened() && !ctx.backpack.select().isEmpty()) {
 			depositInventory();
 			ctx.bank.close();
 		}
-		
 		ctx.game.logout(true);
 		ctx.controller.stop();
-		return true;
 	}
 
 	private boolean depositInventory() {
@@ -379,26 +384,24 @@ public class Tanner extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					return ctx.backpack.select().isEmpty();
 				}
 			}, 250, 20);
-			return true;
 		}
-		return false;
+		return true;
 	}
 
 	private boolean usePreset() {
-		final Component present = ctx.widgets.widget(762).component(45);
+		final Component preset = ctx.widgets.widget(762).component(45);
 		status = "Withdraw";
-		if (present.visible()) {
-			if (present.interact("Withdraw")) {
+		if (preset.visible()) {
+			if (preset.interact("Withdraw")) {
 				Condition.wait(new Callable<Boolean>() {
 					@Override
 					public Boolean call() throws Exception {
 						return hasHide();
 					}
 				}, 250, 20);
-				return true;
 			}
 		}
-		return false;
+		return true;
 	}
 
 	private boolean deposit(final int count, final int... items) {
@@ -454,9 +457,8 @@ public class Tanner extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		g.drawString("*" + (status) + "*", 10, 140);
 		g.setFont(fontThree);
 		g.setColor(Color.RED);
-		g.drawString("v0.1", 165, 120);
+		g.drawString("v0.2", 165, 120);
 		drawMouse(g);
-		drawTannerTile(g);
 	}
 
 	public void drawMouse(Graphics2D g) {
@@ -483,11 +485,6 @@ public class Tanner extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		return "" + start;
 	}
 	
-	private void drawTannerTile(final Graphics g) {
-		final Npc Tanner = ctx.npcs.select().id(tannerID).nearest().poll();
-			if (Tanner.inViewport() && hasHide())
-				Tanner.tile().matrix(ctx).draw(g);
-	}
 
 	@Override
 	public void messaged(MessageEvent msg) {
@@ -507,10 +504,12 @@ public class Tanner extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		}
 
 		private void button1ActionPerformed(ActionEvent e) {
-			if (checkBox1.isSelected())
+			if (checkBox1.isSelected()) {
 				usePotions = true;
-			if (checkBox2.isSelected())
+			}
+			if (checkBox2.isSelected()) {
 				usePreset = true;
+			}
 			guiWait = false;
 			g.dispose();
 		}

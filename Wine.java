@@ -24,8 +24,7 @@ import org.powerbot.script.rt6.Bank.Amount;
 import org.powerbot.script.rt6.Game.Crosshair;
 
 @Manifest(name = "rWine", description = "Loots wine from falador", properties = "hidden=true")
-public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext>
-		implements PaintListener, MessageListener {
+public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
 	private static long TIMER_SCRIPT = 0;
 	private static String STATUS = "Starting...";
 	private static int WINE_GAINED, WINE_STORED, TRIES;
@@ -65,7 +64,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	public void poll() {
 		if (!ctx.game.loggedIn())
 			return;
-
 		switch (state()) {
 		case CAMERA:
 			STATUS = "Set pitch";
@@ -133,10 +131,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext>
 					}
 				} else {
 					STATUS = "Walk to bank";
-					if (!ctx.players.local().inMotion() || ctx.players.local().tile()
-							.distanceTo(ctx.movement.destination()) < Random.nextInt(5, 8)) {
-						ctx.movement.newTilePath(PATH_TEMPLE).reverse().traverse();
-					}
+					ctx.movement.newTilePath(PATH_TEMPLE).reverse().traverse();
 				}
 			}
 			break;
@@ -294,6 +289,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext>
 
 	final static Color BLACK = new Color(35, 0, 0, 250);
 	final static Font FONT = new Font("Comic Sans MS", 0, 13);
+	final static Font FONT_TWO = new Font("Comic Sans MS", 0, 10);
 	final static NumberFormat NF = new DecimalFormat("###,###,###,###");
 
 	@Override
@@ -317,22 +313,22 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		g.drawString("Stored: " + NF.format(WINE_STORED), 10, 80);
 		g.drawString("Status: " + (STATUS), 10, 100);
 		g.setColor(Color.GREEN);
-		g.drawString("v0.1", 165, 100);
+		g.setFont(FONT_TWO);
+		g.drawString("v0.2", 165, 100);
 		drawMouse(g);
 	}
 
 	Point p;
-
 	private void drawMouse(Graphics g) {
 		Point p = ctx.input.getLocation();
 		int circleRadius = 7;
 		int circleDiameter = circleRadius * 2;
 		final long mpt = System.currentTimeMillis() - ctx.input.getPressWhen();
 		g.setColor(Color.GREEN);
-		if (ctx.input.getPressWhen() == -1 || mpt >= 400) {
+		if (ctx.input.getPressWhen() == -1 || mpt >= 500) {
 			g.drawOval(p.x - circleRadius / 3, p.y - circleRadius / 3, circleDiameter / 3, circleDiameter / 3);
 		}
-		if (mpt < 400) {
+		if (mpt < 500) {
 			g.setColor(Color.RED);
 			g.drawLine(p.x - circleRadius, p.y + circleRadius, p.x + circleRadius, p.y - circleRadius);
 			g.drawLine(p.x - circleRadius, p.y - circleRadius, p.x + circleRadius, p.y + circleRadius);
