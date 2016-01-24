@@ -19,6 +19,7 @@ import org.powerbot.script.Random;
 import org.powerbot.script.Tile;
 import org.powerbot.script.Script.Manifest;
 import org.powerbot.script.rt6.Component;
+import org.powerbot.script.rt6.GeItem;
 import org.powerbot.script.rt6.GroundItem;
 import org.powerbot.script.rt6.Bank.Amount;
 import org.powerbot.script.rt6.Game.Crosshair;
@@ -27,7 +28,7 @@ import org.powerbot.script.rt6.Game.Crosshair;
 public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
 	private static long TIMER_SCRIPT = 0;
 	private static String STATUS = "Starting...";
-	private static int WINE_GAINED, WINE_STORED, TRIES;
+	private static int WINE_GAINED, WINE_STORED, WINE_PRICE, LAW_PRICE, RUNES_WASTED, TRIES;
 	private static final int ID_WINE = 245, ID_LAW = 563;
 	static final Tile LOOT_TILE = new Tile(2952, 3474, 0), HOVER_TILE = new Tile(2952, 3473, 0);
 	final Component LOBBY_WIDGET = ctx.widgets.component(1433, 9), FALADOR_WIDGET = ctx.widgets.component(1092, 16);
@@ -43,6 +44,8 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	@Override
 	public void start() {
 		TIMER_SCRIPT = System.currentTimeMillis();
+		LAW_PRICE = getGuidePrice(ID_LAW);
+		WINE_PRICE = getGuidePrice(ID_WINE) - LAW_PRICE;
 	}
 
 	@Override
@@ -185,11 +188,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 						} else {
 							STATUS = "Close bank";
 							WINE_STORED = ctx.bank.select().id(ID_WINE).count(true);
-							if (Random.nextInt(1, 10) == 5) {
-								ctx.bank.close();
-							} else {
-								close();
-							}
+							ctx.bank.close();
 						}
 					}
 				} else {
@@ -221,7 +220,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 	private enum State {
 		CAMERA, LOGOUT, BANKING, GRAB
 	}
-
+	
 	private boolean atTemple() {
 		return AREA_TEMPLE.contains(ctx.players.local().tile());
 	}
@@ -242,7 +241,6 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		}
 		if (ctx.backpack.select().id(ID_WINE).count() == count + 1) {
 			WINE_GAINED++;
-			Condition.sleep(Random.nextInt(25, 500));
 			return true;
 		}
 		return false;
@@ -278,12 +276,15 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		}
 		return 0;
 	}
-
+	
 	@Override
 	public void messaged(MessageEvent msg) {
 		String message = msg.text();
 		if (message.contains("You do not")) {
 			ctx.controller.stop();
+		}
+		if (message.contains("Too late - it's gone!")) {
+			RUNES_WASTED++;
 		}
 	}
 
@@ -302,22 +303,28 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		millis -= minutes * (1000 * 60);
 		long seconds = millis / 1000;
 		g.setColor(BLACK);
-		g.fillRect(5, 5, 190, 105);
+		g.fillRect(5, 5, 190, 145);
 		g.setColor(Color.RED);
-		g.drawRect(5, 5, 190, 105);
+		g.drawRect(5, 5, 190, 145);
 		g.setFont(FONT);
 		g.drawString("rWine", 75, 20);
 		g.setColor(Color.WHITE);
 		g.drawString("Runtime: " + hours + ":" + minutes + ":" + seconds, 10, 40);
 		g.drawString("Gained: " + NF.format(WINE_GAINED) + "(" + PerHour(WINE_GAINED) + "/h)", 10, 60);
-		g.drawString("Stored: " + NF.format(WINE_STORED), 10, 80);
-		g.drawString("Status: " + (STATUS), 10, 100);
+		g.drawString("Profit: " + NF.format(profit()) + "(" + PerHour(profit()) + "/h)", 10, 80);
+		g.drawString("Stored: " + NF.format(WINE_STORED), 10, 100);
+		g.drawString("Wasted: " + (RUNES_WASTED), 10, 120);
+		g.drawString("Status: " + (STATUS), 10, 140);
 		g.setColor(Color.GREEN);
 		g.setFont(FONT_TWO);
-		g.drawString("v0.2", 165, 100);
+		g.drawString("v0.2", 165, 120);
 		drawMouse(g);
 	}
-
+	
+	private static int profit() {
+		return WINE_GAINED * WINE_PRICE;
+	}
+	
 	Point p;
 	private void drawMouse(Graphics g) {
 		Point p = ctx.input.getLocation();
@@ -351,5 +358,10 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 			return nf.format((i / 1000)) + "k";
 		}
 		return "" + start;
+	}
+	
+	@SuppressWarnings("deprecation")
+	private int getGuidePrice(final int id) {
+		return GeItem.price(id);
 	}
 }
