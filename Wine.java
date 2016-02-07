@@ -317,7 +317,7 @@ public class Wine extends PollingScript<org.powerbot.script.rt6.ClientContext> i
 		g.drawString("Status: " + (STATUS), 10, 140);
 		g.setColor(Color.GREEN);
 		g.setFont(FONT_TWO);
-		g.drawString("v0.2", 165, 120);
+		g.drawString("v0.2", 165, 140);
 		drawMouse(g);
 	}
 	
