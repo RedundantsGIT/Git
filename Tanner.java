@@ -207,7 +207,7 @@ public class Tanner extends PollingScript<org.powerbot.script.rt6.ClientContext>
 							} else if (atBurthorpe) {
 								Tanner.interact("Tan hide", "Jack Oval");
 							} else {
-								Tanner.interact("Trade", "Tanner");
+								Tanner.interact("Tan hide", "Tanner");
 							}
 							if (didInteract()) {
 								Condition.wait(new Callable<Boolean>() {
