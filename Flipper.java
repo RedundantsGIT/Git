@@ -32,7 +32,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 	private static long TIMER_SCRIPT = 0;
 	private static int FUR_PRICE, FUR_BOUGHT, FUR_STORED;
 	private static int ID_BARAEK = 547, ID_FUR = 948;
-	private final Component WIDGET_MENU = ctx.widgets.component(1188, 3);
+	private final Component WIDGET_MENU = ctx.widgets.component(1188, 6);
 	private static final Tile[] PATH_TO_NPC = { new Tile(3189, 3435, 0), new Tile(3200, 3429, 0), new Tile(3206, 3429, 0), new Tile(3215, 3433, 0) };
 
 	@Override
@@ -78,8 +78,13 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			break;
 		case MENU:
 			STATUS = "Select Option";
+			
+			if(ctx.widgets.component(1188, 6).text().contains("Hello. I am in search of a quest.")) {
+				ctx.input.send("2");
+			}else 
+				if(ctx.widgets.component(1188, 6).text().contains("Yeah, okay, here you go."))
 			ctx.input.send("1");
-				Condition.wait(new Callable<Boolean>() {
+			Condition.wait(new Callable<Boolean>() {
 					@Override
 					public Boolean call() throws Exception {
 						return !WIDGET_MENU.visible()
@@ -124,10 +129,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 				if (ctx.bank.opened()) {
 					STATUS = "Close Bank";
 					FUR_STORED = ctx.bank.select().id(ID_FUR).count(true);
-					if(Random.nextInt(1, 15) == 10)
 					ctx.bank.close();
-					else
-						close();
 				} else {
 					STATUS = "Walk to Npc";
 					if (!Baraek.inViewport() && ctx.players.local().tile().distanceTo(Baraek.tile()) < 8) {
