@@ -83,7 +83,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 					@Override
 					public Boolean call() throws Exception {
 						return !WIDGET_MENU.visible()
-								&& ctx.chat.queryContinue();
+								&& ctx.chat.canContinue();
 					}
 				}, 250, 20);
 			break;
