@@ -53,7 +53,7 @@ public class Tanner extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	private static boolean usePreset = false;
 	private static int hideCount, hidesLeft, potionsLeft;
 	private static final int doorID = 24376, mangleID = 24920;
-	private final Component make = ctx.widgets.component(1370, 20);
+	private final Component make = ctx.widgets.component(1370, 11);
 	private static final int[] tannerID = { 14877, 2824, 2320 };
 	private static final int[] hideID = { 1739, 1753, 1751, 24372, 6287, 7801, 1749, 1747 };
 	private static final int[] leatherID = { 1741, 1743, 1745, 2505, 24374, 6289, 2507, 2509 };
