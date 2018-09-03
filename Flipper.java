@@ -278,7 +278,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		g.drawString("Status: " + (STATUS), 10, 140);
 		g.setColor(Color.RED);
 		g.setFont(FONT_TWO);
-		g.drawString("v0.26", 165, 140);
+		g.drawString("v0.27", 165, 140);
 		drawMouse(g);
 	}
 	
