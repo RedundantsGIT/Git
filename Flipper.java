@@ -94,12 +94,12 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			break;
 		case CONTINUE:
 			STATUS = "Select Continue";
-			if (ctx.widgets.component(1191, 6).text().contains("Can you sell me some furs?") || ctx.widgets.component(1191, 6).text().contains("Yeah, OK, here you go.")) {
+			if (ctx.widgets.component(1191, 10).text().contains("Can you sell me some furs?") || ctx.widgets.component(1191, 10).text().contains("Yeah, OK, here you go.")) {
 				ctx.input.send(" ");
 				Condition.wait(new Callable<Boolean>() {
 					@Override
 					public Boolean call() throws Exception {
-						return ctx.widgets.component(1184, 9).text().contains("Yeah, sure. They're 20 gold coins each.") || ctx.widgets.component(1189, 2).text().contains("Baraek sells you a fur.");
+						return ctx.widgets.component(1184, 10).text().contains("Yeah, sure. They're 20 gold coins each.") || ctx.widgets.component(1189, 3).text().contains("Baraek sells you a fur.");
 						}
 					}, 250, 20);
 			} else {
@@ -173,11 +173,11 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		
 		antiBan();
 		
-		if(ctx.widgets.component(1188, 12).text().contains("I can't afford that.")){
+		if(ctx.widgets.component(1188, 6).text().contains("I can't afford that.")){
 			return State.STOP;
 	    }
 		
-		if(ctx.widgets.component(1188, 12).text().contains("Can I have a newspaper, please?")){
+		if(ctx.widgets.component(1188, 6).text().contains("Can I have a newspaper, please?")){
 			return State.FIX;
 		}
 		
@@ -185,7 +185,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			return State.MENU;
 		}
 		
-		if(ctx.widgets.component(1191, 6).valid() || ctx.widgets.component(1184, 10).valid()){
+		if(ctx.widgets.component(1191, 11).valid() || ctx.widgets.component(1184, 11).valid()){
 			return State.CONTINUE;
 		}
 		
@@ -278,7 +278,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		g.drawString("Status: " + (STATUS), 10, 140);
 		g.setColor(Color.RED);
 		g.setFont(FONT_TWO);
-		g.drawString("v0.27", 165, 140);
+		g.drawString("v0.26", 165, 140);
 		drawMouse(g);
 	}
 	
