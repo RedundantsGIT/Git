@@ -203,7 +203,7 @@ public class Tanner extends PollingScript<org.powerbot.script.rt6.ClientContext>
 						if (Tanner.inViewport()) {
 							status = "Talk to Tanner";
 							if (atAlKharid) {
-								Tanner.interact("Tan hides", "Ellis");
+								Tanner.interact("Tan hide", "Ellis");
 							} else if (atBurthorpe) {
 								Tanner.interact("Tan hide", "Jack Oval");
 							} else {
@@ -389,10 +389,10 @@ public class Tanner extends PollingScript<org.powerbot.script.rt6.ClientContext>
 	}
 
 	private boolean usePreset() {
-		final Component preset = ctx.widgets.widget(762).component(45);
+		final Component preset = ctx.widgets.widget(762).component(1).component(1);
 		status = "Withdraw";
 		if (preset.visible()) {
-			if (preset.interact("Withdraw")) {
+			if (preset.click()) {
 				Condition.wait(new Callable<Boolean>() {
 					@Override
 					public Boolean call() throws Exception {
@@ -457,7 +457,7 @@ public class Tanner extends PollingScript<org.powerbot.script.rt6.ClientContext>
 		g.drawString("*" + (status) + "*", 10, 140);
 		g.setFont(fontThree);
 		g.setColor(Color.RED);
-		g.drawString("v0.2", 165, 120);
+		g.drawString("v0.3", 165, 120);
 		drawMouse(g);
 	}
 
