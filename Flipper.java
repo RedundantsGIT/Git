@@ -93,7 +93,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 				}, 250, 20);
 			break;
 		case CONTINUE:
-			STATUS = "Select Continue";
+			STATUS = "Select Continue.";
 			if (ctx.widgets.component(1191, 10).text().contains("Can you sell me some furs?") || ctx.widgets.component(1191, 10).text().contains("Yeah, OK, here you go.")) {
 				ctx.input.send(" ");
 				Condition.wait(new Callable<Boolean>() {
@@ -103,6 +103,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 						}
 					}, 250, 20);
 			} else {
+				STATUS = "Select Continue..";
 				ctx.input.send(" ");
 					Condition.wait(new Callable<Boolean>() {
 						@Override
