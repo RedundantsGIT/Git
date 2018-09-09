@@ -33,6 +33,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 	private static int FUR_PRICE, FUR_BOUGHT, FUR_STORED;
 	private static int ID_BARAEK = 547, ID_FUR = 948;
 	private final Component WIDGET_MENU = ctx.widgets.component(1188, 6);
+	private final Component WIDGET_MENU2 = ctx.widgets.component(1189, 15);
 	private static final Tile[] PATH_TO_NPC = { new Tile(3189, 3435, 0), new Tile(3200, 3429, 0), new Tile(3206, 3429, 0), new Tile(3215, 3433, 0) };
 
 	@Override
@@ -78,7 +79,6 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			break;
 		case MENU:
 			STATUS = "Select Option";
-			
 			if(ctx.widgets.component(1188, 6).text().contains("Hello. I am in search of a quest.")) {
 				ctx.input.send("2");
 			}else 
@@ -94,7 +94,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			break;
 		case CONTINUE:
 			STATUS = "Select Continue";
-			if (ctx.widgets.component(1191, 10).text().contains("Can you sell me some furs?") || ctx.widgets.component(1191, 10).text().contains("Yeah, OK, here you go.") || ctx.widgets.component(1189, 3).text().contains("Baraek sells you a fur.")) {
+			if (ctx.widgets.component(1191, 10).text().contains("Can you sell me some furs?") || ctx.widgets.component(1191, 10).text().contains("Yeah, OK, here you go.")) {
 				ctx.input.send(" ");
 				Condition.wait(new Callable<Boolean>() {
 					@Override
@@ -107,7 +107,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 					Condition.wait(new Callable<Boolean>() {
 						@Override
 						public Boolean call() throws Exception {
-							return WIDGET_MENU.valid();
+							return WIDGET_MENU.valid() || !WIDGET_MENU2.valid();
 						}
 					}, 250, 20);
 				}
@@ -278,7 +278,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		g.drawString("Status: " + (STATUS), 10, 140);
 		g.setColor(Color.RED);
 		g.setFont(FONT_TWO);
-		g.drawString("v0.27", 165, 140);
+		g.drawString("v0.26", 165, 140);
 		drawMouse(g);
 	}
 	
