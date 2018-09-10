@@ -81,14 +81,19 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			STATUS = "Select Option";
 			if(ctx.widgets.component(1188, 6).text().contains("Hello. I am in search of a quest.")) {
 				ctx.input.send("2");
+				Condition.wait(new Callable<Boolean>() {
+					@Override
+					public Boolean call() throws Exception {
+						return ctx.chat.canContinue();
+					}
+				}, 250, 20);
 			}else 
 				if(ctx.widgets.component(1188, 6).text().contains("Yeah, okay, here you go."))
 			ctx.input.send("1");
 			Condition.wait(new Callable<Boolean>() {
 					@Override
 					public Boolean call() throws Exception {
-						return !WIDGET_MENU.visible()
-								&& ctx.chat.canContinue();
+						return ctx.chat.canContinue();
 					}
 				}, 250, 20);
 			break;
@@ -295,7 +300,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		g.drawString("Status: " + (STATUS), 10, 140);
 		g.setColor(Color.RED);
 		g.setFont(FONT_TWO);
-		g.drawString("v0.28", 165, 140);
+		g.drawString("v0.99", 165, 140);
 		drawMouse(g);
 	}
 	
