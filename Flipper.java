@@ -64,6 +64,9 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 
 	@Override
 	public void poll() {
+		if (ctx.controller.isStopping()) {
+			return;
+		}
 		if (!ctx.game.loggedIn())
 			return;
 		switch (state()) {
@@ -93,7 +96,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			}, 250, 20);
 			break;
 		case CONTINUE1:
-			STATUS = "Select Continue";
+			STATUS = "Select Continue1";
 			ctx.input.send(" ");
 			Condition.wait(new Callable<Boolean>() {
 				@Override
@@ -103,6 +106,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			}, 210, 20);
 			break;
 		case CONTINUE2:
+			STATUS = "Select Continue2";
 			ctx.input.send(" ");
 			Condition.wait(new Callable<Boolean>() {
 				@Override
@@ -113,6 +117,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 
 			break;
 		case CONTINUE3:
+			STATUS = "Select Continue3";
 			ctx.input.send(" ");
 			Condition.wait(new Callable<Boolean>() {
 				@Override
@@ -122,6 +127,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			}, 210, 20);
 			break;
 		case CONTINUE4:
+			STATUS = "Select Continue4";
 			ctx.input.send(" ");
 			Condition.wait(new Callable<Boolean>() {
 				@Override
@@ -188,9 +194,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		if (ctx.camera.pitch() < 40) {
 			return State.CAMERA;
 		}
-
-		antiBan();
-
+		
 		if (ctx.widgets.component(1188, 6).text().contains("I can't afford that.")) {
 			return State.STOP;
 		}
@@ -240,33 +244,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		Condition.sleep(Random.nextInt(50, 400));
 		ctx.input.send("{VK_ESCAPE up}");
 	}
-
-	private int antiBan() {
-		int antiban = Random.nextInt(1, 600);
-		switch (antiban) {
-		case 1:
-			ctx.camera.angle(Random.nextInt(21, 40));
-			break;
-		case 2:
-			ctx.camera.angle(Random.nextInt(25, 75));
-			break;
-		case 3:
-			ctx.camera.angle(Random.nextInt(0, 200));
-			break;
-		case 4:
-			ctx.camera.angle(Random.nextInt(0, 300));
-			break;
-		case 8:
-			ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
-			break;
-		case 6:
-			ctx.camera.pitch(Random.nextInt(40, 55));
-			ctx.camera.angle(Random.nextInt(0, 300));
-			break;
-		}
-		return 0;
-	}
-
+	
 	@Override
 	public void messaged(MessageEvent msg) {
 		String message = msg.text();
@@ -307,7 +285,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		g.drawString("Status: " + (STATUS), 10, 140);
 		g.setColor(Color.RED);
 		g.setFont(FONT_TWO);
-		g.drawString("v0.31", 165, 140);
+		g.drawString("v0.26", 165, 140);
 		drawMouse(g);
 	}
 
@@ -322,7 +300,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 	public String formatNumber(int start) {
 		DecimalFormat nf = new DecimalFormat("0.0");
 		double i = start;
-		if (i >= 1000000) {
+		if (i >= 100000) {
 			return nf.format((i / 1000000)) + "m";
 		}
 		if (i >= 1000) {
