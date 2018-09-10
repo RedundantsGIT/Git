@@ -64,9 +64,8 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 
 	@Override
 	public void poll() {
-		if (ctx.controller.isStopping()) {
+		if (ctx.controller.isStopping())
 			return;
-		}
 		if (!ctx.game.loggedIn())
 			return;
 		switch (state()) {
@@ -101,7 +100,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			Condition.wait(new Callable<Boolean>() {
 				@Override
 				public Boolean call() throws Exception {
-					return ctx.widgets.component(1184, 10).text().contains("Yeah, sure. They're 20 gold coins each.");
+					return ctx.widgets.component(1184, 10).text().contains("Yeah, sure. They're 20 gold coins each.") && ctx.widgets.component(1184, 10).visible();
 				}
 			}, 210, 20);
 			break;
@@ -111,7 +110,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			Condition.wait(new Callable<Boolean>() {
 				@Override
 				public Boolean call() throws Exception {
-					return ctx.widgets.component(1191, 10).text().contains("Yeah, OK, here you go.");
+					return ctx.widgets.component(1191, 10).text().contains("Yeah, OK, here you go.") && ctx.widgets.component(1191, 10).visible();
 				}
 			}, 210, 20);
 
@@ -122,7 +121,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			Condition.wait(new Callable<Boolean>() {
 				@Override
 				public Boolean call() throws Exception {
-					return ctx.widgets.component(1189, 3).text().contains("Baraek sells you a fur.");
+					return ctx.widgets.component(1189, 3).text().contains("Baraek sells you a fur.") && ctx.widgets.component(1189, 3).visible();
 				}
 			}, 210, 20);
 			break;
@@ -132,7 +131,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			Condition.wait(new Callable<Boolean>() {
 				@Override
 				public Boolean call() throws Exception {
-					return !(ctx.widgets.component(1189, 3).text().contains("Baraek sells you a fur."));
+					return !ctx.widgets.component(1189, 3).text().contains("Baraek sells you a fur.") && !ctx.widgets.component(1189, 3).visible();
 				}
 			}, 210, 20);
 			break;
@@ -207,20 +206,20 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			return State.MENU;
 		}
 
-		if (ctx.widgets.component(1191, 10).text().contains("Can you sell me some furs?")) {
+		if (ctx.widgets.component(1191, 10).text().contains("Can you sell me some furs?") && ctx.widgets.component(1191, 10).visible()) {
 			return State.CONTINUE1;
 		}
 
-		if (ctx.widgets.component(1184, 10).text().contains("Yeah, sure. They're 20 gold coins each.")) {
+		if (ctx.widgets.component(1184, 10).text().contains("Yeah, sure. They're 20 gold coins each.") && ctx.widgets.component(1184, 10).visible()) {
 			return State.CONTINUE2;
 		}
 
-		if (ctx.widgets.component(1191, 10).text().contains("Yeah, OK, here you go.")) {
+		if (ctx.widgets.component(1191, 10).text().contains("Yeah, OK, here you go.") && ctx.widgets.component(1191, 10).visible()) {
 
 			return State.CONTINUE3;
 		}
 
-		if (ctx.widgets.component(1189, 3).text().contains("Baraek sells you a fur.")) {
+		if (ctx.widgets.component(1189, 3).text().contains("Baraek sells you a fur.") && ctx.widgets.component(1189, 3).visible()) {
 			return State.CONTINUE4;
 		}
 
@@ -285,7 +284,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		g.drawString("Status: " + (STATUS), 10, 140);
 		g.setColor(Color.RED);
 		g.setFont(FONT_TWO);
-		g.drawString("v0.26", 165, 140);
+		g.drawString("v0.50", 165, 140);
 		drawMouse(g);
 	}
 
