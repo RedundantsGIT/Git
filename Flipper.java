@@ -90,7 +90,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			Condition.wait(new Callable<Boolean>() {
 				@Override
 				public Boolean call() throws Exception {
-					return !WIDGET_MENU.visible() && ctx.chat.canContinue();
+					return ctx.widgets.component(1191, 10).text().contains("Yeah, OK, here you go.") && ctx.widgets.component(1191, 10).visible();
 				}
 			}, 250, 20);
 			break;
@@ -223,7 +223,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			return State.CONTINUE4;
 		}
 
-		if (ctx.backpack.select().count() != 28) {
+		if (ctx.backpack.select().count() != 28 && !ctx.chat.canContinue() && !ctx.widgets.component(1189, 3).visible() && !ctx.widgets.component(1191, 10).visible() && !ctx.widgets.component(1184, 10).visible()) {
 			return State.TALKING;
 		}
 
@@ -284,7 +284,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		g.drawString("Status: " + (STATUS), 10, 140);
 		g.setColor(Color.RED);
 		g.setFont(FONT_TWO);
-		g.drawString("v0.45", 165, 140);
+		g.drawString("v0.26", 165, 140);
 		drawMouse(g);
 	}
 
