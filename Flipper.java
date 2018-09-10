@@ -26,19 +26,21 @@ import org.powerbot.script.rt6.GeItem;
 import org.powerbot.script.rt6.Npc;
 
 @Manifest(name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for money", properties = "topic=1135335")
-public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
-	private static RenderingHints ANTIALIASING = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext>
+		implements PaintListener, MessageListener {
+	private static RenderingHints ANTIALIASING = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
+			RenderingHints.VALUE_ANTIALIAS_ON);
 	private static String STATUS = "Starting...";
 	private static long TIMER_SCRIPT = 0;
 	private static int FUR_PRICE, FUR_BOUGHT, FUR_STORED;
 	private static int ID_BARAEK = 547, ID_FUR = 948;
 	private final Component WIDGET_MENU = ctx.widgets.component(1188, 6);
-	private final Component WIDGET_MENU2 = ctx.widgets.component(1189, 15);
-	private static final Tile[] PATH_TO_NPC = { new Tile(3189, 3435, 0), new Tile(3200, 3429, 0), new Tile(3206, 3429, 0), new Tile(3215, 3433, 0) };
+	private static final Tile[] PATH_TO_NPC = { new Tile(3189, 3435, 0), new Tile(3200, 3429, 0),
+			new Tile(3206, 3429, 0), new Tile(3215, 3433, 0) };
 
 	@Override
 	public void start() {
-		TIMER_SCRIPT = System.currentTimeMillis();	
+		TIMER_SCRIPT = System.currentTimeMillis();
 		STATUS = "Get prices..";
 		FUR_PRICE = getGuidePrice(ID_FUR) - 20;
 	}
@@ -64,7 +66,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 	public void poll() {
 		if (!ctx.game.loggedIn())
 			return;
-		switch(state()){
+		switch (state()) {
 		case CAMERA:
 			STATUS = "Set Pitch";
 			ctx.camera.pitch(Random.nextInt(48, 55));
@@ -79,51 +81,54 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			break;
 		case MENU:
 			STATUS = "Select Option";
-			if(ctx.widgets.component(1188, 6).text().contains("Hello. I am in search of a quest.")) {
+			if (ctx.widgets.component(1188, 6).text().contains("Hello. I am in search of a quest.")) {
 				ctx.input.send("2");
-			}else 
-				if(ctx.widgets.component(1188, 6).text().contains("Yeah, okay, here you go."))
-			ctx.input.send("1");
+			} else if (ctx.widgets.component(1188, 6).text().contains("Yeah, okay, here you go."))
+				ctx.input.send("1");
 			Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return !WIDGET_MENU.visible()
-								&& ctx.chat.canContinue();
-					}
-				}, 250, 20);
-			break;
-		case CONTINUE:
-			STATUS = "Select Continue.";
-			if (ctx.widgets.component(1191, 10).text().contains("Can you sell me some furs?") || ctx.widgets.component(1191, 10).text().contains("Yeah, OK, here you go.")) {
-				ctx.input.send(" ");
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return ctx.widgets.component(1184, 10).text().contains("Yeah, sure. They're 20 gold coins each.") || ctx.widgets.component(1189, 3).text().contains("Baraek sells you a fur.");
-						}
-					}, 250, 20);
-			} else {
-				STATUS = "Select Continue..";
-				ctx.input.send(" ");
-					Condition.wait(new Callable<Boolean>() {
-						@Override
-						public Boolean call() throws Exception {
-							return WIDGET_MENU.valid();
-						}
-					}, 250, 20);
+				@Override
+				public Boolean call() throws Exception {
+					return !WIDGET_MENU.visible() && ctx.chat.canContinue();
 				}
+			}, 250, 20);
+			break;
+		case CONTINUE1:
+			STATUS = "Select Continue";
+			ctx.input.send(" ");
+			Condition.wait(new Callable<Boolean>() {
+				@Override
+				public Boolean call() throws Exception {
+					return ctx.widgets.component(1184, 10).text().contains("Yeah, sure. They're 20 gold coins each.");
+				}
+			}, 210, 20);
 			break;
 		case CONTINUE2:
-			STATUS = "Select Continue...";
-			if (WIDGET_MENU2.visible()) {
-				ctx.input.send(" ");
-				Condition.wait(new Callable<Boolean>() {
-					@Override
-					public Boolean call() throws Exception {
-						return !WIDGET_MENU.valid() && !WIDGET_MENU2.valid() && !ctx.widgets.component(1191, 10).valid() && !ctx.widgets.component(1184, 10).valid() && !ctx.widgets.component(1189, 3).valid();
-					}
-				}, 250, 20);
-			}
+			ctx.input.send(" ");
+			Condition.wait(new Callable<Boolean>() {
+				@Override
+				public Boolean call() throws Exception {
+					return ctx.widgets.component(1191, 10).text().contains("Yeah, OK, here you go.");
+				}
+			}, 210, 20);
+
+			break;
+		case CONTINUE3:
+			ctx.input.send(" ");
+			Condition.wait(new Callable<Boolean>() {
+				@Override
+				public Boolean call() throws Exception {
+					return ctx.widgets.component(1189, 3).text().contains("Baraek sells you a fur.");
+				}
+			}, 210, 20);
+			break;
+		case CONTINUE4:
+			ctx.input.send(" ");
+			Condition.wait(new Callable<Boolean>() {
+				@Override
+				public Boolean call() throws Exception {
+					return !(ctx.widgets.component(1189, 3).text().contains("Baraek sells you a fur."));
+				}
+			}, 210, 20);
 			break;
 		case TALKING:
 			final Npc Baraek = ctx.npcs.select().id(ID_BARAEK).nearest().poll();
@@ -177,45 +182,53 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			break;
 		}
 	}
-	
+
 	private State state() {
-		
-		if (ctx.camera.pitch() < 40){
+
+		if (ctx.camera.pitch() < 40) {
 			return State.CAMERA;
 		}
-		
+
 		antiBan();
-		
-		if(ctx.widgets.component(1188, 6).text().contains("I can't afford that.")){
+
+		if (ctx.widgets.component(1188, 6).text().contains("I can't afford that.")) {
 			return State.STOP;
-	    }
-		
-		if(ctx.widgets.component(1188, 6).text().contains("Can I have a newspaper, please?")){
+		}
+
+		if (ctx.widgets.component(1188, 6).text().contains("Can I have a newspaper, please?")) {
 			return State.FIX;
 		}
-		
-		if(WIDGET_MENU.valid()){
+
+		if (WIDGET_MENU.valid()) {
 			return State.MENU;
 		}
-		
-		if(ctx.widgets.component(1191, 11).valid() || ctx.widgets.component(1184, 11).valid()){
-			return State.CONTINUE;
+
+		if (ctx.widgets.component(1191, 10).text().contains("Can you sell me some furs?")) {
+			return State.CONTINUE1;
 		}
-		
-		if(WIDGET_MENU2.valid()) {
+
+		if (ctx.widgets.component(1184, 10).text().contains("Yeah, sure. They're 20 gold coins each.")) {
 			return State.CONTINUE2;
 		}
-		
-		if(ctx.backpack.select().count() != 28){
+
+		if (ctx.widgets.component(1191, 10).text().contains("Yeah, OK, here you go.")) {
+
+			return State.CONTINUE3;
+		}
+
+		if (ctx.widgets.component(1189, 3).text().contains("Baraek sells you a fur.")) {
+			return State.CONTINUE4;
+		}
+
+		if (ctx.backpack.select().count() != 28) {
 			return State.TALKING;
 		}
-		
 
 		return State.BANKING;
 	}
 
 	private enum State {
-		CAMERA, STOP, FIX, MENU, CONTINUE, CONTINUE2, TALKING, BANKING
+		CAMERA, STOP, FIX, MENU, CONTINUE1, CONTINUE2, CONTINUE3, CONTINUE4, TALKING, BANKING
 	}
 
 	private boolean didInteract() {
@@ -227,7 +240,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		Condition.sleep(Random.nextInt(50, 400));
 		ctx.input.send("{VK_ESCAPE up}");
 	}
-	
+
 	private int antiBan() {
 		int antiban = Random.nextInt(1, 600);
 		switch (antiban) {
@@ -253,7 +266,6 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		}
 		return 0;
 	}
-
 
 	@Override
 	public void messaged(MessageEvent msg) {
@@ -295,10 +307,10 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		g.drawString("Status: " + (STATUS), 10, 140);
 		g.setColor(Color.RED);
 		g.setFont(FONT_TWO);
-		g.drawString("v0.28", 165, 140);
+		g.drawString("v0.31", 165, 140);
 		drawMouse(g);
 	}
-	
+
 	private static int profit() {
 		return FUR_BOUGHT * FUR_PRICE;
 	}
@@ -326,7 +338,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		g.fill(new Rectangle(p.x + 1, p.y - 4, 2, 15));
 		g.fill(new Rectangle(p.x - 6, p.y + 2, 16, 2));
 	}
-	
+
 	@SuppressWarnings("deprecation")
 	private int getGuidePrice(final int id) {
 		return GeItem.price(id);
