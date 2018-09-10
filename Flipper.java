@@ -26,21 +26,19 @@ import org.powerbot.script.rt6.GeItem;
 import org.powerbot.script.rt6.Npc;
 
 @Manifest(name = "rFurFlipper", description = "Buys fur from Baraek in Varrock for money", properties = "topic=1135335")
-public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext>
-		implements PaintListener, MessageListener {
-	private static RenderingHints ANTIALIASING = new RenderingHints(RenderingHints.KEY_ANTIALIASING,
-			RenderingHints.VALUE_ANTIALIAS_ON);
+public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext> implements PaintListener, MessageListener {
+	private static RenderingHints ANTIALIASING = new RenderingHints(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 	private static String STATUS = "Starting...";
 	private static long TIMER_SCRIPT = 0;
 	private static int FUR_PRICE, FUR_BOUGHT, FUR_STORED;
 	private static int ID_BARAEK = 547, ID_FUR = 948;
 	private final Component WIDGET_MENU = ctx.widgets.component(1188, 6);
-	private static final Tile[] PATH_TO_NPC = { new Tile(3189, 3435, 0), new Tile(3200, 3429, 0),
-			new Tile(3206, 3429, 0), new Tile(3215, 3433, 0) };
+	private final Component WIDGET_MENU2 = ctx.widgets.component(1189, 15);
+	private static final Tile[] PATH_TO_NPC = { new Tile(3189, 3435, 0), new Tile(3200, 3429, 0), new Tile(3206, 3429, 0), new Tile(3215, 3433, 0) };
 
 	@Override
 	public void start() {
-		TIMER_SCRIPT = System.currentTimeMillis();
+		TIMER_SCRIPT = System.currentTimeMillis();	
 		STATUS = "Get prices..";
 		FUR_PRICE = getGuidePrice(ID_FUR) - 20;
 	}
@@ -64,11 +62,9 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 
 	@Override
 	public void poll() {
-		if (ctx.controller.isStopping())
-			return;
 		if (!ctx.game.loggedIn())
 			return;
-		switch (state()) {
+		switch(state()){
 		case CAMERA:
 			STATUS = "Set Pitch";
 			ctx.camera.pitch(Random.nextInt(48, 55));
@@ -83,57 +79,51 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			break;
 		case MENU:
 			STATUS = "Select Option";
-			if (ctx.widgets.component(1188, 6).text().contains("Hello. I am in search of a quest.")) {
+			if(ctx.widgets.component(1188, 6).text().contains("Hello. I am in search of a quest.")) {
 				ctx.input.send("2");
-			} else if (ctx.widgets.component(1188, 6).text().contains("Yeah, okay, here you go."))
-				ctx.input.send("1");
+			}else 
+				if(ctx.widgets.component(1188, 6).text().contains("Yeah, okay, here you go."))
+			ctx.input.send("1");
 			Condition.wait(new Callable<Boolean>() {
-				@Override
-				public Boolean call() throws Exception {
-					return ctx.widgets.component(1191, 10).text().contains("Yeah, OK, here you go.") && ctx.widgets.component(1191, 10).visible();
-				}
-			}, 250, 20);
+					@Override
+					public Boolean call() throws Exception {
+						return !WIDGET_MENU.visible()
+								&& ctx.chat.canContinue();
+					}
+				}, 250, 20);
 			break;
-		case CONTINUE1:
-			STATUS = "Select Continue1";
-			ctx.input.send(" ");
-			Condition.wait(new Callable<Boolean>() {
-				@Override
-				public Boolean call() throws Exception {
-					return ctx.widgets.component(1184, 10).text().contains("Yeah, sure. They're 20 gold coins each.") && ctx.widgets.component(1184, 10).visible();
+		case CONTINUE:
+			STATUS = "Select Continue.";
+			if (ctx.widgets.component(1191, 10).text().contains("Can you sell me some furs?") || ctx.widgets.component(1191, 10).text().contains("Yeah, OK, here you go.")) {
+				ctx.input.send(" ");
+				Condition.wait(new Callable<Boolean>() {
+					@Override
+					public Boolean call() throws Exception {
+						return ctx.widgets.component(1184, 10).text().contains("Yeah, sure. They're 20 gold coins each.") || ctx.widgets.component(1189, 3).text().contains("Baraek sells you a fur.");
+						}
+					}, 250, 20);
+			} else {
+				STATUS = "Select Continue..";
+				ctx.input.send(" ");
+					Condition.wait(new Callable<Boolean>() {
+						@Override
+						public Boolean call() throws Exception {
+							return WIDGET_MENU.valid();
+						}
+					}, 250, 20);
 				}
-			}, 210, 20);
 			break;
 		case CONTINUE2:
-			STATUS = "Select Continue2";
-			ctx.input.send(" ");
-			Condition.wait(new Callable<Boolean>() {
-				@Override
-				public Boolean call() throws Exception {
-					return ctx.widgets.component(1188, 6).text().contains("Yeah, okay, here you go.");
-				}
-			}, 210, 20);
-
-			break;
-		case CONTINUE3:
-			STATUS = "Select Continue3";
-			ctx.input.send(" ");
-			Condition.wait(new Callable<Boolean>() {
-				@Override
-				public Boolean call() throws Exception {
-					return ctx.widgets.component(1189, 3).text().contains("Baraek sells you a fur.") && ctx.widgets.component(1189, 3).visible();
-				}
-			}, 210, 20);
-			break;
-		case CONTINUE4:
-			STATUS = "Select Continue4";
-			ctx.input.send(" ");
-			Condition.wait(new Callable<Boolean>() {
-				@Override
-				public Boolean call() throws Exception {
-					return !ctx.widgets.component(1189, 3).text().contains("Baraek sells you a fur.") && !ctx.widgets.component(1189, 3).visible();
-				}
-			}, 210, 20);
+			STATUS = "Select Continue...";
+			if (WIDGET_MENU2.visible()) {
+				ctx.input.send(" ");
+				Condition.wait(new Callable<Boolean>() {
+					@Override
+					public Boolean call() throws Exception {
+						return !WIDGET_MENU.valid() && !WIDGET_MENU2.valid() && !ctx.widgets.component(1191, 10).valid() && !ctx.widgets.component(1184, 10).valid() && !ctx.widgets.component(1189, 3).valid();
+					}
+				}, 250, 20);
+			}
 			break;
 		case TALKING:
 			final Npc Baraek = ctx.npcs.select().id(ID_BARAEK).nearest().poll();
@@ -187,51 +177,45 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 			break;
 		}
 	}
-
+	
 	private State state() {
-
-		if (ctx.camera.pitch() < 40) {
+		
+		if (ctx.camera.pitch() < 40){
 			return State.CAMERA;
 		}
 		
-		if (ctx.widgets.component(1188, 6).text().contains("I can't afford that.")) {
+		antiBan();
+		
+		if(ctx.widgets.component(1188, 6).text().contains("I can't afford that.")){
 			return State.STOP;
-		}
-
-		if (ctx.widgets.component(1188, 6).text().contains("Can I have a newspaper, please?")) {
+	    }
+		
+		if(ctx.widgets.component(1188, 6).text().contains("Can I have a newspaper, please?")){
 			return State.FIX;
 		}
-
-		if (WIDGET_MENU.valid()) {
+		
+		if(WIDGET_MENU.valid()){
 			return State.MENU;
 		}
-
-		if (ctx.widgets.component(1191, 10).text().contains("Can you sell me some furs?") && ctx.widgets.component(1191, 10).visible()) {
-			return State.CONTINUE1;
+		
+		if(ctx.widgets.component(1191, 11).valid() || ctx.widgets.component(1184, 11).valid()){
+			return State.CONTINUE;
 		}
-
-		if (ctx.widgets.component(1184, 10).text().contains("Yeah, sure. They're 20 gold coins each.") && ctx.widgets.component(1184, 10).visible()) {
+		
+		if(WIDGET_MENU2.valid()) {
 			return State.CONTINUE2;
 		}
-
-		if (ctx.widgets.component(1191, 10).text().contains("Yeah, OK, here you go.") && ctx.widgets.component(1191, 10).visible()) {
-
-			return State.CONTINUE3;
-		}
-
-		if (ctx.widgets.component(1189, 3).text().contains("Baraek sells you a fur.") && ctx.widgets.component(1189, 3).visible()) {
-			return State.CONTINUE4;
-		}
-
-		if (ctx.backpack.select().count() != 28 && !ctx.chat.canContinue() && !ctx.widgets.component(1189, 3).visible() && !ctx.widgets.component(1191, 10).visible() && !ctx.widgets.component(1184, 10).visible()) {
+		
+		if(ctx.backpack.select().count() != 28){
 			return State.TALKING;
 		}
+		
 
 		return State.BANKING;
 	}
 
 	private enum State {
-		CAMERA, STOP, FIX, MENU, CONTINUE1, CONTINUE2, CONTINUE3, CONTINUE4, TALKING, BANKING
+		CAMERA, STOP, FIX, MENU, CONTINUE, CONTINUE2, TALKING, BANKING
 	}
 
 	private boolean didInteract() {
@@ -244,6 +228,33 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		ctx.input.send("{VK_ESCAPE up}");
 	}
 	
+	private int antiBan() {
+		int antiban = Random.nextInt(1, 600);
+		switch (antiban) {
+		case 1:
+			ctx.camera.angle(Random.nextInt(21, 40));
+			break;
+		case 2:
+			ctx.camera.angle(Random.nextInt(25, 75));
+			break;
+		case 3:
+			ctx.camera.angle(Random.nextInt(0, 200));
+			break;
+		case 4:
+			ctx.camera.angle(Random.nextInt(0, 300));
+			break;
+		case 8:
+			ctx.input.move(Random.nextInt(0, 500), Random.nextInt(0, 500));
+			break;
+		case 6:
+			ctx.camera.pitch(Random.nextInt(40, 55));
+			ctx.camera.angle(Random.nextInt(0, 300));
+			break;
+		}
+		return 0;
+	}
+
+
 	@Override
 	public void messaged(MessageEvent msg) {
 		String message = msg.text();
@@ -284,10 +295,10 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		g.drawString("Status: " + (STATUS), 10, 140);
 		g.setColor(Color.RED);
 		g.setFont(FONT_TWO);
-		g.drawString("v0.26", 165, 140);
+		g.drawString("v0.28", 165, 140);
 		drawMouse(g);
 	}
-
+	
 	private static int profit() {
 		return FUR_BOUGHT * FUR_PRICE;
 	}
@@ -299,7 +310,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 	public String formatNumber(int start) {
 		DecimalFormat nf = new DecimalFormat("0.0");
 		double i = start;
-		if (i >= 100000) {
+		if (i >= 1000000) {
 			return nf.format((i / 1000000)) + "m";
 		}
 		if (i >= 1000) {
@@ -315,7 +326,7 @@ public class Flipper extends PollingScript<org.powerbot.script.rt6.ClientContext
 		g.fill(new Rectangle(p.x + 1, p.y - 4, 2, 15));
 		g.fill(new Rectangle(p.x - 6, p.y + 2, 16, 2));
 	}
-
+	
 	@SuppressWarnings("deprecation")
 	private int getGuidePrice(final int id) {
 		return GeItem.price(id);
